@@ -1,7 +1,6 @@
 import streamlit as st
 
-
-class User:
+class User_input:
  def __init__(self, type):
   self.type=type
 
@@ -45,18 +44,23 @@ class User:
         comune=None
      return year_PV,power_PV,area_PV,comune
  
-class Cittadino (User):
- def area_same_POD_house():
+class Cittadino_input (User_input):
+ def area_same_POD_and_cabin_house(area_PV,region):
     same_POD_house=st.radio("L'area dove costruire l'impianto, ha lo stesso POD di casa tua", options=["Si","No"],index=None, horizontal=True, key="POD_area_house" )
     if same_POD_house=="No":
        same_Cabina_house=st.radio("L'area dove costruire l'impianto, è nella stessa cabina primaria di casa tua", options=["Si","No"],index=None, horizontal=True, key="cabina_area_house" )
        if same_Cabina_house=="No":
           st.write("Non puoi accedere agli incentivi") #to be defined
+          outcome="No_incentives"
+          return outcome
        elif same_Cabina_house=="Si":
-          st.write("Stimiamo la produzione e costi") #to be defined
+         outcome="Calculate_cost_and_production"
+         st.markdown("<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>", unsafe_allow_html=True)
+         return outcome
     if same_POD_house=="Si":
-       st.write("Valutazione prosumer") #to be defined
-       
+       outcome="Prosumer" #to be defined
+       return outcome
+              
        
  
 

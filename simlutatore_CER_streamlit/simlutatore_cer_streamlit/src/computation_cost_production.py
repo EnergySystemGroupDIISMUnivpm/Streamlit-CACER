@@ -33,3 +33,7 @@ def computation_annual_production(area_PV,region):
 
     return Energy_year
 
+def computation_installation_cost(area_PV):
+    m2_cost=250 #cost of PV panels for m2, euro
+    installation_cost=m2_cost*area_PV
+    return installation_cost

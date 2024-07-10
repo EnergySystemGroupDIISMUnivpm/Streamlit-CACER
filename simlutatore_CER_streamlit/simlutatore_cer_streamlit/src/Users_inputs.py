@@ -29,7 +29,6 @@ class User_input:
               area_PV=st.number_input("Inserisci le dimensioni dell'area in cui costruire l'impianto", key="PV_area_dim", step=1, format="%d")
              else:
                 area_PV=None
-                know_where_PV=None
           else:
              area_PV=None
              know_where_PV=None
@@ -42,7 +41,7 @@ class User_input:
         comune=st.radio("Il comune dove hai l'impianto o dove vuoi costruirlo, ha meno di 5000 abitanti?", options=["Si","No"],index=None, horizontal=True,key="comune_inhabitants")
      else:
         comune=None
-     return year_PV,power_PV,area_PV,comune
+     return year_PV,power_PV,know_where_PV,area_PV,comune
  
 class Cittadino_input (User_input):
  def area_same_POD_and_cabin_house(area_PV,region):

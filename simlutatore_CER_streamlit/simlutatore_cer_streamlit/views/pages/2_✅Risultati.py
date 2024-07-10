@@ -30,7 +30,6 @@ st.markdown("<h1 style='text-align: center; color: #0078AC;'> ENEA Simulatore CA
 
 #body
 #FOR ALL USERS
-print(f""""{st.session_state["known_area"]}""")
 if st.session_state["known_area"]=="No": #if user want to be build a PV but doesn't know where
           st.session_state["optimal_dim"]=User_outputs.User_output.optimal_dimension(st.session_state["annual_consumption"],st.session_state["region"])
 

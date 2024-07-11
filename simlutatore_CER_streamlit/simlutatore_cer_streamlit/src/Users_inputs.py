@@ -1,4 +1,5 @@
 import streamlit as st
+import datetime
 
 class User_input:
  def __init__(self, type):
@@ -13,32 +14,57 @@ class User_input:
      region=st.selectbox("Seleziona la tua regione", regions, index=None)
      return region
  
+ def insert_area(self):
+    area_PV=st.number_input("Inserisci le dimensioni dell'area in cui costruire l'impianto", key="PV_area_dim", step=1, format="%d")
+    return area_PV
+ def insert_year_power_PV(self):
+    year_PV=st.date_input("Inserisci la data di entrata in esercizio dell'impianto PV", format="DD/MM/YYYY", key="PV_year")
+    power_PV=st.number_input("Inserisci la potenza dell'impianto PV",step=1, format="%d",key="PV_power")
+    return year_PV, power_PV
+ def want_to_install_PV(self):
+    want_PV=st.radio("Vuoi costruire un impianto PV?", options=["Si","No"],index=None, horizontal=True, key="want_PV" )
+    return want_PV
+ def know_where_to_install_PV(self):
+    know_where_PV=st.radio("Sai già dove costruire l'impianto?", options=["Si","No"], index=None, horizontal=True,key="know_PV_area" )
+    return know_where_PV
+ def insert_comune(self):
+    comune=st.radio("Il comune dove hai l'impianto o dove vuoi costruirlo, ha meno di 5000 abitanti?", options=["Si","No"],index=None, horizontal=True,key="comune_inhabitants")
+    return comune
+ 
+ def elaboration_want_or_not_to_install_PV(self,want_PV):
+      if want_PV=="Si":
+             know_where_PV=self.know_where_to_install_PV()
+             if know_where_PV=="Si":
+              area_PV=self.insert_area()
+             else:
+                area_PV=None
+      else:
+             area_PV=None
+             know_where_PV=None
+      return know_where_PV,area_PV
+ 
  def presence_or_construction_PV(self):
      presence_PV_plant=st.radio("Hai già un impianto PV", options=["Si","No"],index=None, horizontal=True, key="presence_PV" )
      if presence_PV_plant=="Si":
-        year_PV=st.number_input("Inserisci la data di entrata in esercizio dell'impianto PV", step=1, format="%d", key="PV_year")
-        power_PV=st.number_input("Inserisci la potenza dell'impianto PV",step=1, format="%d",key="PV_power")
+        year_PV,power_PV=self.insert_year_power_PV()
         area_PV=None
+        know_where_PV=None
+        if year_PV < (datetime.datetime.strptime("16/12/2021", "%d/%m/%Y").date()):
+           st.markdown("Non è possibile prendere incentivi su questa UP *(DECRETO CACER e TIAD, Regole operative per l’accesso al servizio per l’autoconsumo diffuso e al contributo PNRR, Allegato 1, Parte II, capitolo1, sezione 1.2.1.2.c)*")
+           want_PV=self.want_to_install_PV()
+           know_where_PV,area_PV=self.elaboration_want_or_not_to_install_PV(want_PV)
      elif presence_PV_plant=="No":
           year_PV=None
           power_PV=None
-          want_PV=st.radio("Vuoi costruire un impianto PV?", options=["Si","No"],index=None, horizontal=True, key="want_PV" )
-          if want_PV=="Si":
-             know_where_PV=st.radio("Sai già dove costruire l'impianto?", options=["Si","No"], index=None, horizontal=True,key="know_PV_area" )
-             if know_where_PV=="Si":
-              area_PV=st.number_input("Inserisci le dimensioni dell'area in cui costruire l'impianto", key="PV_area_dim", step=1, format="%d")
-             else:
-                area_PV=None
-          else:
-             area_PV=None
-             know_where_PV=None
+          want_PV=self.want_to_install_PV()
+          know_where_PV,area_PV=self.elaboration_want_or_not_to_install_PV(want_PV)
      else:
         year_PV=None
         power_PV=None
         area_PV=None
         know_where_PV=None
      if presence_PV_plant=="Si" or know_where_PV=="Si":
-        comune=st.radio("Il comune dove hai l'impianto o dove vuoi costruirlo, ha meno di 5000 abitanti?", options=["Si","No"],index=None, horizontal=True,key="comune_inhabitants")
+        comune=self.insert_comune
      else:
         comune=None
      return year_PV,power_PV,know_where_PV,area_PV,comune

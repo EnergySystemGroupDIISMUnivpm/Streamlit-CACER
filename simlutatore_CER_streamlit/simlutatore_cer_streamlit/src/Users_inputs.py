@@ -44,7 +44,10 @@ class User_input:
      return year_PV,power_PV,know_where_PV,area_PV,comune
  
 class Cittadino_input (User_input):
- def area_same_POD_and_cabin_house(area_PV,region):
+ def __init__(self, type):
+        super().__init__(type)  
+        
+ def area_same_POD_and_cabin_house(self,area_PV,region):
     same_POD_house=st.radio("L'area dove costruire l'impianto, ha lo stesso POD di casa tua", options=["Si","No"],index=None, horizontal=True, key="POD_area_house" )
     if same_POD_house=="No":
        same_Cabina_house=st.radio("L'area dove costruire l'impianto, è nella stessa cabina primaria di casa tua", options=["Si","No"],index=None, horizontal=True, key="cabina_area_house" )

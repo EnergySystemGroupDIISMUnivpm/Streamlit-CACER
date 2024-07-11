@@ -53,8 +53,9 @@ with col2:
     if st.session_state["known_area"]=="No": 
             st.markdown("<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>", unsafe_allow_html=True)
     if st.session_state["user"]=="Cittadino":
+        cittadino_input=Cittadino_input(f""" {st.session_state["user"]}""")
         if st.session_state["area_PV"] != "No" and st.session_state["area_PV"] is not None:
-            st.session_state["outcome_same_POD_cabin"]=Cittadino_input.area_same_POD_and_cabin_house(st.session_state["area_PV"],st.session_state["region"])
+            st.session_state["outcome_same_POD_cabin"]=cittadino_input.area_same_POD_and_cabin_house(st.session_state["area_PV"],st.session_state["region"])
             print(f""" {st.session_state["outcome_same_POD_cabin"]}""")
             
                     

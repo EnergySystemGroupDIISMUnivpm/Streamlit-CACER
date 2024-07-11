@@ -30,7 +30,14 @@ class User_output():
         self_consump=int(computations.computation_self_consump(annual_comsumption,region,power_peak))
         st.markdown(f"""- Abbiamo stimato che **autoconsumeresti in media**  {self_consump} kWh/anno""")
         return self_consump
+    
+    def overproduction(self,annual_production,self_consumption):
+        overproduction=int(computations.comp_if_there_is_overproduction(annual_production,self_consumption))
+        if overproduction>0:
+         st.markdown(f"""- Abbiamo stimato che potresti costuire un impianto che ti farebbe raggiungere {overproduction} kWh/anno di **sovraproduzione**""")
+        return overproduction
 
+ 
 class Cittadino_output(User_output):
     def __init__(self, type):
         super().__init__(type)  

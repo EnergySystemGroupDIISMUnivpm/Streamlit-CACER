@@ -136,3 +136,7 @@ def computation_self_consump(annual_consum,region,power_peak):
    self_consump=self_consumption_year(df_hourly_self_consump)
    return self_consump
    
+#computation of the fact that there is or not overproduction
+def comp_if_there_is_overproduction(production,self_consumption):
+  overproduction = production - self_consumption
+  return overproduction

@@ -12,7 +12,7 @@ class User_output():
     def __init__(self, type):
         self.name = type
 
-    def comput_annual_production(self,area_PV:int,region:str)->Tuple[int, int]:
+    def comput_annual_production_and_power_peak(self,area_PV:int,region:str)->Tuple[int, int]:
         annual_production,installable_power=computations.computation_annual_production(area_PV,region)
         annual_production=int(annual_production)
         installable_power=int(installable_power)
@@ -56,9 +56,10 @@ class Cittadino_output(User_output):
     def __init__(self, type):
         super().__init__(type)  
         
+   
     def visualize_results_from_same_POD_and_cabin(self,outcome:str,area_PV:int,region:str)->Tuple[int,int]:
          if str(outcome)=="Calculate_cost_and_production":
-            annual_production,power_peak=self.comput_annual_production(area_PV,region)
+            annual_production,power_peak=self.comput_annual_production_and_power_peak(area_PV,region)
             return annual_production,power_peak
         
     def CACER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->int|float:

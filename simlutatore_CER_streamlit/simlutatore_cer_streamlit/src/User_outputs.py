@@ -18,6 +18,7 @@ class User_output():
         installable_power=int(installable_power)
         st.markdown(f"""- Con i dati che hai fornito, potresti costuire un impianto PV da {installable_power} kW di **potenza di picco** e che potrebbe generare un **quantitativo di energia elettrica in un anno** pari a {annual_production} kWh/anno""")
         return annual_production, installable_power
+
     
     def comput_cost_plant(self,area_PV:int)->int:
         impiant_cost=int(computations.computation_installation_cost(area_PV))
@@ -44,6 +45,10 @@ class User_output():
         st.markdown("""<br>""",unsafe_allow_html=True)         
         st.markdown("""Per maggiori informazioni visita la sezione *❓FAQ*""")
     
+    def CO2_reducted(self,energy_self_consum:int|float):
+        CO2=computations.computation_reduced_CO2(energy_self_consum)
+        st.markdown(f"""- Inoltre ridurresti la tua **produzione di CO2** di {CO2} kg CO2/kWh""")
+        return CO2
     def enter_or_create_CER(self,benefit:float|int):
         st.markdown(f"""- Valuta la possibilità di entrare a fare parte o creare una **CER**, potresti ricevere fino a **{benefit}€** all'anno di incentivi""")
     def enter_or_create_Group(self,benefit:float|int):
@@ -62,17 +67,17 @@ class Cittadino_output(User_output):
             annual_production,power_peak=self.comput_annual_production_and_power_peak(area_PV,region)
             return annual_production,power_peak
         
-    def CACER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->int|float:
+    def CACER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float]:
         if overproduction>0:
             CER=CACER_config.CER("CER")
             benefit=CER.total_benefit(energy_self_consum,implant_power,region,comune)
             self.enter_or_create_CER(benefit)
-            self.visit_FAQ()
         elif overproduction<=0:
             Group=CACER_config.groups_self_consumers("Group of self consumer")
             benefit=Group.total_benefit(energy_self_consum,implant_power,region,comune)
             self.enter_or_create(benefit)
-            self.visit_FAQ()
-        return benefit
+        CO2=self.CO2_reducted(energy_self_consum)
+        self.visit_FAQ()
+        return benefit,CO2
 
 

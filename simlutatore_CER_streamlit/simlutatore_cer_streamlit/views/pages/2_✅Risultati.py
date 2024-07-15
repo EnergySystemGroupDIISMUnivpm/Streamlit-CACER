@@ -24,6 +24,8 @@ if "power_peak" not in st.session_state:
       st.session_state["annual production"]=""
 if "overproduction" not in st.session_state:
       st.session_state["overproduction"]=""
+if "benefit" not in st.session_state:
+      st.session_state["benefit"]=""
 
 #title 
 st.markdown("<h1 style='text-align: center; color: #0078AC;'> ENEA Simulatore CACER <em>: qui puoi visualizzare i tuoi risultati</em></h1>", unsafe_allow_html=True)
@@ -50,6 +52,10 @@ if st.session_state["user"]=="Cittadino":
                   st.session_state["region"],
                   st.session_state["power_peak"])
             st.session_state["overproduction"]=cittadino_output.overproduction(st.session_state["annual production"],st.session_state["self_consumption"])
-
-
+            st.session_state["benefit"]=cittadino_output.CACER_benefit(st.session_state["overproduction"],
+                                                                       st.session_state["self_consumption"],
+                                                                       st.session_state["power_peak"],
+                                                                       st.session_state["region"],
+                                                                       st.session_state["comune_under_5000"])
+            
 

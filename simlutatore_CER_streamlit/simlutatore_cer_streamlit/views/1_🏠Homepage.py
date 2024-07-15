@@ -55,9 +55,8 @@ with col2:
     if st.session_state["user"]=="Cittadino":
         cittadino_input=Cittadino_input(f""" {st.session_state["user"]}""")
         if st.session_state["area_PV"] != "No" and st.session_state["area_PV"] is not None:
-            st.session_state["outcome_same_POD_cabin"]=cittadino_input.area_same_POD_and_cabin_house(st.session_state["area_PV"],st.session_state["region"])
-            print(f""" {st.session_state["outcome_same_POD_cabin"]}""")
-            
+            st.session_state["outcome_same_POD_cabin"]=cittadino_input.area_same_POD_and_cabin_house()
+                       
                     
         
 

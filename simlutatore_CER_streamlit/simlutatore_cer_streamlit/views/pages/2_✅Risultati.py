@@ -30,9 +30,25 @@ if "benefit" not in st.session_state:
 #title 
 st.markdown("<h1 style='text-align: center; color: #0078AC;'> ENEA Simulatore CACER <em>: qui puoi visualizzare i tuoi risultati</em></h1>", unsafe_allow_html=True)
 
+#information at the bottom right
+st.markdown(
+    """
+    <style>
+    .bottom-right {
+        position: fixed;
+        bottom: 10px;
+        right: 30px;
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.7);
+    }
+    </style>
+    <div class="bottom-right">
+        Attenzione! Tutti i dati che vedi sono da intendersi come stime.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-
-#body
 #FOR ALL USERS
 user_output=User_outputs.User_output(f"""{st.session_state["user"]}""")
 

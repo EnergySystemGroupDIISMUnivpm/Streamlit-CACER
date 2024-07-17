@@ -14,29 +14,29 @@ class User_output():
 
     def comput_annual_production_and_power_peak(self,area_PV:int,region:str)->Tuple[int, int]:
         annual_production,installable_power=computations.computation_annual_production(area_PV,region)
-        annual_production=int(annual_production)
-        installable_power=int(installable_power)
-        st.markdown(f"""- Con i dati che hai fornito, potresti costuire un impianto PV da {installable_power} kW di **potenza di picco** e che potrebbe generare un **quantitativo di energia elettrica in un anno** pari a {annual_production} kWh/anno""")
+        annual_production=int(round(annual_production))
+        installable_power=int(round(installable_power))
+        st.markdown(f"""- Con i dati che hai fornito, potresti costuire un impianto PV da {installable_power} kWp di **potenza di picco** e che potrebbe generare un **quantitativo di energia elettrica in un anno** pari a {annual_production} kWh/anno""")
         return annual_production, installable_power
 
     
     def comput_cost_plant(self,area_PV:int)->int:
-        impiant_cost=int(computations.computation_installation_cost(area_PV))
+        impiant_cost=int(round(computations.computation_installation_cost(area_PV)))
         st.markdown(f"""- **Il costo dell'installazione** dell'impianto sarebbe approssimatamente {impiant_cost} €""")
         return impiant_cost
     
     def optimal_dimension(self,annual_comsumption:int,region:str)->int:
-        optimal_dim=int(computations.computation_optimal_dimension(annual_comsumption,region))
+        optimal_dim=int(round(computations.computation_optimal_dimension(annual_comsumption,region)))
         st.markdown(f"""- **L'area ottima**  del tuo impianto sarebbe di {optimal_dim} m²""")
         return optimal_dim
     
     def self_consumption(self,annual_comsumption:int,region:str,power_peak:int)->int:
-        self_consump=int(computations.computation_self_consump(annual_comsumption,region,power_peak))
+        self_consump=int(round(computations.computation_self_consump(annual_comsumption,region,power_peak)))
         st.markdown(f"""- Abbiamo stimato che **autoconsumeresti in media**  {self_consump} kWh/anno""")
         return self_consump
     
     def overproduction(self,annual_production:int,self_consumption:int)->int:
-        overproduction=int(computations.comp_if_there_is_overproduction(annual_production,self_consumption))
+        overproduction=int(round(computations.comp_if_there_is_overproduction(annual_production,self_consumption)))
         if overproduction>0:
          st.markdown(f"""- Abbiamo stimato che potresti costuire un impianto che ti farebbe raggiungere {overproduction} kWh/anno di **sovraproduzione**""")
         return overproduction
@@ -46,7 +46,7 @@ class User_output():
         st.markdown("""Per maggiori informazioni visita la sezione *❓FAQ*""")
     
     def CO2_reducted(self,energy_self_consum:int|float):
-        CO2=computations.computation_reduced_CO2(energy_self_consum)
+        CO2=int(round(computations.computation_reduced_CO2(energy_self_consum)))
         st.markdown(f"""- Inoltre ridurresti la tua **produzione di CO2** di {CO2} kg CO2/kWh""")
         return CO2
     def enter_or_create_CER(self,benefit:float|int):
@@ -75,7 +75,7 @@ class Cittadino_output(User_output):
         elif overproduction<=0:
             Group=CACER_config.groups_self_consumers("Group of self consumer")
             benefit=Group.total_benefit(energy_self_consum,implant_power,region,comune)
-            self.enter_or_create(benefit)
+            self.enter_or_create_Group(benefit)
         CO2=self.CO2_reducted(energy_self_consum)
         self.visit_FAQ()
         return benefit,CO2

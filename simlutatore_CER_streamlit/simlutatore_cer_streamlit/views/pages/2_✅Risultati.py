@@ -59,7 +59,7 @@ if st.session_state["user"]=="Cittadino":
           st.session_state["optimal_dim"]=cittadino_output.optimal_dimension(st.session_state["annual_consumption"],st.session_state["region"])
           st.session_state["annual production"],st.session_state["power_peak"]=cittadino_output.comput_annual_production_and_power_peak(st.session_state["optimal_dim"],
                                                                                                                                                          st.session_state["region"])
-          st.session_state["impiant_cost"]= cittadino_output.comput_cost_plant(st.session_state["optimal_dim"])
+          st.session_state["impiant_cost"]= cittadino_output.comput_cost_plant(st.session_state["power_peak"])
           st.session_state["self_consumption"]= cittadino_output.self_consumption(
                   st.session_state["annual_consumption"],
                   st.session_state["region"],

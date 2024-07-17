@@ -25,23 +25,25 @@ Irradiance={"Abruzzo":1575,
                     }
 area_usable_percentage=0.85 #area trurly usable for the PV, excluding the area necessary for the maintenance, shading
 loss_factor=0.8 #to take into account losses in the system, such as those due to the inverter, wiring, dust on the panels ecc. It can vary
+efficiency=0.2 #efficinecy of PV. It can vary
+Power_peak=300 #Wp of one PV
+Area_one_PV= 1.6 #area for 1 PV of Power_peak Wp in m2
 
 #COMPUTATION OF ANNUAL PRODUCTION DEPENDING ON REGION (to know the irradiance) AND AVAILABLE AREA 
 def computation_annual_production(area_PV:int|float,region:str)->Tuple[float,float]:
     Area_eff=area_usable_percentage*area_PV 
-    P_m2=200 #considering this power per square meter(Wp/m2).
-    P_installable=(Area_eff*P_m2)/1000 #kWp
-    efficiency=0.2
     if region not in Irradiance:
         raise ValueError(f"Regione '{region}' non trovata nel dizionario di irradiance.")
     irradiance = Irradiance[region]
-    Energy_year=P_installable*irradiance*efficiency*loss_factor #energy in kWh/year
+    PV_yield=(Power_peak/1000)/Area_one_PV #kWp/m2
+    Energy_year=Area_eff*irradiance*PV_yield*loss_factor #energy in kWh/year formula from https://www.sunbasedata.com/blog/how-to-calculate-solar-panel-output
+    P_installable=(Area_eff/Area_one_PV)*Power_peak
     return Energy_year,P_installable
 
-#computation of intallation costs based on PV area
-def computation_installation_cost(area_PV:str)->float:
-    m2_cost=250 #cost of PV panels for m2, euro
-    installation_cost=m2_cost*area_PV
+#computation of intallation costs based on installable power
+def computation_installation_cost(P_installable:float)->float:
+    kW_cost=1000 #cost of PV panels for kW, euro
+    installation_cost=kW_cost*P_installable
     return installation_cost
 
 #computation optimal PV dimension based on annual consumption and region (region necessary to know the irradiance)

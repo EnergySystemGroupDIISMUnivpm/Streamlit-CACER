@@ -20,8 +20,8 @@ class User_output():
         return annual_production, installable_power
 
     
-    def comput_cost_plant(self,area_PV:int)->int:
-        impiant_cost=int(round(computations.computation_installation_cost(area_PV)))
+    def comput_cost_plant(self,installable_power:int|float)->int:
+        impiant_cost=int(round(computations.computation_installation_cost(installable_power)))
         st.markdown(f"""- **Il costo dell'installazione** dell'impianto sarebbe approssimatamente {impiant_cost} €""")
         return impiant_cost
     
@@ -38,7 +38,7 @@ class User_output():
     def overproduction(self,annual_production:int,self_consumption:int)->int:
         overproduction=int(round(computations.comp_if_there_is_overproduction(annual_production,self_consumption)))
         if overproduction>0:
-         st.markdown(f"""- Abbiamo stimato che potresti costuire un impianto che ti farebbe raggiungere {overproduction} kWh/anno di **sovraproduzione**""")
+         st.markdown(f"""- Abbiamo stimato che potresti costuire un impianto che ti farebbe raggiungere {overproduction} kWh/anno di **sovraproduzione** nelle ore centrali della giornata""")
         return overproduction
     
     def visit_FAQ(self):

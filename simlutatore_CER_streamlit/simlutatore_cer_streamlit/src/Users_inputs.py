@@ -27,6 +27,8 @@ class User_input:
  
  def want_to_install_PV(self)->str:
     want_PV=st.radio("Vuoi costruire un impianto PV?", options=["Si","No"],index=None, horizontal=True, key="want_PV" )
+    if want_PV=="No":
+       st.markdown()
     return want_PV
  
  def know_where_to_install_PV(self)->str:
@@ -89,7 +91,7 @@ class Cittadino_input (User_input):
       if same_POD_house=="No":
        same_Cabina_house=st.radio("L'area dove costruire l'impianto, è nella stessa cabina primaria di casa tua", options=["Si","No"],index=None, horizontal=True, key="cabina_area_house" )
        if same_Cabina_house=="No":
-          st.write("Non puoi accedere agli incentivi") #to be defined
+          st.write("Non puoi accedere agli incentivi, secondo il DECRETO CACER e TIAD puoi prendere incentivi solo su PV che sono sotto la stessa cabina primaria dell'utenza") #to be defined
           outcome="No_incentives"
           return outcome
        elif same_Cabina_house=="Si":
@@ -97,7 +99,7 @@ class Cittadino_input (User_input):
          st.markdown("<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>", unsafe_allow_html=True)
          return outcome
       elif same_POD_house=="Si":
-       outcome="Prosumer" #to be defined
+       outcome="Prosumer"
        return outcome
               
        

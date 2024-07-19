@@ -6,6 +6,7 @@ src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.append(src_path)
 import computations
 import CACER_config
+import pandas as pd
 
 #definition of class with methods in common with all users
 class User_output():
@@ -30,11 +31,12 @@ class User_output():
         st.markdown(f"""- **L'area ottima**  del tuo impianto sarebbe di {optimal_dim} m²""")
         return optimal_dim
     
-    def self_consumption(self,annual_comsumption:int,region:str,power_peak:int)->int:
-        self_consump=int(round(computations.computation_self_consump(annual_comsumption,region,power_peak)))
+    def self_consumption(self,annual_comsumption:int,region:str,power_peak:int)->Tuple[int,pd.Index]:
+        self_consump=int(round(computations.computation_self_consump_and_avg_hour_overproduct(annual_comsumption,region,power_peak)))
         st.markdown(f"""- Abbiamo stimato che **autoconsumeresti in media**  {self_consump} kWh/anno""")
         return self_consump
-    
+
+
     def overproduction(self,annual_production:int,self_consumption:int)->int:
         overproduction=int(round(computations.comp_if_there_is_overproduction(annual_production,self_consumption)))
         if overproduction>0:
@@ -66,7 +68,7 @@ class Cittadino_output(User_output):
          if str(outcome)=="Calculate_cost_and_production":
             annual_production,power_peak=self.comput_annual_production_and_power_peak(area_PV,region)
             return annual_production,power_peak
-        
+                 
     def CACER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float]:
         if overproduction>0:
             CER=CACER_config.CER("CER")

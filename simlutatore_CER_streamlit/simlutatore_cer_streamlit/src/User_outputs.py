@@ -57,17 +57,42 @@ class User_output():
         st.markdown(f"""- Valuta la possibilità di entrare a fare parte o creare un **Gruppo di Autoconsumatori**, potresti ricevere fino a **{benefit}€** all'anno di incentivi""")
     def create_Self_consum(self,benefit:float|int):
         st.markdown(f"""- Valuta la possibilità di diventare un **Autoconsumatore a distanza**, potresti ricevere fino a **{benefit}€** all'anno di incentivi""")
-
+         
 #user: "Cittadino"     
 class Cittadino_output(User_output):
     def __init__(self, type):
         super().__init__(type)  
         
    
-    def visualize_results_from_same_POD_and_cabin(self,outcome:str,area_PV:int,region:str)->Tuple[int,int]:
+    def visualize_results_from_same_POD_and_cabin(self,outcome:str,area_PV:int,region:str,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float]:
          if str(outcome)=="Calculate_cost_and_production":
             annual_production,power_peak=self.comput_annual_production_and_power_peak(area_PV,region)
-            return annual_production,power_peak
+            implant_cost=self.comput_cost_plant(area_PV)
+            self_consumption=self.self_consumption(annual_consumption,region,power_peak)
+            overproduction=self.overproduction(annual_production,self_consumption)
+            benefit=int(round(self.CACER_benefit(overproduction,self_consumption,power_peak,region,comune)))
+            return annual_production,power_peak,implant_cost,self_consumption,overproduction,benefit
+         if str(outcome)=="Prosumer":
+            annual_production,power_peak=self.comput_annual_production_and_power_peak(area_PV,region)
+            implant_cost=self.comput_cost_plant(area_PV)
+            self_consumption=self.self_consumption(annual_consumption,region,power_peak)
+            overproduction=self.overproduction(annual_production,self_consumption)
+            saving=self.Prosumer(self_consumption)
+            st.markdown('''
+                <p style="margin-left: 20px; font-style: italic;">
+                In alternativa
+                </p>
+                ''', unsafe_allow_html=True)
+            benefit=self.CACER_benefit(overproduction,self_consumption,power_peak,region,comune)
+            return annual_production,power_peak,implant_cost,self_consumption,overproduction,saving
+            
+
+             
+    def Prosumer(self,energy_self_consumed:int|float)->int:
+        saving=int(round(computations.savings(energy_self_consumed)))
+        st.markdown(f"""- Valuta la possibilità di diventare **Prosumer**, potresti risparmiare fino a {saving} € in un anno""")
+        return saving
+
                  
     def CACER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float]:
         if overproduction>0:

@@ -21,13 +21,16 @@ if "impiant_cost" not in st.session_state:
 if "optimal_dim" not in st.session_state:
      st.session_state["optimal_dim"]=""
 if "power_peak" not in st.session_state:
-      st.session_state["annual production"]=""
+      st.session_state["power_peak"]=""
 if "overproduction" not in st.session_state:
       st.session_state["overproduction"]=""
 if "benefit" not in st.session_state:
       st.session_state["benefit"]=""
 if "avg_time_overproduction" not in st.session_state:
      st.session_state["avg_time_overproduction"]=""
+if "self_consump" not in st.session_state:
+     st.session_state["self_consump"]=""
+
 
 #title 
 st.markdown("<h1 style='text-align: center; color: #0078AC;'> ENEA Simulatore CACER <em>: qui puoi visualizzare i tuoi risultati</em></h1>", unsafe_allow_html=True)
@@ -62,33 +65,25 @@ if st.session_state["user"]=="Cittadino":
           st.session_state["annual production"],st.session_state["power_peak"]=cittadino_output.comput_annual_production_and_power_peak(st.session_state["optimal_dim"],
                                                                                                                                                          st.session_state["region"])
           st.session_state["impiant_cost"]= cittadino_output.comput_cost_plant(st.session_state["power_peak"])
-          st.session_state["self_consumption"]= cittadino_output.self_consumption(
+          st.session_state["self_consump"]= cittadino_output.self_consumption(
                   st.session_state["annual_consumption"],
                   st.session_state["region"],
                   st.session_state["power_peak"])
           st.session_state["overproduction"]=cittadino_output.overproduction(st.session_state["annual production"],
-                                                                             st.session_state["self_consumption"])
+                                                                             st.session_state["self_consump"])
           st.session_state["benefit"]=cittadino_output.CACER_benefit(st.session_state["overproduction"],
-                                                                       st.session_state["self_consumption"],
+                                                                       st.session_state["self_consump"],
                                                                        st.session_state["power_peak"],
                                                                        st.session_state["region"],
                                                                        st.session_state["comune_under_5000"])
 
     if st.session_state["outcome_same_POD_cabin"]!="": #when the user knows the area where to install PV and all inputs have been inserted
-            st.session_state["annual production"], st.session_state["power_peak"]= cittadino_output.visualize_results_from_same_POD_and_cabin(
+            st.session_state["annual production"], st.session_state["power_peak"],st.session_state["impiant_cost"],st.session_state["self_consump"],st.session_state["overproduction"],st.session_state["benefit"]= cittadino_output.visualize_results_from_same_POD_and_cabin(
                   st.session_state["outcome_same_POD_cabin"], 
                   st.session_state["area_PV"], 
-                  st.session_state["region"])
-            st.session_state["impiant_cost"]= cittadino_output.comput_cost_plant(st.session_state["area_PV"])
-            st.session_state["self_consumption"]= cittadino_output.self_consumption(
-                  st.session_state["annual_consumption"],
                   st.session_state["region"],
-                  st.session_state["power_peak"])
-            st.session_state["overproduction"]=cittadino_output.overproduction(st.session_state["annual production"],st.session_state["self_consumption"])
-            st.session_state["benefit"]=cittadino_output.CACER_benefit(st.session_state["overproduction"],
-                                                                       st.session_state["self_consumption"],
-                                                                       st.session_state["power_peak"],
-                                                                       st.session_state["region"],
-                                                                       st.session_state["comune_under_5000"])
+                  st.session_state["annual_consumption"],
+                  st.session_state["comune_under_5000"])
+          
             
 

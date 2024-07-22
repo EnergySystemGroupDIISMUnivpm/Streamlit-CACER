@@ -15,7 +15,7 @@ class self_consumer():
         benefit_autoconsumed=computations.incentive_self_consumption(energy_self_consum,implant_power,region)
         return benefit_autoconsumed
     
-    #only for CER     
+    #only for groups of self consumers   
 class groups_self_consumers(self_consumer):
      def __init__(self, type):
         self.name = type
@@ -39,6 +39,8 @@ class CER(groups_self_consumers):
     def __init__(self, type):
         self.name = type
 
+        
+    
           
 
     

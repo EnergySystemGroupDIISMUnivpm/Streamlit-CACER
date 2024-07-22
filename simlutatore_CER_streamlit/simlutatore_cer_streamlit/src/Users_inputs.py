@@ -28,7 +28,26 @@ class User_input:
  def want_to_install_PV(self)->str:
     want_PV=st.radio("Vuoi costruire un impianto PV?", options=["Si","No"],index=None, horizontal=True, key="want_PV" )
     if want_PV=="No":
-       st.markdown()
+       st.write("""
+       Siamo spiacenti, ma non puoi ottenere incentivi su un impianto fotovoltaico che non costruisci o potenzi. 
+         In alternativa, potresti valutare la possibilità di entrare a far parte di una Comunità Energetica Rinnovabile (CER) o di un gruppo di autoconsumatori, 
+         che può portare a benefici significativi in termini ambientali, sociali ed economici. Più nel dettaglio:
+         """)
+       st.subheader("Benefici ambientali:")
+       st.markdown("""
+         - **Riduzione delle emissioni di CO2:** Partecipare a una CER o a un gruppo di autoconsumatori significa contribuire alla produzione e all'utilizzo di energia rinnovabile, riducendo la dipendenza da fonti fossili e abbattendo le emissioni di gas serra.
+         - **Promozione della sostenibilità:** Supportando le energie rinnovabili, si favorisce uno sviluppo energetico più sostenibile e rispettoso dell'ambiente.
+         """)
+       st.subheader("Benefici sociali:")
+       st.markdown("""
+         - **Coinvolgimento della comunità:** Le CER e i gruppi di autoconsumatori promuovono la partecipazione attiva dei membri della comunità, rafforzando il senso di appartenenza e la collaborazione tra cittadini.
+         - **Educazione e consapevolezza:** Partecipare a una CER o a un gruppo di autoconsumatori può aumentare la consapevolezza sui temi energetici e ambientali, educando i membri della comunità sulle buone pratiche sostenibili.
+         """)
+       st.subheader("Benefici economici:")
+       st.markdown("""
+         - **Riduzione dei costi energetici:** Partecipare a una CER o a un gruppo di autoconsumatori può comportare una riduzione dei costi energetici per i suoi membri grazie all'autoproduzione e all'autoconsumo di energia rinnovabile.
+         - **Possibili incentivi e agevolazioni:** Secondo il decreto CACER e TIAD, le CER e i gruppi di autoconsumatori beneficiano di incentivi economici e finanziamenti dedicati alla promozione delle energie rinnovabili.
+         """)
     return want_PV
  
  def know_where_to_install_PV(self)->str:
@@ -58,7 +77,7 @@ class User_input:
         area_PV=None
         know_where_PV=None
         if year_PV < (datetime.datetime.strptime("16/12/2021", "%d/%m/%Y").date()):
-           st.markdown("Non è possibile prendere incentivi su questa UP *(DECRETO CACER e TIAD, Regole operative per l’accesso al servizio per l’autoconsumo diffuso e al contributo PNRR, Allegato 1, Parte II, capitolo1, sezione 1.2.1.2.c)*")
+           st.markdown("Siamo spiacenti ma non è possibile prendere incentivi su questa UP *(DECRETO CACER e TIAD, Regole operative per l’accesso al servizio per l’autoconsumo diffuso e al contributo PNRR, Allegato 1, Parte II, capitolo1, sezione 1.2.1.2.c)*")
            want_PV=self.want_to_install_PV()
            know_where_PV,area_PV=self.elaboration_want_or_not_to_install_PV(want_PV)
      elif presence_PV_plant=="No":
@@ -91,7 +110,7 @@ class Cittadino_input (User_input):
       if same_POD_house=="No":
        same_Cabina_house=st.radio("L'area dove costruire l'impianto, è nella stessa cabina primaria di casa tua", options=["Si","No"],index=None, horizontal=True, key="cabina_area_house" )
        if same_Cabina_house=="No":
-          st.write("Non puoi accedere agli incentivi, secondo il DECRETO CACER e TIAD puoi prendere incentivi solo su PV che sono sotto la stessa cabina primaria dell'utenza") #to be defined
+          st.write("Siamo spiacenti ma non puoi accedere agli incentivi. Secondo il DECRETO CACER e TIAD puoi prendere incentivi solo su PV che sono sotto la stessa cabina primaria dell'utenza") #to be defined
           outcome="No_incentives"
           return outcome
        elif same_Cabina_house=="Si":
@@ -100,6 +119,7 @@ class Cittadino_input (User_input):
          return outcome
       elif same_POD_house=="Si":
        outcome="Prosumer"
+       st.markdown("<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>", unsafe_allow_html=True)
        return outcome
               
        

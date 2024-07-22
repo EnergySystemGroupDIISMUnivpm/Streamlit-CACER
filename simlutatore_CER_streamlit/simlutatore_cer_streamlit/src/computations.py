@@ -28,6 +28,7 @@ loss_factor=0.8 #to take into account losses in the system, such as those due to
 efficiency=0.2 #efficinecy of PV. It can vary
 Power_peak=300 #Wp of one PV
 Area_one_PV= 1.6 #area for 1 PV of Power_peak Wp in m2
+energy_price=0.25 #0.25 euro/kWh
 
 #COMPUTATION OF ANNUAL PRODUCTION DEPENDING ON REGION (to know the irradiance) AND AVAILABLE AREA 
 def computation_annual_production(area_PV:int|float,region:str)->Tuple[float,float]:
@@ -96,6 +97,10 @@ def computation_reduced_CO2(energy_self_consum:int|float)->int|float: #energy in
   reduced_CO2=energy_self_consum*avg_emissions_factor 
   return reduced_CO2
 
+#saving of Prosumer
+def savings(energy_self_consumed:int|float)->int|float:
+   savings=energy_self_consumed*energy_price
+   return savings
 
 ##COMPUTATION OF SELF CONSUMPTION
 

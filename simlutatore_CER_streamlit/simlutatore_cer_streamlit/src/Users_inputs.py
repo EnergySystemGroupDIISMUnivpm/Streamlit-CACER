@@ -57,6 +57,10 @@ class User_input:
     know_where_PV=st.radio("Sai già dove costruire l'impianto?", options=["Si","No"], index=None, horizontal=True,key="know_PV_area" )
     return know_where_PV
  
+ def want_to_boost_PV(sefl)->str:
+    want_boost_PV=st.radio("Vuoi potenziare il tuo impianto?", options=["Si","No"], index=None, horizontal=True,key="boosting" )
+    return want_boost_PV
+ 
  def insert_comune(self)->str:
     comune=st.radio("Il comune dove hai l'impianto o dove vuoi costruirlo, ha meno di 5000 abitanti?", options=["Si","No"],index=None, horizontal=True,key="comune_inhabitants")
     return comune
@@ -73,31 +77,42 @@ class User_input:
              know_where_PV=None
       return know_where_PV,area_PV
  
- def presence_or_construction_PV(self)->Tuple[datetime.date|None,int|None,str|None,int|None,str|None]:
+ def presence_or_construction_PV(self)->Tuple[datetime.date|None,int|None,str|None,int|None,str|None,str|None]:
      presence_PV_plant=st.radio("Hai già un impianto PV", options=["Si","No"],index=None, horizontal=True, key="presence_PV" )
      if presence_PV_plant=="Si":
         year_PV,power_PV=self.insert_year_power_PV()
         area_PV=None
         know_where_PV=None
-        if year_PV < (datetime.datetime.strptime("16/12/2021", "%d/%m/%Y").date()):
-           st.markdown("Siamo spiacenti ma non è possibile prendere incentivi su questa UP *(DECRETO CACER e TIAD, Regole operative per l’accesso al servizio per l’autoconsumo diffuso e al contributo PNRR, Allegato 1, Parte II, capitolo1, sezione 1.2.1.2.c)*")
-           want_PV=self.want_to_install_PV()
-           know_where_PV,area_PV=self.elaboration_want_or_not_to_install_PV(want_PV)
+        comune=self.insert_comune()
+        want_boost_PV=self.want_to_boost_PV()
+        if want_boost_PV=="Si":
+           area_PV=self.insert_area()
+           outcome=self.area_same_POD_and_cabin_house()
+        elif want_boost_PV=="No":
+           outcome=self.area_same_POD_and_cabin_house()
+        else:
+           outcome=None
      elif presence_PV_plant=="No":
           year_PV=None
           power_PV=None
           want_PV=self.want_to_install_PV()
           know_where_PV,area_PV=self.elaboration_want_or_not_to_install_PV(want_PV)
+          if know_where_PV=="Si":
+            comune=self.insert_comune()
+            outcome=self.area_same_POD_and_cabin_house()
+          else:
+             comune="No" #default value for comune if the user doesn't know where to install PV
+             outcome=None
+             want_boost_PV=None
      else:
         year_PV=None
         power_PV=None
         area_PV=None
         know_where_PV=None
-     if presence_PV_plant=="Si" or know_where_PV=="Si":
-        comune=self.insert_comune
-     else:
+        want_boost_PV=None
+        outcome=None 
         comune=None
-     return year_PV,power_PV,know_where_PV,area_PV,comune
+     return year_PV,power_PV,know_where_PV,area_PV,comune, outcome
  
 #user: "Cittadino"
 class Cittadino_input (User_input):
@@ -105,13 +120,13 @@ class Cittadino_input (User_input):
         super().__init__(type)  
         
  def insert_POD_house(self)->str:  
-    same_POD_house=st.radio("L'area dove costruire l'impianto, ha lo stesso POD di casa tua", options=["Si","No"],index=None, horizontal=True, key="POD_area_house" )
+    same_POD_house=st.radio("L'area dove hai o vuoi costruire l'impianto, ha lo stesso POD di casa tua?", options=["Si","No"],index=None, horizontal=True, key="POD_area_house" )
     return same_POD_house
       
  def area_same_POD_and_cabin_house(self)->str:
       same_POD_house=self.insert_POD_house()
       if same_POD_house=="No":
-       same_Cabina_house=st.radio("L'area dove costruire l'impianto, è nella stessa cabina primaria di casa tua", options=["Si","No"],index=None, horizontal=True, key="cabina_area_house" )
+       same_Cabina_house=st.radio("L'area dove hai o vuoi costruire l'impianto, è nella stessa cabina primaria di casa tua", options=["Si","No"],index=None, horizontal=True, key="cabina_area_house" )
        if same_Cabina_house=="No":
           st.write("Siamo spiacenti ma non puoi accedere agli incentivi. Secondo il DECRETO CACER e TIAD puoi prendere incentivi solo su PV che sono sotto la stessa cabina primaria dell'utenza") #to be defined
           outcome="No_incentives"

@@ -70,7 +70,8 @@ class Cittadino_output(User_output):
             implant_cost=self.comput_cost_plant(area_PV)
             self_consumption=self.self_consumption(annual_consumption,region,power_peak)
             overproduction=self.overproduction(annual_production,self_consumption)
-            benefit=int(round(self.CACER_benefit(overproduction,self_consumption,power_peak,region,comune)))
+            benefit,CO2=self.CACER_benefit(overproduction,self_consumption,power_peak,region,comune)
+            benefit=int(round(benefit))
             return annual_production,power_peak,implant_cost,self_consumption,overproduction,benefit
          if str(outcome)=="Prosumer":
             annual_production,power_peak=self.comput_annual_production_and_power_peak(area_PV,region)
@@ -83,7 +84,8 @@ class Cittadino_output(User_output):
                 In alternativa
                 </p>
                 ''', unsafe_allow_html=True)
-            benefit=self.CACER_benefit(overproduction,self_consumption,power_peak,region,comune)
+            benefit,CO2=self.CACER_benefit(overproduction,self_consumption,power_peak,region,comune)
+            benefit=int(round(benefit))
             return annual_production,power_peak,implant_cost,self_consumption,overproduction,saving
             
 

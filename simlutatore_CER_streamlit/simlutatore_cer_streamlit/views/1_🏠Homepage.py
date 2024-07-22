@@ -47,13 +47,15 @@ with col2:
     users=["Cittadino","Amministratore di condominio","Amministrazione pubblica"]
     st.session_state["user"]=st.selectbox("Seleziona il tipo di utente",users,index=None)
     user_input=User_input(f""" {st.session_state["user"]}""")
-    st.session_state["annual_consumption"]=user_input.insert_annual_consumption()
-    st.session_state["region"]=user_input.insert_region()
-    st.session_state["year_PV"],st.session_state["power_PV"],st.session_state["known_area"],st.session_state["area_PV"],st.session_state["comune_under_5000"]=user_input.presence_or_construction_PV()
-    if st.session_state["known_area"]=="No": 
-            st.markdown("<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>", unsafe_allow_html=True)
+
+    #CITTADINO
+    cittadino_input=Cittadino_input(f""" {st.session_state["user"]}""")
     if st.session_state["user"]=="Cittadino":
-        cittadino_input=Cittadino_input(f""" {st.session_state["user"]}""")
+        st.session_state["annual_consumption"]=cittadino_input.insert_annual_consumption()
+        st.session_state["region"]=cittadino_input.insert_region()
+        st.session_state["year_PV"],st.session_state["power_PV"],st.session_state["known_area"],st.session_state["area_PV"],st.session_state["comune_under_5000"]=cittadino_input.presence_or_construction_PV()
+        if st.session_state["known_area"]=="No": 
+                cittadino_input.visualize_results()
         if st.session_state["known_area"] != "No" and st.session_state["area_PV"] is not None:
             st.session_state["outcome_same_POD_cabin"]=cittadino_input.area_same_POD_and_cabin_house()
         

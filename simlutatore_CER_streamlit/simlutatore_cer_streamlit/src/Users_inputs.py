@@ -7,6 +7,9 @@ class User_input:
  def __init__(self, type):
   self.type=type
 
+ def visualize_results(self):
+    st.markdown("<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>", unsafe_allow_html=True) 
+
  def insert_annual_consumption(self)->int:
       annual_consumptiont=st.number_input("Seleziona i tuoi consumi annui", key="consumption", step=1, format="%d", help="Puoi trovare i tuoi consumi annui sulla tua bolletta, kWh")
       return annual_consumptiont
@@ -115,11 +118,11 @@ class Cittadino_input (User_input):
           return outcome
        elif same_Cabina_house=="Si":
          outcome="Calculate_cost_and_production"
-         st.markdown("<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>", unsafe_allow_html=True)
+         self.visualize_results()
          return outcome
       elif same_POD_house=="Si":
        outcome="Prosumer"
-       st.markdown("<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>", unsafe_allow_html=True)
+       self.visualize_results()
        return outcome
               
        

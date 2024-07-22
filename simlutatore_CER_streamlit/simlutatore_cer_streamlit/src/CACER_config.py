@@ -38,7 +38,10 @@ class groups_self_consumers(self_consumer):
 class CER(groups_self_consumers):
     def __init__(self, type):
         self.name = type
-
+   
+    #FUNZIONE SIMO
+    def CER_member(self,overproduction:int|float):
+        pass
         
     
           

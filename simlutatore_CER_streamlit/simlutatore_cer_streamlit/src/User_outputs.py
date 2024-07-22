@@ -63,7 +63,7 @@ class Cittadino_output(User_output):
     def __init__(self, type):
         super().__init__(type)  
         
-   
+    #SIMO
     def visualize_results_from_same_POD_and_cabin(self,outcome:str,area_PV:int,region:str,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float]:
          if str(outcome)=="Calculate_cost_and_production":
             annual_production,power_peak=self.comput_annual_production_and_power_peak(area_PV,region)
@@ -95,12 +95,14 @@ class Cittadino_output(User_output):
         st.markdown(f"""- Valuta la possibilità di diventare **Prosumer**, potresti risparmiare fino a {saving} € in un anno""")
         return saving
 
-                 
+
+    #SIMO             
     def CACER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float]:
         if overproduction>0:
             CER=CACER_config.CER("CER")
             benefit=CER.total_benefit(energy_self_consum,implant_power,region,comune)
-            self.enter_or_create_CER(benefit)
+            #members=CER.CER_member(overproduction)
+            self.enter_or_create_CER(benefit) 
         elif overproduction<=0:
             Group=CACER_config.groups_self_consumers("Group of self consumer")
             benefit=Group.total_benefit(energy_self_consum,implant_power,region,comune)

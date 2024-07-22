@@ -72,6 +72,8 @@ if st.session_state["user"]=="Cittadino":
                     st.session_state["power_peak"])
             st.session_state["overproduction"]=cittadino_output.overproduction(st.session_state["annual production"],
                                                                                 st.session_state["self_consump"])
+            
+            #SIMO
             st.session_state["benefit"]=cittadino_output.CACER_benefit(st.session_state["overproduction"],
                                                                         st.session_state["self_consump"],
                                                                         st.session_state["power_peak"],

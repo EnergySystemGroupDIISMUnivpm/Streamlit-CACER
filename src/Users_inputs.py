@@ -5,19 +5,18 @@ from typing import Tuple
 
 # class with methods common to all users
 class UserInput:
-    PV = False
-
-    def __init__(self, type):
+ 
+     def __init__(self, type):
         self.type = type
         self.PV = True
 
-    def visualize_results(self):
+     def visualize_results(self):
         st.markdown(
             "<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>",
             unsafe_allow_html=True,
         )
 
-    def insert_annual_consumption(self) -> int:
+     def insert_annual_consumption(self) -> int:
         annual_consumptiont = st.number_input(
             "Seleziona i tuoi consumi annui",
             key="consumption",
@@ -27,7 +26,7 @@ class UserInput:
         )
         return annual_consumptiont
 
-    def insert_region(self) -> str:
+     def insert_region(self) -> str:
         regions = [
             "Piemonte",
             "Valle d'Aosta",
@@ -53,7 +52,7 @@ class UserInput:
         region = st.selectbox("Seleziona la tua regione", regions, index=None)
         return region
 
-    def insert_area(self) -> int:
+     def insert_area(self) -> int:
         area_PV = st.number_input(
             "Inserisci le dimensioni dell'area in cui costruire l'impianto",
             key="PV_area_dim",
@@ -62,7 +61,7 @@ class UserInput:
         )
         return area_PV
 
-    def insert_year_power_PV(self) -> Tuple[datetime.date, int]:
+     def insert_year_power_PV(self) -> Tuple[datetime.date, int]:
         year_PV = st.date_input(
             "Inserisci la data di entrata in esercizio dell'impianto PV",
             format="DD/MM/YYYY",
@@ -73,7 +72,7 @@ class UserInput:
         )
         return year_PV, power_PV
 
-    def want_to_install_PV(self) -> str:
+     def want_to_install_PV(self) -> str:
         want_PV = st.radio(
             "Vuoi costruire un impianto PV?",
             options=["Si", "No"],
@@ -112,7 +111,7 @@ class UserInput:
             )
         return want_PV
 
-    def know_where_to_install_PV(self) -> str:
+     def know_where_to_install_PV(self) -> str:
         know_where_PV = st.radio(
             "Sai già dove costruire l'impianto?",
             options=["Si", "No"],
@@ -122,7 +121,7 @@ class UserInput:
         )
         return know_where_PV
 
-    def want_to_boost_PV(self) -> str:
+     def want_to_boost_PV(self) -> str:
         want_boost_PV = st.radio(
             "Vuoi potenziare il tuo impianto?",
             options=["Si", "No"],
@@ -132,7 +131,7 @@ class UserInput:
         )
         return want_boost_PV
 
-    def insert_comune(self) -> str:
+     def insert_comune(self) -> str:
         comune = st.radio(
             "Il comune dove hai l'impianto o dove vuoi costruirlo, ha meno di 5000 abitanti?",
             options=["Si", "No"],
@@ -142,7 +141,7 @@ class UserInput:
         )
         return comune
 
-    def elaboration_want_or_not_to_install_PV(
+     def elaboration_want_or_not_to_install_PV(
         self, want_PV: str
     ) -> Tuple[str | None, int | None]:
         if want_PV == "Si":
@@ -156,7 +155,7 @@ class UserInput:
             know_where_PV = None
         return know_where_PV, area_PV
 
-    def presence_or_construction_PV(
+     def presence_or_construction_PV(
         self,
     ) -> Tuple[
         datetime.date | None, int | None, str | None, int | None, str | None, str | None
@@ -243,7 +242,3 @@ class CittadinoInput(UserInput):
             outcome = "Prosumer"
             self.visualize_results()
             return outcome
-
-
-a = UserInput("Cittadino")
-pass

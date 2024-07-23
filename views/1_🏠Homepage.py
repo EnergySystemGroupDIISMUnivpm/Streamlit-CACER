@@ -6,6 +6,7 @@ src_path = str(Path(__file__).parents[1] / "src")
 sys.path.append(src_path)
 
 from Users_inputs import UserInput, CittadinoInput
+from session_state_variables import default_values_homepage
 
 # CONFIGURATION OF STREAMLIT PAGE
 st.set_page_config(
@@ -59,3 +60,5 @@ with col2:
             st.session_state["known_area"] == "No"
         ):  # when user want to install PV but doesn't know area
             cittadino_input.visualize_results()
+
+    

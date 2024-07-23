@@ -2,6 +2,8 @@ enea.exe-win32-x64
 # Created by https://www.toptal.com/developers/gitignore/api/linux,visualstudiocode,windows,python,data
 # Edit at https://www.toptal.com/developers/gitignore?templates=linux,visualstudiocode,windows,python,data
 
+.python-version
+
 ### Data ###
 *.dat
 *.efx

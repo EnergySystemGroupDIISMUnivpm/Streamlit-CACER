@@ -32,6 +32,8 @@ if "self_consump" not in st.session_state:
      st.session_state["self_consump"]=""
 if "members" not in st.session_state:
      st.session_state["members"]=""
+if "CO2" not in st.session_state:
+     st.session_state["CO2"]=None
 
 
 #title 
@@ -75,8 +77,7 @@ if st.session_state["user"]=="Cittadino":
             st.session_state["overproduction"]=cittadino_output.overproduction(st.session_state["annual production"],
                                                                                 st.session_state["self_consump"])
             
-            #SIMO
-            st.session_state["benefit"]=cittadino_output.CACER_benefit(st.session_state["overproduction"],
+            st.session_state["benefit"],st.session_state["CO2"],st.session_state["members"]==cittadino_output.CACER_benefit(st.session_state["overproduction"],
                                                                         st.session_state["self_consump"],
                                                                         st.session_state["power_peak"],
                                                                         st.session_state["region"],

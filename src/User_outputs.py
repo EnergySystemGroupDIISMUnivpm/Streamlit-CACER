@@ -100,7 +100,7 @@ class Cittadino_output(User_output):
         return saving
 
             
-    def CACER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float]:
+    def CACER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float,dict]:
         if overproduction>0:
             CER=CACER_config.CER("CER")
             benefit=CER.total_benefit(energy_self_consum,implant_power,region,comune)

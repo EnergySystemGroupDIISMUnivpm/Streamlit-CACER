@@ -79,14 +79,17 @@ def incentive_self_consumption(energy_self_consum:int|float,implant_power:int|fl
     tariff=120 + ARERA_valorisation #max of tariff with power <200 KW
    elif implant_power<600:
     tariff=110 + ARERA_valorisation #max of tariff with power <600 KW
+   elif implant_power<1000:
+    tariff=100 + ARERA_valorisation #max of tariff with power <600 KW
    else:
-    tariff=100 + ARERA_valorisation #max of tariff with power >600 KW
+      tariff=ARERA_valorisation
     #tariff increase depending on the area
-   if region in ["Lazio","Marche","Toscana","Umbria","Abruzzo"]:
-    tariff=tariff+4 
-   elif region in ["Emilia-Romagna","Friuli-Venezia Giulia","Liguria","Lombardia","Piemonte","Veneto","Trentino-Alto Adige","Valle d'Aosta"]:
-    tariff=tariff+10
-    benefit=tariff*energy_self_consum 
+   if implant_power<1000: 
+    if region in ["Lazio","Marche","Toscana","Umbria","Abruzzo"]:
+        tariff=tariff+4 
+    elif region in ["Emilia-Romagna","Friuli-Venezia Giulia","Liguria","Lombardia","Piemonte","Veneto","Trentino-Alto Adige","Valle d'Aosta"]:
+        tariff=tariff+10
+   benefit=tariff*energy_self_consum 
    return int(round(benefit))
 
 #incentive on CER and Groups of self-consumers in municipalities with < 5000 inhabitants

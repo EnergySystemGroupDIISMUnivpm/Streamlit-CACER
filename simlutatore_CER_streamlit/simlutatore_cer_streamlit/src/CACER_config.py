@@ -3,6 +3,7 @@ import os
 src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.append(src_path)
 import computations
+from typing import Dict, Tuple
 
 #common to all types of CACER
 #auconsumatore a distanza
@@ -39,9 +40,10 @@ class CER(groups_self_consumers):
     def __init__(self, type):
         self.name = type
    
-    #FUNZIONE SIMO
-    def CER_member(self,overproduction:int|float):
-        pass
+    #computation optimal members
+    def CER_member(self,overproduction:int|float)-> Dict[str, int]:
+        members=computations.find_optimal_members(overproduction)
+        return members
         
     
           

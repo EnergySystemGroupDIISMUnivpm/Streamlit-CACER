@@ -30,6 +30,8 @@ if "avg_time_overproduction" not in st.session_state:
      st.session_state["avg_time_overproduction"]=""
 if "self_consump" not in st.session_state:
      st.session_state["self_consump"]=""
+if "members" not in st.session_state:
+     st.session_state["members"]=""
 
 
 #title 
@@ -81,7 +83,7 @@ if st.session_state["user"]=="Cittadino":
                                                                         st.session_state["comune_under_5000"])
 
         if st.session_state["outcome_same_POD_cabin"]!=None: #when the user knows the area where to install PV and all inputs have been inserted
-                st.session_state["annual production"], st.session_state["power_peak"],st.session_state["impiant_cost"],st.session_state["self_consump"],st.session_state["overproduction"],st.session_state["benefit"]= cittadino_output.visualize_results_from_same_POD_and_cabin(
+                st.session_state["annual production"], st.session_state["power_peak"],st.session_state["impiant_cost"],st.session_state["self_consump"],st.session_state["overproduction"],st.session_state["benefit"],st.session_state["members"]= cittadino_output.visualize_results_from_same_POD_and_cabin(
                     st.session_state["outcome_same_POD_cabin"], 
                     st.session_state["area_PV"], 
                     st.session_state["region"],

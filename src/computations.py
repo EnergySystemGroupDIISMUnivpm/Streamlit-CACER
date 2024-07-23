@@ -118,6 +118,22 @@ def incentive_self_consumption(
         benefit = tariff * energy_self_consum
     return int(round(benefit))
 
+<<<<<<< HEAD
+=======
+#incentive on CER and Groups of self-consumers in municipalities with < 5000 inhabitants
+def incentive_municipality(implant_power:int|float)->int|float:#implant power in kW
+   if implant_power < 20: #power < 20kW
+    benefit=1500*implant_power 
+   elif implant_power < 200: #power < 200kW
+    benefit=1200*implant_power
+   elif implant_power < 600: #power < 600kW
+    benefit=1100*implant_power
+   elif implant_power<1000:
+    benefit=1050*implant_power #power <1000kW
+   else:
+      benefit=0
+   return int(round(benefit))
+>>>>>>> faaaf49 (moved streamlit state variables to another file)
 
 # incentive on CER and Groups of self-consumers in municipalities with < 5000 inhabitants
 def incentive_municipality(

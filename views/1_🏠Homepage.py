@@ -1,11 +1,15 @@
 import streamlit as st
 import sys
 import os
-src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'enea-simulatore-cer'))
+
+# Aggiungi la directory 'src' al percorso di ricerca dei moduli
+src_path = os.path.join(project_root, 'src')
 sys.path.append(src_path)
+print(sys.path, "-------------", src_path)
+
+from session_state_variables import default_values_homepage
 from Users_inputs import User_input, Cittadino_input
-
-
 
 #CONFIGURATION OF STREAMLIT PAGE
 st.set_page_config(
@@ -16,26 +20,9 @@ st.set_page_config(
     )   
 
 #DEFINITION OF SESSION STATE VARIABLES
-if "user" not in st.session_state:
-    st.session_state["user"]=""
-if "annual_consumption" not in st.session_state:
-    st.session_state["annual_consumption"]=""
-if "region" not in st.session_state:
-    st.session_state["region"]=""
-if "year_PV" not in st.session_state:
-    st.session_state["year_PV"]=None
-if "power_PV" not in st.session_state:
-    st.session_state["power_PV"]=""
-if "area_PV" not in st.session_state:
-    st.session_state["area_PV"]=""
-if "comune_under_5000" not in st.session_state:
-    st.session_state["comune_under_5000"]="No"
-if "outcome_same_POD_cabin" not in st.session_state:
-    st.session_state["outcome_same_POD_cabin"]=None
-if "known_area" not in st.session_state:
-    st.session_state["known_area"]=None
-if "want_boosting" not in st.session_state:
-    st.session_state["want_boosting"]=None
+for key, value in default_values_homepage.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 
 

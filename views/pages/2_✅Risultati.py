@@ -1,6 +1,7 @@
 import streamlit as st
 import sys
 import os
+from src.session_state_variables import default_values_Risultati
 src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.append(src_path)
 import User_outputs
@@ -14,26 +15,9 @@ st.set_page_config(
     )   
 
 #session state variables
-if "annual production" not in st.session_state:
-    st.session_state["annual production"]=""
-if "impiant_cost" not in st.session_state:
-    st.session_state["impiant_cost"]=""
-if "optimal_dim" not in st.session_state:
-     st.session_state["optimal_dim"]=""
-if "power_peak" not in st.session_state:
-      st.session_state["power_peak"]=""
-if "overproduction" not in st.session_state:
-      st.session_state["overproduction"]=""
-if "benefit" not in st.session_state:
-      st.session_state["benefit"]=""
-if "avg_time_overproduction" not in st.session_state:
-     st.session_state["avg_time_overproduction"]=""
-if "self_consump" not in st.session_state:
-     st.session_state["self_consump"]=""
-if "members" not in st.session_state:
-     st.session_state["members"]=""
-if "CO2" not in st.session_state:
-     st.session_state["CO2"]=None
+for key, value in default_values_Risultati.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 
 #title 

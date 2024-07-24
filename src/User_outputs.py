@@ -48,10 +48,7 @@ class User_output():
          st.markdown(f"""- Abbiamo stimato che potresti costuire un impianto che ti farebbe raggiungere {overproduction} kWh/anno di **sovraproduzione** nelle ore centrali della giornata""")
         return overproduction
     
-    def visit_FAQ(self):
-        st.markdown("""<br>""",unsafe_allow_html=True)         
-        st.markdown("""Per maggiori informazioni visita la sezione *❓FAQ*""")
-    
+ 
     def CO2_reducted(self,energy_self_consum:int|float):
         CO2=int(round(computations.computation_reduced_CO2(energy_self_consum)))
         st.markdown(f"""- Inoltre ridurresti la tua **produzione di CO2** di {CO2} kg CO2/kWh""")

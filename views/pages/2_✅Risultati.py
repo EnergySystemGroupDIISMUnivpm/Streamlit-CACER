@@ -39,6 +39,8 @@ st.markdown(
     </style>
     <div class="bottom-right">
         Attenzione! Tutti i dati che vedi sono da intendersi come stime.
+        <br>
+        Per maggiori informazioni visita la sezione ❓FAQ
     </div>
     """,
     unsafe_allow_html=True

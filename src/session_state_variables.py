@@ -11,6 +11,7 @@ default_values_homepage = {
     "outcome_same_POD_cabin": None,
     "known_area": None,
     "want_boosting": None,
+    "percentage_daytime":None
 }
 
 default_values_Risultati = {

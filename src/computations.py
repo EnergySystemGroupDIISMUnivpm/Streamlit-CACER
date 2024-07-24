@@ -80,17 +80,21 @@ def computation_installation_cost(P_installable: float) -> float:
 
 # computation optimal PV dimension based on annual consumption and region (region necessary to know the irradiance)
 def computation_optimal_dimension(
-    annual_consumption: int | float, region: str
+    annual_consumption: int | float, region: str, percentage_daytime_consum:str
 ) -> int | float:
     efficiency = 0.2  # efficiency of PV panel, it can vary
-    coverage_score = 0.7  # how much of annual consumption must be covered by PV, in general it is suggested to be around 70%
+    coverage_mapping = {
+    "Poco": 0.25,
+    "Mediamente": 0.50,
+    "Molto": 0.75
+     }
+    coverage_score = coverage_mapping[percentage_daytime_consum]  # how much of annual consumption must be covered by PV
     required_PV_energy = annual_consumption * coverage_score
     if region not in Irradiance:
         raise ValueError(
             f"Regione '{region}' non trovata nel dizionario di irradiance."
         )
     PV_dimension = required_PV_energy / (Irradiance[region] * efficiency * loss_factor)
-    PV_dimension = PV_dimension / area_usable_percentage  # area necessary
     return PV_dimension
 
 

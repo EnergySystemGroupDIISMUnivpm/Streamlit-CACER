@@ -201,6 +201,12 @@ class UserInput:
             outcome = None
             comune = None
         return year_PV, power_PV, know_where_PV, area_PV, comune, outcome
+     
+     def insert_percentage_daytime_consumption(self)->str:
+         percentage_consump=st.selectbox(
+        "In una giornata tipo, consumi di più di giorno che di notte?", options=["Molto","Mediamente","Poco"], index=None, key="daytime_consump"
+    )
+         return percentage_consump
 
 
 # user: "Cittadino"

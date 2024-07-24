@@ -12,7 +12,8 @@ import pandas as pd
 class User_output():
     def __init__(self, type):
         self.name = type
-
+    def visit_FAQ(self):
+        st.markdown("Per maggiorni informazioni visita la sezione ❓FAQ")
     def comput_annual_production_from_area_and_power_peak(self,area_PV:int,region:str)->Tuple[int, int]:
         annual_production,installable_power=computations.computation_annual_production_from_area(area_PV,region)
         annual_production=int(round(annual_production))
@@ -31,8 +32,8 @@ class User_output():
         st.markdown(f"""- **Il costo dell'installazione** dell'impianto sarebbe approssimatamente {impiant_cost} €""")
         return impiant_cost
     
-    def optimal_dimension(self,annual_comsumption:int,region:str)->int:
-        optimal_dim=int(round(computations.computation_optimal_dimension(annual_comsumption,region)))
+    def optimal_dimension(self,annual_comsumption:int,region:str,percentage_daytime_consum:str)->int:
+        optimal_dim=int(round(computations.computation_optimal_dimension(annual_comsumption,region,percentage_daytime_consum)))
         st.markdown(f"""- **L'area ottima**  del tuo impianto sarebbe di {optimal_dim} m²""")
         return optimal_dim
     
@@ -124,6 +125,10 @@ class Cittadino_output(User_output):
             benefit,CO2=self.self_consumer_benefit(overproduction,energy_self_consum,implant_power,region,comune)
             members={}
         return benefit,CO2,members
+    
+    def info_possibility_CER(self):
+        st.markdown("- Puoi valutare la possibilità di accedere o costituire una CER. In una CER, se dovessi avere un eccesso di energia prodotta, potresti condividerla con gli altri membri della CER e ricevedere degli incentivi.")
+        self.visit_FAQ()
 
 
 

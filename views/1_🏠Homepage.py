@@ -44,18 +44,18 @@ with col2:
     # CITTADINO
     cittadino_input = CittadinoInput(f""" {st.session_state["user"]}""")
     if st.session_state["user"] == "Cittadino":
-        st.session_state["annual_consumption"] = (
-            cittadino_input.insert_annual_consumption()
-        )
+        st.session_state["annual_consumption"] = cittadino_input.insert_annual_consumption()
+        st.session_state["percentage_daytime"]=cittadino_input.insert_percentage_daytime_consumption()
         st.session_state["region"] = cittadino_input.insert_region()
-        (
-            st.session_state["year_PV"],
+
+        (st.session_state["year_PV"],
             st.session_state["power_PV"],
             st.session_state["known_area"],
             st.session_state["area_PV"],
             st.session_state["comune_under_5000"],
             st.session_state["outcome_same_POD_cabin"],
         ) = cittadino_input.presence_or_construction_PV()
+
         if (
             st.session_state["known_area"] == "No"
         ):  # when user want to install PV but doesn't know area

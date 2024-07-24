@@ -184,6 +184,8 @@ class UserInput:
             if know_where_PV == "Si": #if user knows the area 
                 comune = self.insert_comune()
                 outcome = self.area_same_POD_and_cabin_house()
+            elif know_where_PV=="No":
+                self.visualize_results()
         return year_PV, power_PV, know_where_PV, area_PV, comune, outcome
      
      def insert_percentage_daytime_consumption(self)->str:

@@ -56,9 +56,5 @@ with col2:
             st.session_state["outcome_same_POD_cabin"],
         ) = cittadino_input.presence_or_construction_PV()
 
-        if (
-            st.session_state["known_area"] == "No"
-        ):  # when user want to install PV but doesn't know area
-            cittadino_input.visualize_results()
 
     

@@ -13,12 +13,17 @@ class User_output():
     def __init__(self, type):
         self.name = type
 
-    def comput_annual_production_and_power_peak(self,area_PV:int,region:str)->Tuple[int, int]:
-        annual_production,installable_power=computations.computation_annual_production(area_PV,region)
+    def comput_annual_production_from_area_and_power_peak(self,area_PV:int,region:str)->Tuple[int, int]:
+        annual_production,installable_power=computations.computation_annual_production_from_area(area_PV,region)
         annual_production=int(round(annual_production))
         installable_power=int(round(installable_power))
         st.markdown(f"""- Con i dati che hai fornito, potresti costuire un impianto PV da {installable_power} kWp di **potenza di picco** e che potrebbe generare un **quantitativo di energia elettrica in un anno** pari a {annual_production} kWh/anno""")
         return annual_production, installable_power
+    
+    def comput_annual_production_from_power(self,power:int|float,region:str)->int|float:
+        annual_production=int(round(computations.computation_annual_production_from_power(power,region)))
+        st.markdown(f"""- Con il tuo impianto potresti produrre circa **{annual_production} kWh** all'anno""")
+        return annual_production
 
     
     def comput_cost_plant(self,installable_power:int|float)->int:
@@ -61,58 +66,68 @@ class User_output():
         st.markdown(f"""- Valuta la possibilità di entrare a fare parte o creare un **Gruppo di Autoconsumatori**, potresti ricevere fino a **{benefit}€** all'anno di incentivi""")
     def create_Self_consum(self,benefit:float|int):
         st.markdown(f"""- Valuta la possibilità di diventare un **Autoconsumatore a distanza**, potresti ricevere fino a **{benefit}€** all'anno di incentivi""")
-         
-#user: "Cittadino"     
-class Cittadino_output(User_output):
-    def __init__(self, type):
-        super().__init__(type)  
-        
 
-    def visualize_results_from_same_POD_and_cabin(self,outcome:str,area_PV:int,region:str,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float,dict]:
-         if str(outcome)=="Calculate_cost_and_production":
-            annual_production,power_peak=self.comput_annual_production_and_power_peak(area_PV,region)
-            implant_cost=self.comput_cost_plant(area_PV)
-            self_consumption=self.self_consumption(annual_consumption,region,power_peak)
-            overproduction=self.overproduction(annual_production,self_consumption)
-            benefit,CO2,members=self.CACER_benefit(overproduction,self_consumption,power_peak,region,comune)
-            benefit=int(round(benefit))
-            return annual_production,power_peak,implant_cost,self_consumption,overproduction,benefit,members
-         if str(outcome)=="Prosumer":
-            annual_production,power_peak=self.comput_annual_production_and_power_peak(area_PV,region)
-            implant_cost=self.comput_cost_plant(area_PV)
-            self_consumption=self.self_consumption(annual_consumption,region,power_peak)
-            overproduction=self.overproduction(annual_production,self_consumption)
-            saving=self.Prosumer(self_consumption)
-            st.markdown('''
-                <p style="margin-left: 20px; font-style: italic;">
-                In alternativa
-                </p>
-                ''', unsafe_allow_html=True)
-            benefit,CO2,members=self.CACER_benefit(overproduction,self_consumption,power_peak,region,comune)
-            benefit=int(round(benefit))
-            return annual_production,power_peak,implant_cost,self_consumption,overproduction,saving,members
-            
-
-             
     def Prosumer(self,energy_self_consumed:int|float)->int:
         saving=int(round(computations.savings(energy_self_consumed)))
         st.markdown(f"""- Valuta la possibilità di diventare **Prosumer**, potresti risparmiare fino a {saving} € in un anno""")
         return saving
 
             
-    def CACER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float,dict]:
-        if overproduction>0:
+    def CER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float,dict]:
             CER=CACER_config.CER("CER")
-            benefit=CER.total_benefit(energy_self_consum,implant_power,region,comune)
+            total_energy=energy_self_consum+overproduction
+            benefit=CER.total_benefit(total_energy,implant_power,region,comune)
             members=CER.CER_member(overproduction)
-            self.enter_or_create_CER(benefit,members) 
-        elif overproduction<=0:
+            self.enter_or_create_CER(benefit,members)
+            CO2=self.CO2_reducted(energy_self_consum)
+            return benefit,CO2,members
+
+    def self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float]:        
             self_cons=CACER_config.self_consumer("Self consumer")
             benefit=self_cons.benefit_autoconsumed_energy(energy_self_consum,implant_power,region)
             self.create_Self_consum(benefit)
+            CO2=self.CO2_reducted(energy_self_consum)
+            return benefit,CO2    
+    
+        #depending on the fact that the user has already a PV or only knows the area where to build it, calculated the annual production, implant cost and  PV power 
+    def determine_solar_plant_output(self,area_PV:int|None,region:str,annual_consumption:int|float,power:int|float|None)->Tuple[int|float,int|float|None,int|float]:
+         if area_PV!=None:
+             annual_production,power_peak=self.comput_annual_production_from_area_and_power_peak(area_PV,region)
+             implant_cost=self.comput_cost_plant(area_PV)
+             power=power_peak
+         else:
+                annual_production=self.comput_annual_production_from_power(power,region)
+                implant_cost=None  
+         return annual_production, implant_cost, power
+    
+#user: "Cittadino"     
+class Cittadino_output(User_output):
+    def __init__(self, type):
+        super().__init__(type)  
+       
+        
+   #depending on the fact that the user area or PV is in the same POD of its house, it is calculated the benefits only as CACER member (not same POD) or as Prosumer and altenratively as CER member(same POD)
+   #the fact that the POD is the same or not depends on outcome. 
+    def visualize_results_from_same_POD_and_cabin(self,outcome:str,area_PV:int|None,power:int|float|None,region:str,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float,dict]:     
+         annual_production, implant_cost, power=self.determine_solar_plant_output(area_PV,region,annual_consumption,power)
+         self_consumption=self.self_consumption(annual_consumption,region,power)
+         overproduction=self.overproduction(annual_production,self_consumption) 
+         if str(outcome)=="Calculate_cost_and_production":
+             benefit,CO2,members=self.CER_or_self_consumer_benefit(overproduction,self_consumption,power,region,comune)
+             benefit=int(round(benefit))
+         if str(outcome)=="Prosumer":
+            benefit,CO2,members=self.CER_benefit(overproduction,self_consumption,power,region,comune)
+            saving=self.Prosumer(self_consumption)
+         return annual_production,power,implant_cost,self_consumption,overproduction,benefit,members
+            
+    def CER_or_self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float,dict]:
+        if overproduction>0:
+            benefit,CO2,members=self.CER_benefit(overproduction,energy_self_consum,implant_power,region,comune)
+        elif overproduction<=0:
+            benefit,CO2=self.self_consumer_benefit(overproduction,energy_self_consum,implant_power,region,comune)
             members={}
-        CO2=self.CO2_reducted(energy_self_consum)
-        self.visit_FAQ()
         return benefit,CO2,members
+
+
 
 

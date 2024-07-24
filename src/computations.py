@@ -45,7 +45,7 @@ energy_price = 0.25  # 0.25 euro/kWh
 
 
 # COMPUTATION OF ANNUAL PRODUCTION DEPENDING ON REGION (to know the irradiance) AND AVAILABLE AREA
-def computation_annual_production(
+def computation_annual_production_from_area(
     area_PV: int | float, region: str
 ) -> Tuple[float, float]:
     Area_eff = area_usable_percentage * area_PV
@@ -60,6 +60,15 @@ def computation_annual_production(
     )  # energy in kWh/year formula from https://www.sunbasedata.com/blog/how-to-calculate-solar-panel-output
     P_installable = (Area_eff / Area_one_PV) * Power_peak
     return Energy_year, P_installable
+
+def computation_annual_production_from_power(power:int|float,region:str)->int|float:
+    if region not in Irradiance:
+        raise ValueError(
+            f"Regione '{region}' non trovata nel dizionario di irradiance."
+        )
+    irradiance = Irradiance[region]
+    Energy_year=power*irradiance*loss_factor
+    return Energy_year
 
 
 # computation of intallation costs based on installable power

@@ -155,6 +155,7 @@ class UserInput:
             know_where_PV = None
         return know_where_PV, area_PV
 
+
      def presence_or_construction_PV(
         self,
     ) -> Tuple[
@@ -167,39 +168,22 @@ class UserInput:
             horizontal=True,
             key="presence_PV",
         )
-        if presence_PV_plant == "Si":
+        year_PV, power_PV, area_PV, know_where_PV, comune, outcome = (None, None, None, None, None, None)
+        if presence_PV_plant == "Si": #if the user has PV
             year_PV, power_PV = self.insert_year_power_PV()
-            area_PV = None
-            know_where_PV = None
             comune = self.insert_comune()
             want_boost_PV = self.want_to_boost_PV()
-            if want_boost_PV == "Si":
+            if want_boost_PV == "Si": #if user want to boost PV
                 area_PV = self.insert_area()
                 outcome = self.area_same_POD_and_cabin_house()
             elif want_boost_PV == "No":
                 outcome = self.area_same_POD_and_cabin_house()
-            else:
-                outcome = None
-        elif presence_PV_plant == "No":
-            year_PV = None
-            power_PV = None
+        elif presence_PV_plant == "No": #user dosent't have PV
             want_PV = self.want_to_install_PV()
             know_where_PV, area_PV = self.elaboration_want_or_not_to_install_PV(want_PV)
-            if know_where_PV == "Si":
+            if know_where_PV == "Si": #if user knows the area 
                 comune = self.insert_comune()
                 outcome = self.area_same_POD_and_cabin_house()
-            else:
-                comune = "No"  # default value for comune if the user doesn't know where to install PV
-                outcome = None
-                want_boost_PV = None
-        else:
-            year_PV = None
-            power_PV = None
-            area_PV = None
-            know_where_PV = None
-            want_boost_PV = None
-            outcome = None
-            comune = None
         return year_PV, power_PV, know_where_PV, area_PV, comune, outcome
      
      def insert_percentage_daytime_consumption(self)->str:

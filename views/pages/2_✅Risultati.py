@@ -75,11 +75,13 @@ if st.session_state["user"]=="Cittadino":
                     st.session_state["comune_under_5000"])
     
     if st.session_state["year_PV"]!=None: #the user has PV   
-            st.session_state["annual production"]=cittadino_output.comput_annual_production_from_power(st.session_state["power_PV"],st.session_state["region"]) 
+            st.session_state["annual production"]=cittadino_output.comput_annual_production_from_power(st.session_state["power_PV"]+st.session_state["boosting_power"],st.session_state["region"]) 
+            #print(st.session_state["annual production"])
+            #__import__('ipdb').set_trace()
             st.session_state["self_consump"]= cittadino_output.self_consumption(
                     st.session_state["annual_consumption"],
-                    st.session_state["region"],
-                    st.session_state["power_PV"])
+                    st.session_state["percentage_daytime"],
+                    st.session_state["annual production"])
             st.session_state["overproduction"]=cittadino_output.overproduction(st.session_state["annual production"],
                                                                                 st.session_state["self_consump"])
             

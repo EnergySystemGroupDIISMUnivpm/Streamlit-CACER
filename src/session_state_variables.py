@@ -12,7 +12,7 @@ default_values_homepage = {
     "known_area": None,
     "want_boosting": None,
     "percentage_daytime":None,
-    "boosting_power":None
+    "boosting_power":0
       }
 
 default_values_Risultati = {

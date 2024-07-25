@@ -174,7 +174,7 @@ class UserInput:
             horizontal=True,
             key="presence_PV",
         )
-        year_PV, power_PV, boosting_power, area_PV, know_where_PV, comune, user_choice = (None, None, None,None, None, None, None)
+        year_PV, power_PV, boosting_power, area_PV, know_where_PV, comune, user_choice = (None, None, 0,None, None, None, None)
         if presence_PV_plant == "Si": #if the user has PV
             year_PV, power_PV = self.insert_year_power_PV()
             comune = self.insert_comune()

@@ -1,6 +1,7 @@
 import pandas as pd
 from typing import Dict, Tuple
 from pathlib import Path
+import datetime
 
 PATH_RESOURCES = Path(__file__).parents[1] / "resources"
 
@@ -93,7 +94,7 @@ def computation_optimal_dimension(
 
 ##INCENTIVES
   #incentive on self-consumed energy as defined in decreto MASE 07/12/2023
-def incentive_self_consumption(energy_self_consum:int|float,implant_power:int|float,region:str)->int|float: #energy and implant power in kWh,kW
+def incentive_self_consumption(energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date|None,region:str)->int|float: #energy and implant power in kWh,kW
    ARERA_valorisation=8 #valorisation of ARERA, it can vary, generally is around 8 euro/MWh. 
    energy_self_consum=energy_self_consum/1000 #conversion in MWh
    #tariff definition
@@ -112,6 +113,8 @@ def incentive_self_consumption(energy_self_consum:int|float,implant_power:int|fl
     elif region in ["Emilia-Romagna","Friuli-Venezia Giulia","Liguria","Lombardia","Piemonte","Veneto","Trentino-Alto Adige","Valle d'Aosta"]:
         tariff=tariff+10
    benefit=tariff*energy_self_consum 
+   if implant_year<(datetime.datetime.strptime("16/12/2021", "%d/%m/%Y").date()):
+      benefit=benefit*0.3
    return int(round(benefit))
 
 

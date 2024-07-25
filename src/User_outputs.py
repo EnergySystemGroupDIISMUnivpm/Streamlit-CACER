@@ -7,6 +7,7 @@ sys.path.append(src_path)
 import computations
 import CACER_config
 import pandas as pd
+import datetime
 
 #definition of class with methods in common with all users
 class User_output():
@@ -79,17 +80,17 @@ class User_output():
         st.markdown(f"""- Costruendo un impianto del genere, postresti **risparmiare in bolletta** fino a {saving} € in un anno""")
         return saving
           
-    def CER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,dict]:
+    def CER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date,region:str,comune:str)->Tuple[int|float,dict]:
             CER=CACER_config.CER("CER")
             total_energy=energy_self_consum+overproduction
-            benefit=CER.total_benefit(total_energy,implant_power,region,comune)
+            benefit=CER.total_benefit(total_energy,implant_power,implant_year,region,comune)
             members=CER.CER_member(overproduction)
             self.enter_or_create_CER(benefit,members)
             return benefit,members
 
-    def self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str)->Tuple[int|float]:        
+    def self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date,region:str)->Tuple[int|float]:        
             self_cons=CACER_config.self_consumer("Self consumer")
-            benefit=self_cons.benefit_autoconsumed_energy(energy_self_consum,implant_power,region)
+            benefit=self_cons.benefit_autoconsumed_energy(energy_self_consum,implant_power,implant_year,region)
             self.create_Self_consum(benefit)
             return benefit 
     
@@ -112,13 +113,13 @@ class Cittadino_output(User_output):
     def info_possibility_CER(self):
         st.markdown("- Puoi valutare la possibilità di accedere o costituire una CER. In una CER, se dovessi avere un eccesso di energia prodotta, potresti condividerla con gli altri membri della CER e ricevedere degli incentivi.")
         
-    def results_from_user_CACER_choice(self,choice:str,area_PV:int|None,power:int|float|None,region:str,percentage_daily_consump:float,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float,dict]:     
+    def results_from_user_CACER_choice(self,choice:str,area_PV:int|None,power:int|float|None,year_PV:datetime.date,region:str,percentage_daily_consump:float,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float,dict]:     
         annual_production, implant_cost, power=self.determine_solar_plant_output(area_PV,region,annual_consumption,power)
         self_consumption=self.self_consumption(annual_consumption,percentage_daily_consump,annual_production)
         overproduction=self.overproduction(annual_production,self_consumption) 
         members=None
         if choice=="CER":
-             benefit,members=self.CER_benefit(overproduction,self_consumption,power,region,comune)
+             benefit,members=self.CER_benefit(overproduction,self_consumption,power,year_PV,region,comune)
              benefit=int(round(benefit))
              self.CO2_reducted(self_consumption+overproduction)
              self.visit_FAQ()
@@ -127,7 +128,7 @@ class Cittadino_output(User_output):
              self.CO2_reducted(self_consumption)
              self.visit_FAQ()
         elif choice=="Autoconsumatore a distanza":
-             benefit=self.self_consumer_benefit(overproduction,self_consumption,power,region)
+             benefit=self.self_consumer_benefit(overproduction,self_consumption,power,year_PV,region)
              self.CO2_reducted(self_consumption)
              self.visit_FAQ()
         return annual_production,power,implant_cost,self_consumption,overproduction,benefit,members

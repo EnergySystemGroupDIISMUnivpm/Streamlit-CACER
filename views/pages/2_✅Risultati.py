@@ -61,29 +61,28 @@ if st.session_state["user"]=="Cittadino":
             st.session_state["benefit"]=cittadino_output.savings_bolletta_from_PV_construction(st.session_state["annual_consumption"])
             cittadino_output.info_possibility_CER()
             cittadino_output.visit_FAQ()
-            
-           
           
         if st.session_state["user_CACER_choice"]!=None: #when the user knows the area where to install PV 
                 st.session_state["annual production"], st.session_state["power_peak"],st.session_state["impiant_cost"],st.session_state["self_consump"],st.session_state["overproduction"],st.session_state["benefit"],st.session_state["members"]= cittadino_output.results_from_user_CACER_choice(
                     st.session_state["user_CACER_choice"], 
                     st.session_state["area_PV"],
                     st.session_state["power_PV"],
+                    st.session_state["year_PV"],
                     st.session_state["region"],
                     st.session_state["percentage_daytime"],
                     st.session_state["annual_consumption"],
                     st.session_state["comune_under_5000"])
     
     if st.session_state["year_PV"]!=None: #the user has PV   
-            st.session_state["annual production"]=cittadino_output.comput_annual_production_from_power(st.session_state["power_PV"]+st.session_state["boosting_power"],st.session_state["region"]) 
-            #print(st.session_state["annual production"])
-            #__import__('ipdb').set_trace()
-            st.session_state["self_consump"]= cittadino_output.self_consumption(
-                    st.session_state["annual_consumption"],
+            st.session_state["annual production"], st.session_state["power_peak"],st.session_state["impiant_cost"],st.session_state["self_consump"],st.session_state["overproduction"],st.session_state["benefit"],st.session_state["members"]= cittadino_output.results_from_user_CACER_choice(
+                    st.session_state["user_CACER_choice"], 
+                    st.session_state["area_PV"],
+                    st.session_state["power_PV"]+st.session_state["boosting_power"],
+                    st.session_state["year_PV"],
+                    st.session_state["region"],
                     st.session_state["percentage_daytime"],
-                    st.session_state["annual production"])
-            st.session_state["overproduction"]=cittadino_output.overproduction(st.session_state["annual production"],
-                                                                                st.session_state["self_consump"])
+                    st.session_state["annual_consumption"],
+                    st.session_state["comune_under_5000"])
             
                   
                       

@@ -60,7 +60,7 @@ class User_output():
         filtered_data = {k: v for k, v in members.items() if v > 0}
         result_list = [f"{v} {k}" for k, v in filtered_data.items()]
         result_string = ", ".join(result_list)
-        st.markdown(f"""- Valuta la possibilità di entrare a fare parte o creare una **CER**, potresti ricevere fino a **{benefit}€** all'anno di incentivi.
+        st.markdown(f"""- Valuta la possibilità di entrare a fare parte o creare una **CER**, potresti ricevere fino a **{benefit}€** all'anno di incentivi da dividere con gli altri membri della CER.
                     I **membri ideali** con cui potresti costituire la CER sono: **{result_string}**""")
                 
     def enter_or_create_Group(self,benefit:float|int):
@@ -78,10 +78,7 @@ class User_output():
         saving=int(round(computations.savings(energy)))
         st.markdown(f"""- Costruendo un impianto del genere, postresti **risparmiare in bolletta** fino a {saving} € in un anno""")
         return saving
-
-
-
-            
+          
     def CER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,dict]:
             CER=CACER_config.CER("CER")
             total_energy=energy_self_consum+overproduction
@@ -111,29 +108,6 @@ class User_output():
 class Cittadino_output(User_output):
     def __init__(self, type):
         super().__init__(type)  
-       
-        
-   #depending on the fact that the user area or PV is in the same POD of its house, it is calculated the benefits only as CACER member (not same POD) or as Prosumer and altenratively as CER member(same POD)
-   #the fact that the POD is the same or not depends on outcome. 
-    def visualize_results_from_same_POD_and_cabin(self,outcome:str,area_PV:int|None,power:int|float|None,region:str,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float,dict]:     
-         annual_production, implant_cost, power=self.determine_solar_plant_output(area_PV,region,annual_consumption,power)
-         self_consumption=self.self_consumption(annual_consumption,region,power)
-         overproduction=self.overproduction(annual_production,self_consumption) 
-         if str(outcome)=="Calculate_cost_and_production":
-             benefit,members=self.CER_or_self_consumer_benefit(overproduction,self_consumption,power,region,comune)
-             benefit=int(round(benefit))
-         if str(outcome)=="Prosumer":
-            benefit,members=self.CER_benefit(overproduction,self_consumption,power,region,comune)
-            saving=self.Prosumer_benefit(self_consumption)
-         return annual_production,power,implant_cost,self_consumption,overproduction,benefit,members
-            
-    def CER_or_self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,dict]:
-        if overproduction>0:
-            benefit,members=self.CER_benefit(overproduction,energy_self_consum,implant_power,region,comune)
-        elif overproduction<=0:
-            benefit=self.self_consumer_benefit(overproduction,energy_self_consum,implant_power,region,comune)
-            members={}
-        return benefit,members
     
     def info_possibility_CER(self):
         st.markdown("- Puoi valutare la possibilità di accedere o costituire una CER. In una CER, se dovessi avere un eccesso di energia prodotta, potresti condividerla con gli altri membri della CER e ricevedere degli incentivi.")
@@ -157,6 +131,29 @@ class Cittadino_output(User_output):
              self.CO2_reducted(self_consumption)
              self.visit_FAQ()
         return annual_production,power,implant_cost,self_consumption,overproduction,benefit,members
+    
+    #NOT USED YET FUNCTIONS
+       #depending on the fact that the user area or PV is in the same POD of its house, it is calculated the benefits only as CACER member (not same POD) or as Prosumer and altenratively as CER member(same POD)
+   #the fact that the POD is the same or not depends on outcome. 
+    def visualize_results_from_same_POD_and_cabin(self,outcome:str,area_PV:int|None,power:int|float|None,region:str,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float,dict]:     
+         annual_production, implant_cost, power=self.determine_solar_plant_output(area_PV,region,annual_consumption,power)
+         self_consumption=self.self_consumption(annual_consumption,region,power)
+         overproduction=self.overproduction(annual_production,self_consumption) 
+         if str(outcome)=="Calculate_cost_and_production":
+             benefit,members=self.CER_or_self_consumer_benefit(overproduction,self_consumption,power,region,comune)
+             benefit=int(round(benefit))
+         if str(outcome)=="Prosumer":
+            benefit,members=self.CER_benefit(overproduction,self_consumption,power,region,comune)
+            saving=self.Prosumer_benefit(self_consumption)
+         return annual_production,power,implant_cost,self_consumption,overproduction,benefit,members
+            
+    def CER_or_self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,dict]:
+        if overproduction>0:
+            benefit,members=self.CER_benefit(overproduction,energy_self_consum,implant_power,region,comune)
+        elif overproduction<=0:
+            benefit=self.self_consumer_benefit(overproduction,energy_self_consum,implant_power,region,comune)
+            members={}
+        return benefit,members
 
 
 

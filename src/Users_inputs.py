@@ -68,7 +68,7 @@ class UserInput:
             key="PV_year",
         )
         power_PV = st.number_input(
-            "Inserisci la potenza dell'impianto PV", step=1, format="%d", key="PV_power"
+            "Inserisci la potenza dell'impianto PV in kWh", step=1, format="%d", key="PV_power"
         )
         return year_PV, power_PV
 
@@ -140,6 +140,12 @@ class UserInput:
             key="comune_inhabitants",
         )
         return comune
+     
+     def insert_boosting_power(self)->int:
+         boosting_power=st.number_input(
+            "Di quanti kW vuoi potenziare il tuo impianto?", step=1, format="%d", key="boosting_PV_power"
+        )
+         return boosting_power
 
      def elaboration_want_or_not_to_install_PV(
         self, want_PV: str
@@ -159,7 +165,7 @@ class UserInput:
      def presence_or_construction_PV(
         self,
     ) -> Tuple[
-        datetime.date | None, int | None, str | None, int | None, str | None, str | None
+        datetime.date | None, int | None, int, str | None, int | None, str | None, str | None
     ]:
         presence_PV_plant = st.radio(
             "Hai già un impianto PV",
@@ -168,25 +174,25 @@ class UserInput:
             horizontal=True,
             key="presence_PV",
         )
-        year_PV, power_PV, area_PV, know_where_PV, comune, outcome = (None, None, None, None, None, None)
+        year_PV, power_PV, boosting_power, area_PV, know_where_PV, comune, user_choice = (None, None, None,None, None, None, None)
         if presence_PV_plant == "Si": #if the user has PV
             year_PV, power_PV = self.insert_year_power_PV()
             comune = self.insert_comune()
             want_boost_PV = self.want_to_boost_PV()
             if want_boost_PV == "Si": #if user want to boost PV
-                area_PV = self.insert_area()
-                outcome = self.self.want_to_be_CER_self_Prosumer()
+                boosting_power=self.insert_boosting_power()
+                user_choice = self.want_to_be_CER_self_Prosumer()
             elif want_boost_PV == "No":
-                outcome = self.want_to_be_CER_self_Prosumer()
+                user_choice = self.want_to_be_CER_self_Prosumer()
         elif presence_PV_plant == "No": #user dosent't have PV
             want_PV = self.want_to_install_PV()
             know_where_PV, area_PV = self.elaboration_want_or_not_to_install_PV(want_PV)
             if know_where_PV == "Si": #if user knows the area 
                 comune = self.insert_comune()
-                outcome=self.want_to_be_CER_self_Prosumer()
+                user_choice=self.want_to_be_CER_self_Prosumer()
             elif know_where_PV=="No":
                 self.visualize_results()
-        return year_PV, power_PV, know_where_PV, area_PV, comune, outcome
+        return year_PV, power_PV, boosting_power, know_where_PV, area_PV, comune, user_choice
      
      def insert_percentage_daytime_consumption(self)->float:
          daily_consump=st.selectbox(

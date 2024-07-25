@@ -11,8 +11,9 @@ default_values_homepage = {
     "user_CACER_choice": None,
     "known_area": None,
     "want_boosting": None,
-    "percentage_daytime":None
-}
+    "percentage_daytime":None,
+    "boosting_power":None
+      }
 
 default_values_Risultati = {
 "annual production": None,

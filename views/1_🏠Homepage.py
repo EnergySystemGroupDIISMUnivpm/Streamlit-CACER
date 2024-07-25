@@ -48,8 +48,8 @@ with col2:
         st.session_state["percentage_daytime"]=cittadino_input.insert_percentage_daytime_consumption()
         st.session_state["region"] = cittadino_input.insert_region()
 
-        st.session_state["year_PV"], st.session_state["power_PV"], st.session_state["known_area"], st.session_state["area_PV"], st.session_state["comune_under_5000"], st.session_state["user_CACER_choice"]= cittadino_input.presence_or_construction_PV()
-        
+        st.session_state["year_PV"], st.session_state["power_PV"], st.session_state["boosting_power"],st.session_state["known_area"], st.session_state["area_PV"], st.session_state["comune_under_5000"], st.session_state["user_CACER_choice"]= cittadino_input.presence_or_construction_PV()
+
 
 
     

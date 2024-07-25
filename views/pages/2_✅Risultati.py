@@ -58,7 +58,9 @@ if st.session_state["user"]=="Cittadino":
                                                                                                                                                 st.session_state["region"])
             
             st.session_state["impiant_cost"]= cittadino_output.comput_cost_plant(st.session_state["power_peak"])
+            st.session_state["benefit"]=cittadino_output.savings_bolletta_from_PV_construction(st.session_state["annual_consumption"])
             cittadino_output.info_possibility_CER()
+            cittadino_output.visit_FAQ()
             
            
           

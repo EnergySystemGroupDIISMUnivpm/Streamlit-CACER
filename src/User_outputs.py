@@ -71,8 +71,15 @@ class User_output():
                 
     def Prosumer_benefit(self,energy_self_consumed:int|float)->int:
         saving=int(round(computations.savings(energy_self_consumed)))
-        st.markdown(f"""- Valuta la possibilità di diventare **Prosumer**, potresti risparmiare in bolletta fino a {saving} € in un anno""")
+        st.markdown(f"""- Valuta la possibilità di diventare **Prosumer**, potresti **risparmiare in bolletta** fino a {saving} € in un anno""")
         return saving
+    
+    def savings_bolletta_from_PV_construction(self,energy:int|float)->int:
+        saving=int(round(computations.savings(energy)))
+        st.markdown(f"""- Costruendo un impianto del genere, postresti **risparmiare in bolletta** fino a {saving} € in un anno""")
+        return saving
+
+
 
             
     def CER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,dict]:
@@ -140,12 +147,15 @@ class Cittadino_output(User_output):
              benefit,members=self.CER_benefit(overproduction,self_consumption,power,region,comune)
              benefit=int(round(benefit))
              self.CO2_reducted(self_consumption+overproduction)
+             self.visit_FAQ()
         elif choice=="Prosumer":
              benefit=self.Prosumer_benefit(self_consumption)
              self.CO2_reducted(self_consumption)
+             self.visit_FAQ()
         elif choice=="Autoconsumatore a distanza":
              benefit=self.self_consumer_benefit(overproduction,self_consumption,power,region)
              self.CO2_reducted(self_consumption)
+             self.visit_FAQ()
         return annual_production,power,implant_cost,self_consumption,overproduction,benefit,members
 
 

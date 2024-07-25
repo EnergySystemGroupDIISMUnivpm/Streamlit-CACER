@@ -62,12 +62,13 @@ if st.session_state["user"]=="Cittadino":
             
            
           
-        if st.session_state["outcome_same_POD_cabin"]!=None: #when the user knows the area where to install PV and all inputs have been inserted
-                st.session_state["annual production"], st.session_state["power_peak"],st.session_state["impiant_cost"],st.session_state["self_consump"],st.session_state["overproduction"],st.session_state["benefit"],st.session_state["members"]= cittadino_output.visualize_results_from_same_POD_and_cabin(
-                    st.session_state["outcome_same_POD_cabin"], 
+        if st.session_state["user_CACER_choice"]!=None: #when the user knows the area where to install PV 
+                st.session_state["annual production"], st.session_state["power_peak"],st.session_state["impiant_cost"],st.session_state["self_consump"],st.session_state["overproduction"],st.session_state["benefit"],st.session_state["members"]= cittadino_output.results_from_user_CACER_choice(
+                    st.session_state["user_CACER_choice"], 
                     st.session_state["area_PV"],
                     st.session_state["power_PV"],
                     st.session_state["region"],
+                    st.session_state["percentage_daytime"],
                     st.session_state["annual_consumption"],
                     st.session_state["comune_under_5000"])
     

@@ -8,7 +8,7 @@ default_values_homepage = {
     "power_PV": None,
     "area_PV": None,
     "comune_under_5000": None,
-    "outcome_same_POD_cabin": None,
+    "user_CACER_choice": None,
     "known_area": None,
     "want_boosting": None,
     "percentage_daytime":None

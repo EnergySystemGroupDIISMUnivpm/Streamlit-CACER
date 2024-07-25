@@ -3,6 +3,7 @@ from typing import Dict, Tuple
 from pathlib import Path
 
 PATH_RESOURCES = Path(__file__).parents[1] / "resources"
+
 # mean values of irradiance for each region (kWh/m2)
 Irradiance = {
     "Abruzzo": 1575,
@@ -36,7 +37,7 @@ consumption_rates: Dict[str, int] = {
     "ristoranti": 10000,  # consumi kWh dalle 10 alle 15 per anno per hotel
 }
 
-area_usable_percentage = 0.85  # area trurly usable for the PV, excluding the area necessary for the maintenance, shading
+
 loss_factor = 0.8  # to take into account losses in the system, such as those due to the inverter, wiring, dust on the panels ecc. It can vary
 efficiency = 0.2  # efficinecy of PV. It can vary
 Power_peak = 300  # Wp of one PV
@@ -48,7 +49,6 @@ energy_price = 0.25  # 0.25 euro/kWh
 def computation_annual_production_from_area(
     area_PV: int | float, region: str
 ) -> Tuple[float, float]:
-    Area_eff = area_usable_percentage * area_PV
     if region not in Irradiance:
         raise ValueError(
             f"Regione '{region}' non trovata nel dizionario di irradiance."
@@ -56,9 +56,9 @@ def computation_annual_production_from_area(
     irradiance = Irradiance[region]
     PV_yield = (Power_peak / 1000) / Area_one_PV  # kWp/m2
     Energy_year = (
-        Area_eff * irradiance * PV_yield * loss_factor
+        area_PV * irradiance * PV_yield * loss_factor
     )  # energy in kWh/year formula from https://www.sunbasedata.com/blog/how-to-calculate-solar-panel-output
-    P_installable = (Area_eff / Area_one_PV) * Power_peak
+    P_installable = (area_PV / Area_one_PV) * Power_peak
     return Energy_year, P_installable
 
 def computation_annual_production_from_power(power:int|float,region:str)->int|float:
@@ -80,16 +80,9 @@ def computation_installation_cost(P_installable: float) -> float:
 
 # computation optimal PV dimension based on annual consumption and region (region necessary to know the irradiance)
 def computation_optimal_dimension(
-    annual_consumption: int | float, region: str, percentage_daytime_consum:str
+    annual_consumption: int | float, region: str, percentage_daytime_consum:float
 ) -> int | float:
-    efficiency = 0.2  # efficiency of PV panel, it can vary
-    coverage_mapping = {
-    "Poco": 0.25,
-    "Mediamente": 0.50,
-    "Molto": 0.75
-     }
-    coverage_score = coverage_mapping[percentage_daytime_consum]  # how much of annual consumption must be covered by PV
-    required_PV_energy = annual_consumption * coverage_score
+    required_PV_energy = annual_consumption * percentage_daytime_consum
     if region not in Irradiance:
         raise ValueError(
             f"Regione '{region}' non trovata nel dizionario di irradiance."
@@ -152,166 +145,15 @@ def savings(energy_self_consumed: int | float) -> int | float:
     return savings
 
 
-##COMPUTATION OF SELF CONSUMPTION
-
-
-# the process involves calculating the total annual consumption of an user of example by summing up hourly data (consumption_PV_example.csv),
-# then normalizing example's consumption by dividing each hourly value by this sum.
-# Subsequently, these normalized values are multiplied by the total annual consumption of user to obtain user's consumption predictions for each hour of the day.
-def estimate_energy_profile(annual_consum: int | float) -> pd.DataFrame:
-    df_consumption = pd.read_csv(
-        PATH_RESOURCES / "consumption_PV_example.csv",
-        delimiter=";",
-    )
-    # Calculate the total sum of example consumption (for normalization)
-    total_example_consum = df_consumption["Consumption"].sum()
-    # Normalize example consumption data
-    df_consumption["NormalizedConsumption"] = (
-        df_consumption["Consumption"] / total_example_consum
-    )
-    # Scale example normalized data to fit user total annual consumption
-    df_consumption["ScaledConsumption"] = (
-        df_consumption["NormalizedConsumption"] * annual_consum
-    )
-    df_hour_year_consumption = df_consumption[["DateUTC", "ScaledConsumption"]]
-    return df_hour_year_consumption
-
-
-# estimate of the production profile of the user's PV plant using as reference the production profile in production_PV_example.csv
-def estimate_production_profile(region: str, power_peak: int | float) -> pd.DataFrame:
-    df_production = pd.read_csv(
-        PATH_RESOURCES / "production_PV_example.csv", delimiter=";"
-    )
-    example_annual_irradiance = (
-        1575  # annual mean irradiance of the PV plant taken as example
-    )
-    example_power = 1  # considering a PV panel of 1kW power peak
-    irradiance = Irradiance[region]
-    # normalization example's production data to get an estimate for our PV hourly production in 1 year.
-    # normalization done by multiplying the sample output by the ratio of the real to the sample peak power,
-    # and by the ratio of the real irradiance of the region to the sample one.
-    df_production["ScaledProduction"] = (
-        df_production["Production"]
-        * (power_peak / example_power)
-        * (irradiance / example_annual_irradiance)
-    )
-    df_hour_year_production = df_production[["DateUTC", "ScaledProduction"]]
-    return df_hour_year_production
-
-
-def calculation_hourly_self_consumption(
-    df_hour_year_consumption: pd.DataFrame, df_hour_year_production: pd.DataFrame
-) -> pd.DataFrame:
-    merged_df = pd.merge(
-        df_hour_year_consumption, df_hour_year_production, on="DateUTC", how="inner"
-    )
-    # self consumption calculated as min between production and consumption
-    merged_df["Houry_self-consumption"] = merged_df[
-        ["ScaledConsumption", "ScaledProduction"]
-    ].min(axis=1)
-    df_hourly_self_consump = merged_df[["DateUTC", "Houry_self-consumption"]]
-    return df_hourly_self_consump
-
-
-def self_consumption_year(df_hourly_self_consump: pd.DataFrame) -> int | float:
-    self_consumed_energy_year = df_hourly_self_consump["Houry_self-consumption"].sum()
-    return self_consumed_energy_year
-
-
-def computation_self_consump_and_avg_hour_overproduct(
-    annual_consum: int | float, region: str, power_peak: int | float
+def computation_self_consump(
+    annual_consum: int | float, percentage_daily_consump: float, annual_production: int | float
 ) -> int | float:
-    df_hour_year_production = estimate_energy_profile(annual_consum)
-    df_hour_year_consumption = estimate_production_profile(region, power_peak)
-    df_hourly_self_consump = calculation_hourly_self_consumption(
-        df_hour_year_consumption, df_hour_year_production
-    )
-    self_consump = self_consumption_year(df_hourly_self_consump)
+    diurnal_consum=percentage_daily_consump*annual_consum
+    self_consump=min(diurnal_consum,annual_production)
     return self_consump
 
-
-# computation of the average hours in which there is overproduction
-def comp_avg_hours_overproduction(
-    df_hour_year_production: pd.DataFrame, df_hour_year_consumption: pd.DataFrame
-) -> pd.Index:
-    df_hour_year_production["DateUTC"] = pd.to_datetime(
-        df_hour_year_production["DateUTC"], dayfirst=True
-    )
-    df_hour_year_consumption["DateUTC"] = pd.to_datetime(
-        df_hour_year_consumption["DateUTC"], dayfirst=True
-    )
-    df_merged = pd.merge(
-        df_hour_year_production, df_hour_year_consumption, on="DateUTC"
-    )
-    df_merged["Difference"] = (
-        df_merged["ScaledProduction"] - df_merged["ScaledConsumption"]
-    )
-    df_merged["Hour"] = pd.to_datetime(df_merged["DateUTC"]).dt.hour
-    # group the data by time of day and average the difference
-    hourly_average_difference = df_merged.groupby("Hour")["Difference"].mean()
-    # identify the hours with overproduction (average of the positive difference)
-    hours_with_surplus = hourly_average_difference[hourly_average_difference > 0].index
-    print(hours_with_surplus)
-    return hours_with_surplus
-
-
-def hours_overproduction(avg_hours_overproduct: pd.Index) -> str:
-    day_period = {
-        0: "di notte",
-        1: "di notte",
-        2: "di notte",
-        3: "di notte",
-        4: "di notte",
-        5: "di notte",
-        6: "di mattina",
-        7: "di mattina",
-        8: "di mattina",
-        9: "di mattina",
-        10: "di mattina",
-        11: "di mattina",
-        12: "nelle ore centrali della giornata",
-        13: "nelle ore centrali della giornata",
-        14: "nelle ore centrali della giornata",
-        15: "nelle ore centrali della giornata",
-        16: "di pomeriggio",
-        17: "di pomeriggio",
-        18: "di pomeriggio",
-        19: "di sera",
-        20: "di sera",
-        21: "di sera",
-        22: "di notte",
-        23: "di notte",
-    }
-    # Count occurrences of each part of the day
-    counts = {
-        "di notte": 0,
-        "di mattina": 0,
-        "nelle ore centrali della giornata": 0,
-        "di pomeriggio": 0,
-        "di notte": 0,
-    }
-    for hour in avg_hours_overproduct:
-        part_of_the_day = day_period[hour]
-        counts[part_of_the_day] += 1
-    # Find the part of the day with the majority of occurrences
-    predominat_hours_overproduction = max(counts, key=counts.get)
-    return predominat_hours_overproduction
-
-
-def avg_overproduction_time(
-    annual_consum: int | float, region: str, power_peak: int | float
-) -> str:
-    df_hour_year_production = estimate_energy_profile(annual_consum)
-    df_hour_year_consumption = estimate_production_profile(region, power_peak)
-    hours_with_surplus = comp_avg_hours_overproduction(
-        df_hour_year_production, df_hour_year_consumption
-    )
-    avg_time_overproduction = hours_overproduction(hours_with_surplus)
-    return avg_time_overproduction
-
-
 # computation of the fact that there is or not overproduction on average yearly values
-def comp_if_there_is_overproduction(
+def comp_overproduction(
     production: int | float, self_consumption: int | float
 ) -> int | float:
     overproduction = production - self_consumption

@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
 from typing import Tuple
-
+import Info_CACER
 
 # class with methods common to all users
 class UserInput:
@@ -18,7 +18,7 @@ class UserInput:
 
      def insert_annual_consumption(self) -> int:
         annual_consumptiont = st.number_input(
-            "Seleziona i tuoi consumi annui",
+            "Seleziona i tuoi consumi annui in kWh",
             key="consumption",
             step=1,
             format="%d",
@@ -54,7 +54,7 @@ class UserInput:
 
      def insert_area(self) -> int:
         area_PV = st.number_input(
-            "Inserisci le dimensioni dell'area in cui costruire l'impianto",
+            "Inserisci le dimensioni dell'area in m² in cui costruire l'impianto",
             key="PV_area_dim",
             step=1,
             format="%d",
@@ -175,25 +175,45 @@ class UserInput:
             want_boost_PV = self.want_to_boost_PV()
             if want_boost_PV == "Si": #if user want to boost PV
                 area_PV = self.insert_area()
-                outcome = self.area_same_POD_and_cabin_house()
+                outcome = self.self.want_to_be_CER_self_Prosumer()
             elif want_boost_PV == "No":
-                outcome = self.area_same_POD_and_cabin_house()
+                outcome = self.want_to_be_CER_self_Prosumer()
         elif presence_PV_plant == "No": #user dosent't have PV
             want_PV = self.want_to_install_PV()
             know_where_PV, area_PV = self.elaboration_want_or_not_to_install_PV(want_PV)
             if know_where_PV == "Si": #if user knows the area 
                 comune = self.insert_comune()
-                outcome = self.area_same_POD_and_cabin_house()
+                outcome=self.want_to_be_CER_self_Prosumer()
             elif know_where_PV=="No":
                 self.visualize_results()
         return year_PV, power_PV, know_where_PV, area_PV, comune, outcome
      
-     def insert_percentage_daytime_consumption(self)->str:
-         percentage_consump=st.selectbox(
-        "In una giornata tipo, consumi di più di giorno che di notte?", options=["Molto","Mediamente","Poco"], index=None, key="daytime_consump"
-    )
+     def insert_percentage_daytime_consumption(self)->float:
+         daily_consump=st.selectbox(
+        "In una giornata tipo, consumi di più di giorno che di notte?", options=["Molto","Mediamente","Poco"], index=None, key="daytime_consump")
+         percentage_consump=None
+         if daily_consump!=None:   
+            percentage_mapping = {
+            "Poco": 0.25,
+            "Mediamente": 0.50,
+            "Molto": 0.75 }
+            percentage_consump = percentage_mapping[daily_consump] 
          return percentage_consump
 
+     def want_to_be_CER_self_Prosumer(self):
+        choice=st.radio("""Vuoi costituire una CER, essere un Autoconsumatore a distanza o un Prosumer? 
+                        Svegli un'opzione.
+                        Trovi la spiegazione di ogni opzione qui sotto. """, options=["CER", "Autoconsumatore a distanza", "Prosumer"], key="want_CACER", horizontal=True,index=None)
+        
+        with st.expander("Visualizza la spiegazione"):
+          st.markdown(Info_CACER.info_CER
+               )
+          st.markdown(Info_CACER.info_Autoconsumatore)
+          st.markdown(Info_CACER.info_Prosumer)
+          st.markdown(Info_CACER.info_cabine_primarie)
+        if choice!=None:
+             self.visualize_results()
+        return choice
 
 # user: "Cittadino"
 class CittadinoInput(UserInput):

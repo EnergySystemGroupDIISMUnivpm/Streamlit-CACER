@@ -14,6 +14,7 @@ class User_output():
         self.name = type
     def visit_FAQ(self):
         st.markdown("Per maggiorni informazioni visita la sezione ❓FAQ")
+
     def comput_annual_production_from_area_and_power_peak(self,area_PV:int,region:str)->Tuple[int, int]:
         annual_production,installable_power=computations.computation_annual_production_from_area(area_PV,region)
         annual_production=int(round(annual_production))
@@ -37,14 +38,14 @@ class User_output():
         st.markdown(f"""- **L'area ottima**  del tuo impianto sarebbe di {optimal_dim} m²""")
         return optimal_dim
     
-    def self_consumption(self,annual_comsumption:int,region:str,power_peak:int)->Tuple[int,pd.Index]:
-        self_consump=int(round(computations.computation_self_consump_and_avg_hour_overproduct(annual_comsumption,region,power_peak)))
+    def self_consumption(self,annual_comsumption:int,percentage_daily_consump: float, annual_production: int | float)->int|float:
+        self_consump=int(round(computations.computation_self_consump(annual_comsumption,percentage_daily_consump,annual_production)))
         st.markdown(f"""- Abbiamo stimato che **autoconsumeresti in media**  {self_consump} kWh/anno""")
         return self_consump
 
 
     def overproduction(self,annual_production:int,self_consumption:int)->int:
-        overproduction=int(round(computations.comp_if_there_is_overproduction(annual_production,self_consumption)))
+        overproduction=int(round(computations.comp_overproduction(annual_production,self_consumption)))
         if overproduction>0:
          st.markdown(f"""- Abbiamo stimato che potresti costuire un impianto che ti farebbe raggiungere {overproduction} kWh/anno di **sovraproduzione** nelle ore centrali della giornata""")
         return overproduction
@@ -60,14 +61,16 @@ class User_output():
         result_string = ", ".join(result_list)
         st.markdown(f"""- Valuta la possibilità di entrare a fare parte o creare una **CER**, potresti ricevere fino a **{benefit}€** all'anno di incentivi.
                     I **membri ideali** con cui potresti costituire la CER sono: **{result_string}**""")
+                
     def enter_or_create_Group(self,benefit:float|int):
         st.markdown(f"""- Valuta la possibilità di entrare a fare parte o creare un **Gruppo di Autoconsumatori**, potresti ricevere fino a **{benefit}€** all'anno di incentivi""")
+       
     def create_Self_consum(self,benefit:float|int):
         st.markdown(f"""- Valuta la possibilità di diventare un **Autoconsumatore a distanza**, potresti ricevere fino a **{benefit}€** all'anno di incentivi""")
-
-    def Prosumer(self,energy_self_consumed:int|float)->int:
+                
+    def Prosumer_benefit(self,energy_self_consumed:int|float)->int:
         saving=int(round(computations.savings(energy_self_consumed)))
-        st.markdown(f"""- Valuta la possibilità di diventare **Prosumer**, potresti risparmiare fino a {saving} € in un anno""")
+        st.markdown(f"""- Valuta la possibilità di diventare **Prosumer**, potresti risparmiare in bolletta fino a {saving} € in un anno""")
         return saving
 
             
@@ -80,7 +83,7 @@ class User_output():
             CO2=self.CO2_reducted(energy_self_consum)
             return benefit,CO2,members
 
-    def self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float]:        
+    def self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str)->Tuple[int|float,int|float]:        
             self_cons=CACER_config.self_consumer("Self consumer")
             benefit=self_cons.benefit_autoconsumed_energy(energy_self_consum,implant_power,region)
             self.create_Self_consum(benefit)
@@ -115,7 +118,7 @@ class Cittadino_output(User_output):
              benefit=int(round(benefit))
          if str(outcome)=="Prosumer":
             benefit,CO2,members=self.CER_benefit(overproduction,self_consumption,power,region,comune)
-            saving=self.Prosumer(self_consumption)
+            saving=self.Prosumer_benefit(self_consumption)
          return annual_production,power,implant_cost,self_consumption,overproduction,benefit,members
             
     def CER_or_self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,region:str,comune:str)->Tuple[int|float,int|float,dict]:
@@ -128,7 +131,21 @@ class Cittadino_output(User_output):
     
     def info_possibility_CER(self):
         st.markdown("- Puoi valutare la possibilità di accedere o costituire una CER. In una CER, se dovessi avere un eccesso di energia prodotta, potresti condividerla con gli altri membri della CER e ricevedere degli incentivi.")
-        self.visit_FAQ()
+        
+    def results_from_user_CACER_choice(self,choice:str,area_PV:int|None,power:int|float|None,region:str,percentage_daily_consump:float,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float,dict]:     
+        annual_production, implant_cost, power=self.determine_solar_plant_output(area_PV,region,annual_consumption,power)
+        self_consumption=self.self_consumption(annual_consumption,percentage_daily_consump,annual_production)
+        overproduction=self.overproduction(annual_production,self_consumption) 
+        members=None
+        if choice=="CER":
+             benefit,CO2,members=self.CER_benefit(overproduction,self_consumption,power,region,comune)
+             benefit=int(round(benefit))
+        elif choice=="Prosumer":
+             benefit=self.Prosumer_benefit(self_consumption)
+        elif choice=="Autoconsumatore a distanza":
+             benefit,CO2=self.self_consumer_benefit(overproduction,self_consumption,power,region)
+        return annual_production,power,implant_cost,self_consumption,overproduction,benefit,members
+
 
 
 

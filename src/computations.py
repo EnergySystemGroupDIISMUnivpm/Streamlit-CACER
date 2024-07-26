@@ -35,8 +35,7 @@ def computation_annual_production_from_power(power:int|float,region:str)->int|fl
 
 # computation of intallation costs based on installable power
 def computation_installation_cost(P_installable: float) -> float:
-    kW_cost = 1000  # cost of PV panels for kW, euro
-    installation_cost = kW_cost * P_installable
+    installation_cost = parameters.kW_cost * P_installable
     return installation_cost
 
 

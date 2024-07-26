@@ -64,6 +64,7 @@ efficiency = 0.2  # efficinecy of PV.
 Power_peak = 300  # Wp of one PV pannel
 Area_one_PV = 1.7*1.1 # area for 1 PV with power peak of Power_peak
 energy_price = 0.25  # 0.25 euro/kW, price to install 1kW of PV
+kW_cost = 1000  # cost of PV panels for kW, euro
 
 options_for_daily_percentage_time = ["Molto", "Mediamente", "Poco"]
 percentage_values = [0.75, 0.50, 0.25]

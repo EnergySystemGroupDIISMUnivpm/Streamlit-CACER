@@ -68,7 +68,7 @@ class UserInput:
             key="PV_year",
         )
         power_PV = st.number_input(
-            "Inserisci la potenza dell'impianto PV in kWh", step=1, format="%d", key="PV_power"
+            "Inserisci la potenza dell'impianto PV in kW", step=1, format="%d", key="PV_power"
         )
         return year_PV, power_PV
 

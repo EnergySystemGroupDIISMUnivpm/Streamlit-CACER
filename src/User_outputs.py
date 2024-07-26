@@ -18,42 +18,48 @@ class User_output():
 
     def comput_annual_production_from_area_and_power_peak(self,area_PV:int,region:str)->Tuple[int, int]:
         annual_production,installable_power=computations.computation_annual_production_from_area(area_PV,region)
-        annual_production=int(round(annual_production))
-        installable_power=int(round(installable_power))
+        annual_production=self.custom_round(annual_production)
+        installable_power=self.custom_round(installable_power)
         st.markdown(f"""- Con i dati che hai fornito, potresti costuire un impianto PV da {installable_power} kWp di **potenza di picco** e che potrebbe generare un **quantitativo di energia elettrica in un anno** pari a {annual_production} kWh/anno""")
         return annual_production, installable_power
     
     def comput_annual_production_from_power(self,power:int|float,region:str)->int|float:
-        annual_production=int(round(computations.computation_annual_production_from_power(power,region)))
+        annual_production=computations.computation_annual_production_from_power(power,region)
+        annual_production=self.custom_round(annual_production)
         st.markdown(f"""- Con il tuo impianto potresti produrre circa **{annual_production} kWh** all'anno""")
         return annual_production
 
     
     def comput_cost_plant(self,installable_power:int|float)->int:
-        impiant_cost=int(round(computations.computation_installation_cost(installable_power)))
+        impiant_cost=computations.computation_installation_cost(installable_power)
+        impiant_cost=self.custom_round(impiant_cost)
         st.markdown(f"""- **Il costo dell'installazione** dell'impianto sarebbe approssimatamente {impiant_cost} €""")
         return impiant_cost
     
     def optimal_dimension(self,annual_comsumption:int,region:str,percentage_daytime_consum:str)->int:
-        optimal_dim=int(round(computations.computation_optimal_dimension(annual_comsumption,region,percentage_daytime_consum)))
+        optimal_dim=computations.computation_optimal_dimension(annual_comsumption,region,percentage_daytime_consum)
+        optimal_dim=self.custom_round(optimal_dim)
         st.markdown(f"""- **L'area ottima**  del tuo impianto sarebbe di {optimal_dim} m²""")
         return optimal_dim
     
     def self_consumption(self,annual_comsumption:int,percentage_daily_consump: float, annual_production: int | float)->int|float:
-        self_consump=int(round(computations.computation_self_consump(annual_comsumption,percentage_daily_consump,annual_production)))
+        self_consump=computations.computation_self_consump(annual_comsumption,percentage_daily_consump,annual_production)
+        self_consump=self.custom_round(self_consump)
         st.markdown(f"""- Abbiamo stimato che **autoconsumeresti in media**  {self_consump} kWh/anno""")
         return self_consump
 
 
     def overproduction(self,annual_production:int,self_consumption:int)->int:
-        overproduction=int(round(computations.comp_overproduction(annual_production,self_consumption)))
+        overproduction=computations.comp_overproduction(annual_production,self_consumption)
+        overproduction=self.custom_round(overproduction)
         if overproduction>0:
          st.markdown(f"""- Abbiamo stimato che potresti costuire un impianto che ti farebbe raggiungere {overproduction} kWh/anno di **sovraproduzione** nelle ore centrali della giornata""")
         return overproduction
     
  
     def CO2_reducted(self,energy_self_consum:int|float):
-        CO2=int(round(computations.computation_reduced_CO2(energy_self_consum)))
+        CO2=computations.computation_reduced_CO2(energy_self_consum)
+        CO2=self.custom_round(CO2)
         st.markdown(f"""- Inoltre ridurresti la tua **produzione di CO2** di {CO2} kg CO2/kWh all'anno""")
         return CO2
     
@@ -71,19 +77,21 @@ class User_output():
         st.markdown(f"""- Valuta la possibilità di diventare un **Autoconsumatore a distanza**, potresti ricevere fino a **{benefit}€** all'anno di incentivi""")
                 
     def Prosumer_benefit(self,energy_self_consumed:int|float)->int:
-        saving=int(round(computations.savings(energy_self_consumed)))
+        saving=computations.savings(energy_self_consumed)
+        saving=self.custom_round(saving)
         st.markdown(f"""- Valuta la possibilità di diventare **Prosumer**, potresti **risparmiare in bolletta** fino a {saving} € in un anno""")
         return saving
     
     def savings_bolletta_from_PV_construction(self,energy:int|float)->int:
-        saving=int(round(computations.savings(energy)))
+        saving=computations.savings(energy)
+        saving=self.custom_round(saving)
         st.markdown(f"""- Costruendo un impianto del genere, postresti **risparmiare in bolletta** fino a {saving} € in un anno""")
         return saving
           
-    def CER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date,region:str,comune:str)->Tuple[int|float,dict]:
+    def CER_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date,boosting_power:int,region:str,comune:str)->Tuple[int|float,dict]:
             CER=CACER_config.CER("CER")
             total_energy=energy_self_consum+overproduction
-            benefit=CER.total_benefit(total_energy,implant_power,implant_year,region,comune)
+            benefit=CER.total_benefit(total_energy,implant_power,implant_year,boosting_power,region,comune)
             members=CER.CER_member(overproduction)
             self.enter_or_create_CER(benefit,members)
             return benefit,members
@@ -105,6 +113,12 @@ class User_output():
                 implant_cost=None  
          return annual_production, implant_cost, power
     
+    def custom_round(self,numero:int|float)->int|float:
+        if abs(numero) < 1:
+            return round(numero, 2)
+        else:
+            return round(numero)
+    
 #user: "Cittadino"     
 class Cittadino_output(User_output):
     def __init__(self, type):
@@ -113,14 +127,14 @@ class Cittadino_output(User_output):
     def info_possibility_CER(self):
         st.markdown("- Puoi valutare la possibilità di accedere o costituire una CER. In una CER, se dovessi avere un eccesso di energia prodotta, potresti condividerla con gli altri membri della CER e ricevedere degli incentivi.")
         
-    def results_from_user_CACER_choice(self,choice:str,area_PV:int|None,power:int|float|None,year_PV:datetime.date,region:str,percentage_daily_consump:float,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float,dict]:     
+    def results_from_user_CACER_choice(self,choice:str,area_PV:int|None,power:int|float|None,year_PV:datetime.date,boosting_power:int,region:str,percentage_daily_consump:float,annual_consumption:int|float,comune:str)->Tuple[int,int,int,int|float,int|float,int|float,dict]:     
         annual_production, implant_cost, power=self.determine_solar_plant_output(area_PV,region,annual_consumption,power)
         self_consumption=self.self_consumption(annual_consumption,percentage_daily_consump,annual_production)
         overproduction=self.overproduction(annual_production,self_consumption) 
         members=None
         if choice=="CER":
-             benefit,members=self.CER_benefit(overproduction,self_consumption,power,year_PV,region,comune)
-             benefit=int(round(benefit))
+             benefit,members=self.CER_benefit(overproduction,self_consumption,power,year_PV,boosting_power,region,comune)
+             benefit=self.custom_round((benefit))
              self.CO2_reducted(self_consumption+overproduction)
              self.visit_FAQ()
         elif choice=="Prosumer":
@@ -142,7 +156,7 @@ class Cittadino_output(User_output):
          overproduction=self.overproduction(annual_production,self_consumption) 
          if str(outcome)=="Calculate_cost_and_production":
              benefit,members=self.CER_or_self_consumer_benefit(overproduction,self_consumption,power,region,comune)
-             benefit=int(round(benefit))
+             benefit=self.custom_round((benefit))
          if str(outcome)=="Prosumer":
             benefit,members=self.CER_benefit(overproduction,self_consumption,power,region,comune)
             saving=self.Prosumer_benefit(self_consumption)

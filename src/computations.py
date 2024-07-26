@@ -1,11 +1,11 @@
 import pandas as pd
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 from pathlib import Path
 import datetime
 
 PATH_RESOURCES = Path(__file__).parents[1] / "resources"
 
-# mean values of irradiance for each region (kWh/m2)
+# mean values of irradiance for each region (kW/m2)
 Irradiance = {
     "Abruzzo": 1575,
     "Basilicata": 1603,
@@ -42,7 +42,7 @@ consumption_rates: Dict[str, int] = {
 loss_factor = 0.8  # to take into account losses in the system, such as those due to the inverter, wiring, dust on the panels ecc. It can vary
 efficiency = 0.2  # efficinecy of PV. It can vary
 Power_peak = 300  # Wp of one PV
-Area_one_PV = 1.6  # area for 1 PV of Power_peak Wp in m2
+Area_one_PV = 1.7*1.1 # area for 1 PV of Power_peak Wp in m2
 energy_price = 0.25  # 0.25 euro/kWh
 
 
@@ -59,7 +59,7 @@ def computation_annual_production_from_area(
     Energy_year = (
         area_PV * irradiance * PV_yield * loss_factor
     )  # energy in kWh/year formula from https://www.sunbasedata.com/blog/how-to-calculate-solar-panel-output
-    P_installable = (area_PV / Area_one_PV) * Power_peak
+    P_installable = (area_PV / Area_one_PV) * (Power_peak/1000)
     return Energy_year, P_installable
 
 def computation_annual_production_from_power(power:int|float,region:str)->int|float:
@@ -94,43 +94,64 @@ def computation_optimal_dimension(
 
 ##INCENTIVES
   #incentive on self-consumed energy as defined in decreto MASE 07/12/2023
-def incentive_self_consumption(energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date|None,region:str)->int|float: #energy and implant power in kWh,kW
-   ARERA_valorisation=8 #valorisation of ARERA, it can vary, generally is around 8 euro/MWh. 
-   energy_self_consum=energy_self_consum/1000 #conversion in MWh
-   #tariff definition
-   if implant_power<200:
-    tariff=120 + ARERA_valorisation #max of tariff with power <200 KW
-   elif implant_power<600:
-    tariff=110 + ARERA_valorisation #max of tariff with power <600 KW
-   elif implant_power<1000:
-    tariff=100 + ARERA_valorisation #max of tariff with power <600 KW
-   else:
-      tariff=ARERA_valorisation
-    #tariff increase depending on the area
-   if implant_power<1000: 
-    if region in ["Lazio","Marche","Toscana","Umbria","Abruzzo"]:
-        tariff=tariff+4 
-    elif region in ["Emilia-Romagna","Friuli-Venezia Giulia","Liguria","Lombardia","Piemonte","Veneto","Trentino-Alto Adige","Valle d'Aosta"]:
-        tariff=tariff+10
-   benefit=tariff*energy_self_consum 
-   if implant_year<(datetime.datetime.strptime("16/12/2021", "%d/%m/%Y").date()):
-      benefit=benefit*0.3
-   return int(round(benefit))
+def incentive_self_consumption(
+    energy_self_consum: Union[int, float],
+    implant_power: Union[int, float],
+    implant_year: Union[datetime.date, None],
+    boosting_power: int,
+    region: str
+) -> Union[int, float]:
+    ARERA_valorisation = 8  # valorisation of ARERA, generally around 8 euro/MWh
+    energy_self_consum = energy_self_consum / 1000  # conversion to MWh
+    # Tariff definitions using a dictionary
+    tariff_dict = {
+        (0, 200): 120,
+        (200, 600): 110,
+        (600, 1000): 100,
+    }
+    # Determine the base tariff
+    tariff = ARERA_valorisation
+    for power_range, base_tariff in tariff_dict.items():
+        if power_range[0] <= implant_power < power_range[1]:
+            tariff = base_tariff + ARERA_valorisation
+            break
+    # Tariff increase depending on the area
+    regional_tariff_increase = {
+        "Lazio": 4, "Marche": 4, "Toscana": 4, "Umbria": 4, "Abruzzo": 4,
+        "Emilia-Romagna": 10, "Friuli-Venezia Giulia": 10, "Liguria": 10,
+        "Lombardia": 10, "Piemonte": 10, "Veneto": 10,
+        "Trentino-Alto Adige": 10, "Valle d'Aosta": 10,
+    }
+    if implant_power < 1000 and region in regional_tariff_increase:
+        tariff += regional_tariff_increase[region]
+    benefit = tariff * energy_self_consum
+    # Adjust benefit if implant_year is before 16/12/2021
+    if implant_year is not None and implant_year < datetime.date(2021, 12, 16):
+        total_power = implant_power + boosting_power
+        energy_old = energy_self_consum * (implant_power / total_power)
+        energy_new = energy_self_consum - energy_old
+        benefit_old = energy_old * tariff * 0.3
+        benefit_new = energy_new * tariff
+        benefit = benefit_new + benefit_old
+    return benefit
 
 
 # incentive on CER and Groups of self-consumers in municipalities with < 5000 inhabitants
-def incentive_municipality(
-    implant_power: int | float,
-) -> int | float:  # implant power in kW
-    if implant_power < 20:  # power < 20kW
-        benefit = 1500 * implant_power
-    elif implant_power < 200:  # power < 200kW
-        benefit = 1200 * implant_power
-    elif implant_power < 600:  # power < 600kW
-        benefit = 1100 * implant_power
-    else:
-        benefit = 1050 * implant_power  # power >600kW
-    return int(round(benefit))
+def incentive_municipality(implant_power: int | float) -> int | float:
+    # Define the mapping of power ranges to tariffs
+    tariff_dict = {
+        (0, 20): 1500,
+        (20, 200): 1200,
+        (200, 600): 1100,
+        (600, float('inf')): 1050,
+    }
+    # Determine the benefit based on the power range
+    benefit = 0
+    for power_range, tariff in tariff_dict.items():
+        if power_range[0] <= implant_power < power_range[1]:
+            benefit = tariff * implant_power
+            break
+    return benefit
 
 
 # Reduced CO2

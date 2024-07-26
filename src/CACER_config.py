@@ -13,8 +13,8 @@ class self_consumer():
         self.name = type
 
     #incentives on self consumed energy
-    def benefit_autoconsumed_energy(self,energy_consumed:int|float,implant_power:int|float,implant_year:datetime.date,region:str)->int|float:
-        benefit_autoconsumed=computations.incentive_self_consumption(energy_consumed,implant_power,implant_year,region)
+    def benefit_autoconsumed_energy(self,energy_consumed:int|float,implant_power:int|float,implant_year:datetime.date,boosting_power:int,region:str)->int|float:
+        benefit_autoconsumed=computations.incentive_self_consumption(energy_consumed,implant_power,implant_year,boosting_power,region)
         return benefit_autoconsumed
     
     #only for groups of self consumers   
@@ -27,8 +27,8 @@ class groups_self_consumers(self_consumer):
         benefit_municip=computations.incentive_municipality(implant_power)
         return benefit_municip
      
-     def total_benefit(self,energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date,region:str,comune:str)->float|int:
-         benefit_autoconsumed=self.benefit_autoconsumed_energy(energy_self_consum,implant_power,implant_year,region)
+     def total_benefit(self,energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date,boosting_power:int,region:str,comune:str)->float|int:
+         benefit_autoconsumed=self.benefit_autoconsumed_energy(energy_self_consum,implant_power,implant_year,boosting_power,region)
          if comune=="Si":
           benefit_municipality=self.benefit_comune(implant_power)
           benefit=benefit_autoconsumed+benefit_municipality

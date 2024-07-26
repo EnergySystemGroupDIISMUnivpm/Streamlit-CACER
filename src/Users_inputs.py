@@ -2,6 +2,7 @@ import streamlit as st
 import datetime
 from typing import Tuple
 import Info_CACER
+import parameters
 
 # class with methods common to all users
 class UserInput:
@@ -27,29 +28,7 @@ class UserInput:
         return annual_consumptiont
 
      def insert_region(self) -> str:
-        regions = [
-            "Piemonte",
-            "Valle d'Aosta",
-            "Lombardia",
-            "Trentino-Alto Adige",
-            "Veneto",
-            "Friuli-Venezia Giulia",
-            "Liguria",
-            "Emilia-Romagna",
-            "Toscana",
-            "Umbria",
-            "Marche",
-            "Lazio",
-            "Abruzzo",
-            "Molise",
-            "Campania",
-            "Puglia",
-            "Basilicata",
-            "Calabria",
-            "Sicilia",
-            "Sardegna",
-        ]
-        region = st.selectbox("Seleziona la tua regione", regions, index=None)
+        region = st.selectbox("Seleziona la tua regione", parameters.regions, index=None)
         return region
 
      def insert_area(self) -> int:
@@ -196,13 +175,10 @@ class UserInput:
      
      def insert_percentage_daytime_consumption(self)->float:
          daily_consump=st.selectbox(
-        "In una giornata tipo, consumi di più di giorno che di notte?", options=["Molto","Mediamente","Poco"], index=None, key="daytime_consump")
+        "In una giornata tipo, consumi di più di giorno che di notte?", options=parameters.options_for_daily_percentage_time, index=None, key="daytime_consump")
          percentage_consump=None
          if daily_consump!=None:   
-            percentage_mapping = {
-            "Poco": 0.25,
-            "Mediamente": 0.50,
-            "Molto": 0.75 }
+            percentage_mapping = parameters.percentage_dict
             percentage_consump = percentage_mapping[daily_consump] 
          return percentage_consump
 

@@ -7,26 +7,16 @@ sys.path.append(src_path)
 
 from Users_inputs import UserInput, CittadinoInput
 from session_state_variables import default_values_homepage
+import streamlit_pages_configuration
 
-# CONFIGURATION OF STREAMLIT PAGE
-st.set_page_config(
-    page_title="ENEA Simulatore CACER",
-    page_icon="🌤️",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
+#page configuration
+streamlit_pages_configuration.configuration()
+streamlit_pages_configuration.home_page_title()
 
 #DEFINITION OF SESSION STATE VARIABLES
 for key, value in default_values_homepage.items():
     if key not in st.session_state:
         st.session_state[key] = value
-
-
-# title
-st.markdown(
-    "<h1 style='text-align: center; color: #0078AC;'><em>Benvenuto in</em> ENEA Simulatore CACER</h1>",
-    unsafe_allow_html=True,
-)
 
 # body
 col1, col2, col3 = st.columns([1, 2, 1])

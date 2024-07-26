@@ -7,42 +7,17 @@ sys.path.append(src_path)
 
 import User_outputs
 from session_state_variables import default_values_Risultati
+import streamlit_pages_configuration
 
 #CONFIGURATION OF STREAMLIT PAGE
-st.set_page_config(
-    page_title="ENEA Simulatore CACER",
-    page_icon="🌤️",
-    layout='wide',
-    initial_sidebar_state='collapsed'
-    )   
+streamlit_pages_configuration.configuration()
+streamlit_pages_configuration.Risultati_title()
+streamlit_pages_configuration.attention()
 
 #session state variables
 for key, value in default_values_Risultati.items():
     if key not in st.session_state:
         st.session_state[key] = value
-
-
-#title 
-st.markdown("<h1 style='text-align: center; color: #0078AC;'> ENEA Simulatore CACER <em>: qui puoi visualizzare i tuoi risultati</em></h1>", unsafe_allow_html=True)
-
-#information at the bottom right
-st.markdown(
-    """
-    <style>
-    .bottom-right {
-        position: fixed;
-        bottom: 10px;
-        right: 30px;
-        padding: 10px;
-        background-color: rgba(255, 255, 255, 0.7);
-    }
-    </style>
-    <div class="bottom-right">
-        Attenzione! Tutti i dati che vedi sono da intendersi come stime.
-            </div>
-    """,
-    unsafe_allow_html=True
-)
 
 #FOR ALL USERS
 user_output=User_outputs.User_output(f"""{st.session_state["user"]}""")

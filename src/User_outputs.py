@@ -92,13 +92,15 @@ class User_output():
             CER=CACER_config.CER("CER")
             total_energy=energy_self_consum+overproduction
             benefit=CER.total_benefit(total_energy,implant_power,implant_year,boosting_power,region,comune)
+            benefit=self.custom_round(benefit)
             members=CER.CER_member(overproduction)
             self.enter_or_create_CER(benefit,members)
             return benefit,members
 
-    def self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date,region:str)->Tuple[int|float]:        
+    def self_consumer_benefit(self,overproduction:int,energy_self_consum:int|float,implant_power:int|float,implant_year:datetime.date,boosting_power:int,region:str)->Tuple[int|float]:        
             self_cons=CACER_config.self_consumer("Self consumer")
-            benefit=self_cons.benefit_autoconsumed_energy(energy_self_consum,implant_power,implant_year,region)
+            benefit=self_cons.benefit_autoconsumed_energy(energy_self_consum,implant_power,implant_year,boosting_power,region)
+            benefit=self.custom_round(benefit)
             self.create_Self_consum(benefit)
             return benefit 
     
@@ -139,10 +141,12 @@ class Cittadino_output(User_output):
              self.visit_FAQ()
         elif choice=="Prosumer":
              benefit=self.Prosumer_benefit(self_consumption)
+             benefit=self.custom_round((benefit))
              self.CO2_reducted(self_consumption)
              self.visit_FAQ()
         elif choice=="Autoconsumatore a distanza":
-             benefit=self.self_consumer_benefit(overproduction,self_consumption,power,year_PV,region)
+             benefit=self.self_consumer_benefit(overproduction,self_consumption,power,year_PV,boosting_power,region)
+             benefit=self.custom_round((benefit))
              self.CO2_reducted(self_consumption)
              self.visit_FAQ()
         return annual_production,power,implant_cost,self_consumption,overproduction,benefit,members

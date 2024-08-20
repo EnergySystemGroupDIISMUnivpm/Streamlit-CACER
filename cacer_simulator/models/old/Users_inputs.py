@@ -1,23 +1,24 @@
-import streamlit as st
 import datetime
 from typing import Tuple
-import Info_CACER
+
 import parameters
+import streamlit as st
+
 
 # class with methods common to all users
 class UserInput:
- 
-     def __init__(self, type):
+
+    def __init__(self, type):
         self.type = type
         self.PV = True
 
-     def visualize_results(self):
+    def visualize_results(self):
         st.markdown(
             "<h2 style='text-align: center; color: #0078AC;'>Step 2: Visualizza i risulati nella sezione ✅Risultati </h2>",
             unsafe_allow_html=True,
         )
 
-     def insert_annual_consumption(self) -> int:
+    def insert_annual_consumption(self) -> int:
         annual_consumptiont = st.number_input(
             "Seleziona i tuoi consumi annui in kWh",
             key="consumption",
@@ -27,11 +28,13 @@ class UserInput:
         )
         return annual_consumptiont
 
-     def insert_region(self) -> str:
-        region = st.selectbox("Seleziona la tua regione", parameters.regions, index=None)
+    def insert_region(self) -> str:
+        region = st.selectbox(
+            "Seleziona la tua regione", parameters.regions, index=None
+        )
         return region
 
-     def insert_area(self) -> int:
+    def insert_area(self) -> int:
         area_PV = st.number_input(
             "Inserisci le dimensioni dell'area in m² in cui costruire l'impianto",
             key="PV_area_dim",
@@ -40,18 +43,21 @@ class UserInput:
         )
         return area_PV
 
-     def insert_year_power_PV(self) -> Tuple[datetime.date, int]:
+    def insert_year_power_PV(self) -> Tuple[datetime.date, int]:
         year_PV = st.date_input(
             "Inserisci la data di entrata in esercizio dell'impianto PV",
             format="DD/MM/YYYY",
             key="PV_year",
         )
         power_PV = st.number_input(
-            "Inserisci la potenza dell'impianto PV in kW", step=1, format="%d", key="PV_power"
+            "Inserisci la potenza dell'impianto PV in kW",
+            step=1,
+            format="%d",
+            key="PV_power",
         )
         return year_PV, power_PV
 
-     def want_to_install_PV(self) -> str:
+    def want_to_install_PV(self) -> str:
         want_PV = st.radio(
             "Vuoi costruire un impianto PV?",
             options=["Si", "No"],
@@ -90,7 +96,7 @@ class UserInput:
             )
         return want_PV
 
-     def know_where_to_install_PV(self) -> str:
+    def know_where_to_install_PV(self) -> str:
         know_where_PV = st.radio(
             "Sai già dove costruire l'impianto?",
             options=["Si", "No"],
@@ -100,7 +106,7 @@ class UserInput:
         )
         return know_where_PV
 
-     def want_to_boost_PV(self) -> str:
+    def want_to_boost_PV(self) -> str:
         want_boost_PV = st.radio(
             "Vuoi potenziare il tuo impianto?",
             options=["Si", "No"],
@@ -110,7 +116,7 @@ class UserInput:
         )
         return want_boost_PV
 
-     def insert_comune(self) -> str:
+    def insert_comune(self) -> str:
         comune = st.radio(
             "Il comune dove hai l'impianto o dove vuoi costruirlo, ha meno di 5000 abitanti?",
             options=["Si", "No"],
@@ -119,14 +125,17 @@ class UserInput:
             key="comune_inhabitants",
         )
         return comune
-     
-     def insert_boosting_power(self)->int:
-         boosting_power=st.number_input(
-            "Di quanti kW vuoi potenziare il tuo impianto?", step=1, format="%d", key="boosting_PV_power"
-        )
-         return boosting_power
 
-     def elaboration_want_or_not_to_install_PV(
+    def insert_boosting_power(self) -> int:
+        boosting_power = st.number_input(
+            "Di quanti kW vuoi potenziare il tuo impianto?",
+            step=1,
+            format="%d",
+            key="boosting_PV_power",
+        )
+        return boosting_power
+
+    def elaboration_want_or_not_to_install_PV(
         self, want_PV: str
     ) -> Tuple[str | None, int | None]:
         if want_PV == "Si":
@@ -140,11 +149,16 @@ class UserInput:
             know_where_PV = None
         return know_where_PV, area_PV
 
-
-     def presence_or_construction_PV(
+    def presence_or_construction_PV(
         self,
     ) -> Tuple[
-        datetime.date | None, int | None, int, str | None, int | None, str | None, str | None
+        datetime.date | None,
+        int | None,
+        int,
+        str | None,
+        int | None,
+        str | None,
+        str | None,
     ]:
         presence_PV_plant = st.radio(
             "Hai già un impianto PV",
@@ -153,49 +167,75 @@ class UserInput:
             horizontal=True,
             key="presence_PV",
         )
-        year_PV, power_PV, boosting_power, area_PV, know_where_PV, comune, user_choice = (None, None, 0,None, None, None, None)
-        if presence_PV_plant == "Si": #if the user has PV
+        (
+            year_PV,
+            power_PV,
+            boosting_power,
+            area_PV,
+            know_where_PV,
+            comune,
+            user_choice,
+        ) = (None, None, 0, None, None, None, None)
+        if presence_PV_plant == "Si":  # if the user has PV
             year_PV, power_PV = self.insert_year_power_PV()
             comune = self.insert_comune()
             want_boost_PV = self.want_to_boost_PV()
-            if want_boost_PV == "Si": #if user want to boost PV
-                boosting_power=self.insert_boosting_power()
+            if want_boost_PV == "Si":  # if user want to boost PV
+                boosting_power = self.insert_boosting_power()
                 user_choice = self.want_to_be_CER_self_Prosumer()
             elif want_boost_PV == "No":
                 user_choice = self.want_to_be_CER_self_Prosumer()
-        elif presence_PV_plant == "No": #user dosent't have PV
+        elif presence_PV_plant == "No":  # user dosent't have PV
             want_PV = self.want_to_install_PV()
             know_where_PV, area_PV = self.elaboration_want_or_not_to_install_PV(want_PV)
-            if know_where_PV == "Si": #if user knows the area 
+            if know_where_PV == "Si":  # if user knows the area
                 comune = self.insert_comune()
-                user_choice=self.want_to_be_CER_self_Prosumer()
-            elif know_where_PV=="No":
+                user_choice = self.want_to_be_CER_self_Prosumer()
+            elif know_where_PV == "No":
                 self.visualize_results()
-        return year_PV, power_PV, boosting_power, know_where_PV, area_PV, comune, user_choice
-     
-     def insert_percentage_daytime_consumption(self)->float:
-         daily_consump=st.selectbox(
-        "In una giornata tipo, consumi di più di giorno che di notte?", options=parameters.options_for_daily_percentage_time, index=None, key="daytime_consump")
-         percentage_consump=None
-         if daily_consump!=None:   
-            percentage_mapping = parameters.percentage_dict
-            percentage_consump = percentage_mapping[daily_consump] 
-         return percentage_consump
+        return (
+            year_PV,
+            power_PV,
+            boosting_power,
+            know_where_PV,
+            area_PV,
+            comune,
+            user_choice,
+        )
 
-     def want_to_be_CER_self_Prosumer(self):
-        choice=st.radio("""Vuoi costituire una CER, essere un Autoconsumatore a distanza o un Prosumer? 
+    def insert_percentage_daytime_consumption(self) -> float:
+        daily_consump = st.selectbox(
+            "In una giornata tipo, consumi di più di giorno che di notte?",
+            options=parameters.options_for_daily_percentage_time,
+            index=None,
+            key="daytime_consump",
+        )
+        percentage_consump = None
+        if daily_consump != None:
+            percentage_mapping = parameters.percentage_dict
+            percentage_consump = percentage_mapping[daily_consump]
+        return percentage_consump
+
+    def want_to_be_CER_self_Prosumer(self):
+        choice = st.radio(
+            """Vuoi costituire una CER, essere un Autoconsumatore a distanza o un Prosumer? 
                         Svegli un'opzione.
-                        Trovi la spiegazione di ogni opzione qui sotto. """, options=["CER", "Autoconsumatore a distanza", "Prosumer"], key="want_CACER", horizontal=True,index=None)
-        
+                        Trovi la spiegazione di ogni opzione qui sotto. """,
+            options=["CER", "Autoconsumatore a distanza", "Prosumer"],
+            key="want_CACER",
+            horizontal=True,
+            index=None,
+        )
+
         with st.expander("Visualizza la spiegazione"):
-          st.markdown(Info_CACER.info_CER
-               )
-          st.markdown(Info_CACER.info_Autoconsumatore)
-          st.markdown(Info_CACER.info_Prosumer)
-          st.markdown(Info_CACER.info_cabine_primarie)
-        if choice!=None:
-             self.visualize_results()
+            st.markdown(Info_CACER.info_CER)
+            st.markdown(Info_CACER.info_Autoconsumatore)
+            st.markdown(Info_CACER.info_Prosumer)
+            st.markdown(Info_CACER.info_cabine_primarie)
+        if choice != None:
+            self.visualize_results()
         return choice
+
 
 # user: "Cittadino"
 class CittadinoInput(UserInput):

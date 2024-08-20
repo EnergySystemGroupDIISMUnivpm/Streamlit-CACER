@@ -20,16 +20,19 @@ def computation_annual_production_from_area(
     Energy_year = (
         area_PV * irradiance * PV_yield * parameters.loss_factor
     )  # energy in kWh/year formula from https://www.sunbasedata.com/blog/how-to-calculate-solar-panel-output
-    P_installable = (area_PV / parameters.Area_one_PV) * (parameters.Power_peak/1000)
+    P_installable = (area_PV / parameters.Area_one_PV) * (parameters.Power_peak / 1000)
     return Energy_year, P_installable
 
-def computation_annual_production_from_power(power:int|float,region:str)->int|float:
+
+def computation_annual_production_from_power(
+    power: int | float, region: str
+) -> int | float:
     if region not in parameters.Irradiance:
         raise ValueError(
             f"Regione '{region}' non trovata nel dizionario di irradiance."
         )
     irradiance = parameters.Irradiance[region]
-    Energy_year=power*irradiance*parameters.loss_factor
+    Energy_year = power * irradiance * parameters.loss_factor
     return Energy_year
 
 
@@ -41,25 +44,27 @@ def computation_installation_cost(P_installable: float) -> float:
 
 # computation optimal PV dimension based on annual consumption and region (region necessary to know the irradiance)
 def computation_optimal_dimension(
-    annual_consumption: int | float, region: str, percentage_daytime_consum:float
+    annual_consumption: int | float, region: str, percentage_daytime_consum: float
 ) -> int | float:
     required_PV_energy = annual_consumption * percentage_daytime_consum
     if region not in parameters.Irradiance:
         raise ValueError(
             f"Regione '{region}' non trovata nel dizionario di irradiance."
         )
-    PV_dimension = required_PV_energy / (parameters.Irradiance[region] * parameters.efficiency * parameters.loss_factor)
+    PV_dimension = required_PV_energy / (
+        parameters.Irradiance[region] * parameters.efficiency * parameters.loss_factor
+    )
     return PV_dimension
 
 
 ##INCENTIVES
-  #incentive on self-consumed energy as defined in decreto MASE 07/12/2023
+# incentive on self-consumed energy as defined in decreto MASE 07/12/2023
 def incentive_self_consumption(
     energy_self_consum: Union[int, float],
     implant_power: Union[int, float],
     implant_year: Union[datetime.date, None],
     boosting_power: int,
-    region: str
+    region: str,
 ) -> Union[int, float]:
     energy_self_consum = energy_self_consum / 1000  # conversion to MWh
     # Determine the base tariff
@@ -109,11 +114,14 @@ def savings(energy_self_consumed: int | float) -> int | float:
 
 
 def computation_self_consump(
-    annual_consum: int | float, percentage_daily_consump: float, annual_production: int | float
+    annual_consum: int | float,
+    percentage_daily_consump: float,
+    annual_production: int | float,
 ) -> int | float:
-    diurnal_consum=percentage_daily_consump*annual_consum
-    self_consump=min(diurnal_consum,annual_production)
+    diurnal_consum = percentage_daily_consump * annual_consum
+    self_consump = min(diurnal_consum, annual_production)
     return self_consump
+
 
 # computation of the fact that there is or not overproduction on average yearly values
 def comp_overproduction(
@@ -136,7 +144,9 @@ def find_optimal_members(overproduction: int) -> Dict[str, int]:
     remaining_overproduction = overproduction
 
     # Ordina i membri per consumo decrescente
-    sorted_members = sorted(parameters.consumption_rates.items(), key=lambda x: x[1], reverse=True)
+    sorted_members = sorted(
+        parameters.consumption_rates.items(), key=lambda x: x[1], reverse=True
+    )
 
     for member_type, consumption_rate in sorted_members:
         if remaining_overproduction <= 0:

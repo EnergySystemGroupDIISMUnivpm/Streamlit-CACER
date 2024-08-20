@@ -9,11 +9,11 @@ from Users_inputs import UserInput, CittadinoInput
 from session_state_variables import default_values_homepage
 import streamlit_pages_configuration
 
-#page configuration
+# page configuration
 streamlit_pages_configuration.configuration()
 streamlit_pages_configuration.home_page_title()
 
-#DEFINITION OF SESSION STATE VARIABLES
+# DEFINITION OF SESSION STATE VARIABLES
 for key, value in default_values_homepage.items():
     if key not in st.session_state:
         st.session_state[key] = value
@@ -34,12 +34,20 @@ with col2:
     # CITTADINO
     cittadino_input = CittadinoInput(f""" {st.session_state["user"]}""")
     if st.session_state["user"] == "Cittadino":
-        st.session_state["annual_consumption"] = cittadino_input.insert_annual_consumption()
-        st.session_state["percentage_daytime"]=cittadino_input.insert_percentage_daytime_consumption()
+        st.session_state["annual_consumption"] = (
+            cittadino_input.insert_annual_consumption()
+        )
+        st.session_state["percentage_daytime"] = (
+            cittadino_input.insert_percentage_daytime_consumption()
+        )
         st.session_state["region"] = cittadino_input.insert_region()
 
-        st.session_state["year_PV"], st.session_state["power_PV"], st.session_state["boosting_power"],st.session_state["known_area"], st.session_state["area_PV"], st.session_state["comune_under_5000"], st.session_state["user_CACER_choice"]= cittadino_input.presence_or_construction_PV()
-
-
-
-    
+        (
+            st.session_state["year_PV"],
+            st.session_state["power_PV"],
+            st.session_state["boosting_power"],
+            st.session_state["known_area"],
+            st.session_state["area_PV"],
+            st.session_state["comune_under_5000"],
+            st.session_state["user_CACER_choice"],
+        ) = cittadino_input.presence_or_construction_PV()

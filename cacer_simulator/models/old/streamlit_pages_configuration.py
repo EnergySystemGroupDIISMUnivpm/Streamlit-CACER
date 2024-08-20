@@ -1,12 +1,13 @@
-import streamlit as st
 from pathlib import Path
-from PIL import Image
+
+import streamlit as st
 
 resources_path = Path(__file__).parents[1] / "resources"
 
-path_logo_enea=resources_path/"logo_ENEA.png"
-path_logo_univpm=resources_path/"logo_UNIVPM.png"
-simulatore_nome="ENEA Simulatore CACER"
+path_logo_enea = resources_path / "logo_ENEA.png"
+path_logo_univpm = resources_path / "logo_UNIVPM.png"
+simulatore_nome = "ENEA Simulatore CACER"
+
 
 # CONFIGURATION OF STREAMLIT PAGE
 def configuration():
@@ -17,19 +18,26 @@ def configuration():
         initial_sidebar_state="collapsed",
     )
 
-     # titles
+    # titles
+
+
 def home_page_title():
     st.markdown(
         f"""<h1 style='text-align: center; color: #0078AC;'><em>Benvenuto in</em> {simulatore_nome}""",
         unsafe_allow_html=True,
     )
 
+
 def Risultati_title():
-    st.markdown(f"""<h1 style='text-align: center; color: #0078AC;'> {simulatore_nome}: qui puoi visualizzare i tuoi risultati</em></h1>""", unsafe_allow_html=True)
+    st.markdown(
+        f"""<h1 style='text-align: center; color: #0078AC;'> {simulatore_nome}: qui puoi visualizzare i tuoi risultati</em></h1>""",
+        unsafe_allow_html=True,
+    )
+
 
 def attention():
     st.markdown(
-    """
+        """
     <style>
     .bottom-right {
         position: fixed;
@@ -43,5 +51,5 @@ def attention():
         Attenzione! Tutti i dati che vedi sono da intendersi come stime.
             </div>
     """,
-    unsafe_allow_html=True
-)
+        unsafe_allow_html=True,
+    )

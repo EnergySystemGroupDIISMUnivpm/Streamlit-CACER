@@ -1,4 +1,4 @@
-#SESSION STATE VARIABLES
+# SESSION STATE VARIABLES
 
 default_values_homepage = {
     "user": None,
@@ -11,12 +11,12 @@ default_values_homepage = {
     "user_CACER_choice": None,
     "known_area": None,
     "want_boosting": None,
-    "percentage_daytime":None,
-    "boosting_power":0
-      }
+    "percentage_daytime": None,
+    "boosting_power": 0,
+}
 
 default_values_Risultati = {
-"annual production": None,
+    "annual production": None,
     "impiant_cost": None,
     "optimal_dim": None,
     "power_peak": None,
@@ -25,5 +25,5 @@ default_values_Risultati = {
     "avg_time_overproduction": None,
     "self_consump": None,
     "members": None,
-    "CO2": None
+    "CO2": None,
 }

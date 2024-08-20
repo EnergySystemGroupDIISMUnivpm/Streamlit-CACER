@@ -1,0 +1,18 @@
+#!/bin/bash
+
+FLAG=$1
+shift
+
+case $FLAG in
+run)
+    (
+        source $(poetry env info --path)/bin/activate
+        streamlit run main.py
+    )
+    ;;
+
+*)
+    echo flag not recognized
+    ;;
+
+esac

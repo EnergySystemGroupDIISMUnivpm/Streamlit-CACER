@@ -1,0 +1,19 @@
+import streamlit as st
+
+from cacer_simulator.views.landing_page import MacroGroup, show_macro_group_selector
+
+
+def main():
+    choice = show_macro_group_selector()
+
+    match choice:
+        case MacroGroup.AutoconsumatoreADistanza:
+            st.toast("SELECTED: Autoconsumatore a distanza", icon="💡")
+        case MacroGroup.ComunitaEnergetica:
+            st.toast("SELECTED: Comunità Energetica", icon="💡")
+        case MacroGroup.GruppoAutoconsumo:
+            st.toast("SELECTED: Gruppo Autoconsumo", icon="💡")
+
+
+if __name__ == "__main__":
+    main()

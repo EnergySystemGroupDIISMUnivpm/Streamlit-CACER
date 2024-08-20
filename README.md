@@ -28,7 +28,7 @@ This project has been restructured to mirror an **MVC** style application.
 ♻️ All existing scripts have been moved to `old` folders inside `models` or `views`.
 
 ```bash
-cacer_simulator
+cacer_simulator # ✨ NEW
 ├── __init__.py
 ├── models # ✨ NEW
 │   ├── __init__.py

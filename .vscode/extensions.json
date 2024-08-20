@@ -6,6 +6,7 @@
         "ms-python.python",
         "ms-python.debugpy",
         "tamasfe.even-better-toml",
-        "codeium.codeium"
+        "codeium.codeium",
+        "yzhang.markdown-all-in-one"
     ]
 }

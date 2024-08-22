@@ -1,6 +1,7 @@
 from enum import StrEnum
+from typing import Annotated, NotRequired
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel, Field
 from typing_extensions import TypedDict
 
 REGIONS = [
@@ -25,6 +26,30 @@ REGIONS = [
     "Valle d'Aosta",
     "Veneto",
 ]
+
+
+def is_valid_region(x: str) -> str:
+    if x not in REGIONS:
+        raise ValueError(f"Invalid Region {x}, must be in {REGIONS}")
+    return x
+
+
+RegionType = Annotated[
+    str,
+    AfterValidator(is_valid_region),
+    Field(description=f"Region among {REGIONS}"),
+]
+
+PercentageType = Annotated[
+    float,
+    Field(ge=0, le=1, description="Percentage value"),
+]
+
+PositiveOrZeroFloat = Annotated[
+    float,
+    Field(ge=0, description="Positive or zero value"),
+]
+
 
 # mean values of irradiance for each region (kW/m2)
 _irradiance_values = [
@@ -137,6 +162,14 @@ MEMBERS = [
 ]
 
 
+class OptionalMembersWithValues(TypedDict):
+    bar: NotRequired[int]
+    appartamenti: NotRequired[int]
+    pmi: NotRequired[int]
+    hotel: NotRequired[int]
+    ristoranti: NotRequired[int]
+
+
 class MembersWithValues(TypedDict):
     bar: int
     appartamenti: int
@@ -171,16 +204,21 @@ class ConsumptionByMember(BaseModel):
     def get_sorted_diurnal(self, reverse: bool = False) -> list[tuple[str, int]]:
         return sorted(  # type: ignore
             self.CONSUMPTION_RATES_DIURNAL_HOURS.items(),
-            key=lambda x: x[1],
+            key=lambda x: x[1],  # type: ignore
             reverse=reverse,
         )
 
     def get_sorted(self, reverse: bool = False) -> list[tuple[str, int]]:
         return sorted(  # type: ignore
             self.CONSUMPTION_RATES.items(),
-            key=lambda x: x[1],
+            key=lambda x: x[1],  # type: ignore
             reverse=reverse,
         )
+
+    def get_consumption_value(self, member: str, diurnal: bool = False) -> int:
+        if diurnal:
+            return self.CONSUMPTION_RATES_DIURNAL_HOURS.get(member, 0)
+        return self.CONSUMPTION_RATES.get(member, 0)
 
 
 # avg annual consumptions during 10 to 15 (central hours of the day) in kWh.

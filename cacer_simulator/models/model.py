@@ -1,13 +1,17 @@
 import datetime
-from typing import Dict
+
+from pydantic import PositiveFloat, validate_call
 
 import cacer_simulator.common as common
 
 # TODO: Put function comments into docstrings. Remember to add examples or unit of measurements if required by the function
 
 
-# computation of the regional irradiance given the region
-def computation_regional_irradiance(region: str) -> int:
+@validate_call
+def computation_regional_irradiance(region: common.RegionType) -> int:
+    """
+    computation of the regional irradiance given the region
+    """
     if region not in common.IRRADIANCE:
         raise ValueError(
             f"Regione '{region}' non trovata nel dizionario di irradiance."
@@ -17,8 +21,11 @@ def computation_regional_irradiance(region: str) -> int:
 
 
 # computation of the optimal size of PV plant in kw given the annual consumption and the region
+@validate_call
 def optimal_sizing(
-    annual_consumption: float, region: str, percentage_daytime_consum: float
+    annual_consumption: PositiveFloat,
+    region: common.RegionType,
+    percentage_daytime_consum: common.PercentageType,
 ) -> float:
     required_PV_energy = annual_consumption * percentage_daytime_consum
     regional_irradiance = computation_regional_irradiance(region)
@@ -29,19 +36,27 @@ def optimal_sizing(
 
 
 # computation of the annual production in kWh given the power of the PV plant
-def production_estimate(plant_power: float, region: str) -> float:
+@validate_call
+def production_estimate(
+    plant_power: PositiveFloat,
+    region: common.RegionType,
+) -> float:
     regional_irradiance = computation_regional_irradiance(region)
     energy_year = plant_power * regional_irradiance * common.LOSS_FACTOR
     return energy_year
 
 
-# computation of the installable power in kW given the area in m2
-def computation_installable_power(area: float) -> float:
+@validate_call
+def computation_installable_power(area: PositiveFloat) -> float:
+    """
+    computation of the installable power in kW given the area in m2
+    """
     installable_power = (area / common.AREA_ONE_PV) * (common.POWER_PEAK / 1000)
     return installable_power
 
 
-def cost_estimate(plant_power: float) -> float:
+@validate_call
+def cost_estimate(plant_power: PositiveFloat) -> float:
     """
     Computation of intallation costs based on installable power in kw
 
@@ -53,18 +68,20 @@ def cost_estimate(plant_power: float) -> float:
 
 
 # computation of reducted CO2 based on annual self-consumed energy in kwh
-def environmental_benefits(self_consumed_energy: float) -> float:
+@validate_call
+def environmental_benefits(self_consumed_energy: PositiveFloat) -> float:
     reduced_CO2 = self_consumed_energy * common.AVG_EMISSIONS_FACTOR
     return reduced_CO2
 
 
 # computation of the benefit B (benefit on self consumpted energy)
+@validate_call
 def economical_benefit_b(
-    plant_power: float,
+    plant_power: PositiveFloat,
     year: datetime.date,
-    plant_enhancement: float,
-    region: str,
-    self_consumed_energy: float,
+    plant_enhancement: common.PositiveOrZeroFloat,
+    region: common.RegionType,
+    self_consumed_energy: PositiveFloat,
 ) -> float:
     """
     Calculates the economic benefit on self consumption type B
@@ -93,8 +110,11 @@ def economical_benefit_b(
 
 
 # estimation of annual self consumed energy in kWh
+@validate_call
 def estimate_self_consumed_energy(
-    annual_consuption: float, percentage_daytime_consum: float, annual_production: float
+    annual_consuption: PositiveFloat,
+    percentage_daytime_consum: common.PercentageType,
+    annual_production: PositiveFloat,
 ) -> float:
     diurnal_consum = percentage_daytime_consum * annual_consuption
     energy_self_consump = min(diurnal_consum, annual_production)
@@ -102,13 +122,18 @@ def estimate_self_consumed_energy(
 
 
 # computation of the difference between the energy producted and the energy consumed in a year in kWh
-def energy_difference(energy_self_consump: float, annual_production: float) -> float:
+@validate_call
+def energy_difference(
+    energy_self_consump: PositiveFloat,
+    annual_production: PositiveFloat,
+) -> float:
     difference = annual_production - energy_self_consump
     return difference
 
 
 # computation of the area (m2) necessary to install the optimal plant power (kW)
-def computation_optimal_area(optimal_plant_power: float) -> float:
+@validate_call
+def computation_optimal_area(optimal_plant_power: PositiveFloat) -> float:
     optimal_area = (optimal_plant_power * common.AREA_ONE_PV) / (
         common.POWER_PEAK / 1000
     )
@@ -119,8 +144,9 @@ def computation_optimal_area(optimal_plant_power: float) -> float:
 
 
 # computation of benefit A (only for municipalities with less than 5000 inhabitants)
+@validate_call
 def economical_benefit_a(
-    plant_power: float,
+    plant_power: PositiveFloat,
     inhabitants: bool = False,
 ) -> float:
     benefit = 0
@@ -130,24 +156,42 @@ def economical_benefit_a(
     return benefit
 
 
-def consumption_estimation(members: dict) -> float:
-
-    # TODO: REFACTOR, what is members?
+@validate_call
+def consumption_estimation(members: common.OptionalMembersWithValues) -> int:
     """
     Estimation of the annual consumption in kWh starting from the number and type of members.
+
     For Groups of self consumers the only typology is appartments.
+
+    Usage:
+
+    ```
+    result = consumption_estimation(
+        {
+            "bar": 0,
+            "appartamenti": 10,
+            "pmi": 0,
+            "hotel": 0,
+            "ristoranti": 0,
+        }
+    )
+    assert result == 20_000
+    ```
     """
     total_consumption = 0
     for member_type, member_count in members.items():
-        if member_type in common.CONSUMPTION_RATES:
-            total_consumption += member_count * common.CONSUMPTION_RATES[member_type]
+        total_consumption += (  # type: ignore
+            member_count
+            * common.ConsumptionByMember().get_consumption_value(member_type)
+        )
     return total_consumption
 
 
 ## FUNCTION FOR CER
 
 
-def optimal_members(energy_year: float) -> Dict[str, int]:
+@validate_call(validate_return=True)
+def optimal_members(energy_year: float) -> common.MembersWithValues:
     """
     estimation of the optimal members of a CER based on the annual production of energy in kWh
     """
@@ -163,4 +207,5 @@ def optimal_members(energy_year: float) -> Dict[str, int]:
         num_members = int(remaining_overproduction // consumption_rates_diurnal_hours)
         members[member_type] = num_members
         remaining_overproduction -= num_members * consumption_rates_diurnal_hours
-    return members
+
+    return members  # type: ignore

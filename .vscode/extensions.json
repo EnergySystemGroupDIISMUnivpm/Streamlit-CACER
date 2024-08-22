@@ -7,6 +7,7 @@
         "ms-python.debugpy",
         "tamasfe.even-better-toml",
         "codeium.codeium",
-        "yzhang.markdown-all-in-one"
+        "yzhang.markdown-all-in-one",
+        "gruntfuggly.todo-tree"
     ]
 }

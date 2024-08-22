@@ -1,6 +1,7 @@
 import streamlit as st
 
 from cacer_simulator.views.homepage import MacroGroup, show_macro_group_selector
+from cacer_simulator.views.view import UserInput
 
 
 def main():

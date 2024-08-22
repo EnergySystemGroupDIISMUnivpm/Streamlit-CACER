@@ -1,7 +1,7 @@
 import datetime
-from typing import Never, Tuple
 
 import streamlit as st
+from pydantic import validate_call
 
 import cacer_simulator.common as common
 
@@ -55,16 +55,11 @@ class UserInput:
         return consumption_options[option]
 
     # Power and year of PV
+    @validate_call(validate_return=True)
     def insert_year_power_PV(
         self,
-    ) -> Tuple[
-        datetime.date
-        | Tuple[Never]
-        | Tuple[datetime.date]
-        | Tuple[datetime.date]
-        | None
-        | int
-    ]:  ### tipizzazione tupla???
+    ) -> tuple[datetime.date, int]:
+
         year_PV = st.date_input(
             "Inserisci la data di entrata in esercizio dell'impianto PV",
             format="DD/MM/YYYY",
@@ -76,7 +71,8 @@ class UserInput:
             format="%d",
             key="PV_power",
         )
-        return year_PV, int(power_PV)
+
+        return year_PV, int(power_PV)  # type: ignore
 
     def insert_area(self) -> int:
         area_PV: int | float = st.number_input(
@@ -85,7 +81,7 @@ class UserInput:
             step=1,
             format="%d",
         )
-        return area_PV
+        return int(area_PV)
 
     ## Input for only CER
     # Knowing with making the cer

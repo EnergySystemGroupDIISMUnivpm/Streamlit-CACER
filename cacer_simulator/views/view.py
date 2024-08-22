@@ -1,12 +1,12 @@
 import datetime
 
 import streamlit as st
-from pydantic import validate_call
+from pydantic import validate_call, BaseModel
 
 import cacer_simulator.common as common
 
 
-class UserInput:
+class UserInput(BaseModel):
 
     ## Input in common for all 3 use case
     # Region
@@ -83,6 +83,16 @@ class UserInput:
         )
         return int(area_PV)
 
+    def pv_or_area(self) -> str | None:
+        has_pv_or_area: str | None = st.radio(
+            "Hai già un impianto PV o hai un area a disposizione in cui costruirlo?",
+            options=["Ho già un impianto", "Ho un'area in cui costruirlo"],
+            index=None,
+            horizontal=True,
+            key="pv_or_area",
+        )
+        return has_pv_or_area
+
     ## Input for only CER
     # Knowing with making the cer
     def cer_with(self) -> str | None:
@@ -94,3 +104,26 @@ class UserInput:
             key="cer_members_info",
         )
         return members_info
+
+    def insert_members(self) -> common.MembersWithValues:
+        st.markdown("Inserisci il numero di membri della tua CER per ogni categoria")
+        member_dict = common.MembersWithValues(
+            bar=0, appartamenti=0, pmi=0, hotel=0, ristoranti=0
+        )
+        for member in member_dict.keys():
+            number = st.number_input(
+                str(member), min_value=0, step=1, key=f"cer_member_{member}"
+            )
+            number = int(number)
+            member_dict[member] = number
+        return member_dict
+
+    def know_members_consumption(self) -> str | None:
+        members_consumption: str | None = st.radio(
+            "Conosci i consumi energetici dei membri della tua CER?",
+            options=["Si", "No"],
+            index=None,
+            horizontal=True,
+            key="cer_members_consumption",
+        )
+        return members_consumption

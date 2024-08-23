@@ -140,3 +140,12 @@ class UserInput(BaseModel):
             key="cer_members_consumption",
         )
         return members_consumption
+    
+
+class Results(BaseModel):
+
+    def see_results(self) -> bool:
+        view_result = st.button("Clicca qui per vedere i risultati", key = "visualize-result")
+        
+        return view_result
+    

@@ -16,5 +16,6 @@
     "python.testing.pytestArgs": [
         "-sv"
     ],
-    "python.terminal.activateEnvironment": false
+    "python.terminal.activateEnvironment": false,
+    "editor.formatOnSave": true
 }

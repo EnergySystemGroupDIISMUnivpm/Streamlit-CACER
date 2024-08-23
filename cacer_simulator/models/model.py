@@ -157,7 +157,7 @@ def economical_benefit_a(
 
 
 @validate_call
-def consumption_estimation(members: common.OptionalMembersWithValues) -> int:
+def consumption_estimation(members: common.MembersWithValues) -> int :
     """
     Estimation of the annual consumption in kWh starting from the number and type of members.
 

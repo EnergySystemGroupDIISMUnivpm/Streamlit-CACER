@@ -3,7 +3,7 @@ import streamlit as st
 from cacer_simulator.views.homepage import MacroGroup, show_macro_group_selector
 from cacer_simulator.views.view import UserInput
 import controller_functions
-
+from cacer_simulator.models import model
 
 def main():
     choice = show_macro_group_selector()
@@ -21,9 +21,12 @@ def main():
                 knowledge_cer_consumption = user_input.know_members_consumption()
                 if knowledge_cer_consumption == "No":
                     members = user_input.insert_members()
-                    area, year_pv, power_pv = controller_functions.info_pv_or_area(
-                        user_input
-                    )
+                    area, year_pv, power_pv, add_power = (
+                         controller_functions.info_pv_    or_area(user_input)
+                    ) 
+                    consumption = model.consumption_estimation(members)
+                    production = model.production_estimate(power_pv, region)
+
                 elif knowledge_cer_consumption == "Si":
                     consumption = user_input.insert_annual_consumption(
                         "Inserisci i consumi annui totali, in kwh, della tua CER "
@@ -31,13 +34,17 @@ def main():
                     percentage_daily_consumption = (
                         user_input.insert_percentage_daytime_consumption()
                     )
-                    area, year_pv, power_pv = controller_functions.info_pv_or_area(
-                        user_input
+                    area, year_pv, power_pv, add_power = (
+                        controller_functions.info_pv_or_area(user_input)
                     )
-
+            elif know_cer_members == "No":
+                area, year_pv, power_pv, add_power = (
+                         controller_functions.info_pv_or_area(user_input)
+                    )
         case MacroGroup.GruppoAutoconsumo:
             st.toast("SELECTED: Gruppo Autoconsumo", icon="💡")
 
 
 if __name__ == "__main__":
     main()
+ 

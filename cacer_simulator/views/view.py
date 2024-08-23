@@ -10,12 +10,12 @@ class UserInput(BaseModel):
 
     ## Input in common for all 3 use case
     # Region
-    def insert_region(self) -> str | None:
+    def insert_region(self) -> common.RegionType | None:
         region: str | None = st.selectbox(
             "Seleziona la tua regione", common.REGIONS, index=None
         )
         return region
-
+    
     # Municipality
     def municipality(self) -> str | None:
         inhabitants: str | None = st.radio(
@@ -92,6 +92,19 @@ class UserInput(BaseModel):
             key="pv_or_area",
         )
         return has_pv_or_area
+    
+
+    def boosting_power(self) -> int:
+        added_power = st.number_input(
+            "Di quanto vuoi potenziare il tuo impianto in kWh?",
+            key="boosted_power",
+            step=1,
+            format="%d",
+            help="Se non vuoi potenziare l'impianto inserisci 0",
+        )
+        return int(added_power)
+
+    
 
     ## Input for only CER
     # Knowing with making the cer

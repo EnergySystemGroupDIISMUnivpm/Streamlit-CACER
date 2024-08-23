@@ -4,13 +4,11 @@ from pydantic import PositiveFloat, validate_call
 
 import cacer_simulator.common as common
 
-# TODO: Put function comments into docstrings. Remember to add examples or unit of measurements if required by the function
-
 
 @validate_call
 def computation_regional_irradiance(region: common.RegionType) -> int:
     """
-    computation of the regional irradiance given the region
+    computation of the regional irradiance given the region.
     """
     if region not in common.IRRADIANCE:
         raise ValueError(
@@ -20,13 +18,22 @@ def computation_regional_irradiance(region: common.RegionType) -> int:
     return regional_irradiance
 
 
-# computation of the optimal size of PV plant in kw given the annual consumption and the region
 @validate_call
 def optimal_sizing(
     annual_consumption: PositiveFloat,
     region: common.RegionType,
     percentage_daytime_consum: common.PercentageType,
 ) -> float:
+    """
+    Computation of the optimal size of PV plant in kw given the annual consumption and the region.
+
+    Attrs:
+        annual_consumption: PositiveFloat - consumed energy in kWh
+        region: RegionType - region in which there is the PV plant
+        percentage_daytime_consum: PercentageType - percentage of the total consumption referring to how much of the total consumption is
+        consumed during the daytime.
+
+    """
     required_PV_energy = annual_consumption * percentage_daytime_consum
     regional_irradiance = computation_regional_irradiance(region)
     optimal_PV_size = required_PV_energy / (
@@ -35,12 +42,19 @@ def optimal_sizing(
     return optimal_PV_size
 
 
-# computation of the annual production in kWh given the power of the PV plant
 @validate_call
 def production_estimate(
     plant_power: PositiveFloat,
     region: common.RegionType,
 ) -> float:
+    """
+    Computation of the annual production in kWh given the power of the PV plant.
+
+    Attrs:
+        plant_power: PositiveFloat - power of PV plant in KW
+        region: RegionType - region in which there is the PV plant
+
+    """
     regional_irradiance = computation_regional_irradiance(region)
     energy_year = plant_power * regional_irradiance * common.LOSS_FACTOR
     return energy_year
@@ -49,7 +63,10 @@ def production_estimate(
 @validate_call
 def computation_installable_power(area: PositiveFloat) -> float:
     """
-    computation of the installable power in kW given the area in m2
+    computation of the installable power in kW given the area.
+
+    Attrs:
+        area: PositiveFloat - area in m2
     """
     installable_power = (area / common.AREA_ONE_PV) * (common.POWER_PEAK / 1000)
     return installable_power
@@ -67,14 +84,18 @@ def cost_estimate(plant_power: PositiveFloat) -> float:
     return installation_cost
 
 
-# computation of reducted CO2 based on annual self-consumed energy in kwh
 @validate_call
 def environmental_benefits(self_consumed_energy: PositiveFloat) -> float:
+    """
+    Computation of reduced CO2 emissions based on annual self-consumed energy.
+
+    Attrs:
+        self_consumed_energy: Positivefloat - self-consumed energy in kWh
+    """
     reduced_CO2 = self_consumed_energy * common.AVG_EMISSIONS_FACTOR
     return reduced_CO2
 
 
-# computation of the benefit B (benefit on self consumpted energy)
 @validate_call
 def economical_benefit_b(
     plant_power: PositiveFloat,
@@ -87,7 +108,25 @@ def economical_benefit_b(
     Calculates the economic benefit on self consumption type B
 
     Attrs:
-        consumed_energy: float - consumed energy in kWh
+        plant_power: PositiveFloat - power of PV plant in kW
+        year: datetime.date - year of construction of the PV
+        plant_enhancement: PositiveOrZeroFloat - enhancement of the PV plant in kW
+        region: RegionType - region
+        self_consumed_energy: PositiveFloat - self-consumed energy in kWh
+
+    Usage:
+
+    ```
+    result = economical_benefit_b(
+        1000,
+        datetime.date(2021, 12, 16),
+        0,
+        "Lazio",
+        300,
+    )
+
+    assert result == 3.0
+    ```
     """
     energy_self_consum = self_consumed_energy / 1000  # conversion to MWh
     # Determine the base tariff
@@ -116,24 +155,43 @@ def estimate_self_consumed_energy(
     percentage_daytime_consum: common.PercentageType,
     annual_production: PositiveFloat,
 ) -> float:
+    """
+    Computation of the annual self-consumed energy in kWh.
+
+    Attrs:
+        annual_consumption: PositiveFloat - consumed energy in kWh
+        percentage_daytime_consum: PercentageType - percentage of the total consumption referring to how much of the total consumption is during the daytime
+        annual_production: PositiveFloat - annual production in kWh
+    """
     diurnal_consum = percentage_daytime_consum * annual_consuption
     energy_self_consump = min(diurnal_consum, annual_production)
     return energy_self_consump
 
 
-# computation of the difference between the energy producted and the energy consumed in a year in kWh
 @validate_call
 def energy_difference(
     energy_self_consump: PositiveFloat,
     annual_production: PositiveFloat,
 ) -> float:
+    """
+    Computation of the difference between the energy producted and the energy consumed in a year in kWh.
+
+    Attrs:
+        energy_self_consump: PositiveFloat - energy consumed in kWh
+        annual_production: PositiveFloat - energy produced in kWh
+    """
     difference = annual_production - energy_self_consump
     return difference
 
 
-# computation of the area (m2) necessary to install the optimal plant power (kW)
 @validate_call
 def computation_optimal_area(optimal_plant_power: PositiveFloat) -> float:
+    """
+    Computation of the area (m2) necessary to install the optimal plant power (kW).
+
+    Attrs:
+        optimal_plant_power: PositiveFloat - power of PV plant in kW
+    """
     optimal_area = (optimal_plant_power * common.AREA_ONE_PV) / (
         common.POWER_PEAK / 1000
     )
@@ -143,12 +201,18 @@ def computation_optimal_area(optimal_plant_power: PositiveFloat) -> float:
 ## FUNCTION FOR CER AND GROUPS OF SELF CONSUMERS
 
 
-# computation of benefit A (only for municipalities with less than 5000 inhabitants)
 @validate_call
 def economical_benefit_a(
     plant_power: PositiveFloat,
     inhabitants: bool = False,
 ) -> float:
+    """
+    Computation of benefit A (only for municipalities with less than 5000 inhabitants).
+
+    Attrs:
+        plant_power: PositiveFloat - power of PV plant in kW
+        inhabitants: bool - True if the municipality has less than 5000 inhabitants.
+    """
     benefit = 0
     if inhabitants == True:
         # Determine the benefit based on the power range
@@ -157,7 +221,7 @@ def economical_benefit_a(
 
 
 @validate_call
-def consumption_estimation(members: common.MembersWithValues) -> int :
+def consumption_estimation(members: common.MembersWithValues) -> int:
     """
     Estimation of the annual consumption in kWh starting from the number and type of members.
 
@@ -191,9 +255,25 @@ def consumption_estimation(members: common.MembersWithValues) -> int :
 
 
 @validate_call(validate_return=True)
-def optimal_members(energy_year: float) -> common.MembersWithValues:
+def optimal_members(energy_year: PositiveFloat) -> common.MembersWithValues:
     """
-    estimation of the optimal members of a CER based on the annual production of energy in kWh
+    estimation of the optimal members of a CER based on the annual production of energy in kWh.
+
+    Attrs:
+        energy_year: PositiveFloat - annual production in kWh.
+
+    Usage:
+
+    ```
+    result = optimal_members(1000)
+    assert result == {
+        "bar": 0,
+        "appartamenti": 10,
+        "pmi": 0,
+        "hotel": 0,
+        "ristoranti": 0,
+    }
+    ```
     """
     members = {key: 0 for key in common.ConsumptionByMember().members}
     remaining_overproduction = energy_year

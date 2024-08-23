@@ -27,9 +27,54 @@ def main():
                         controller_functions.info_pv_or_area(user_input)
                     )
                     consumption = model.consumption_estimation(members)
-                    if power_pv:
-                        production = model.production_estimate(power_pv, region)
-                        result_view = results.see_results()
+                    if power_pv and year_pv:
+                        if add_power is not None:  # va bene anche se è 0
+                            production = model.production_estimate(
+                                power_pv + add_power, region
+                            )
+                            percentage_daily_consumption = (
+                                model.percentage_daytime_consumption_estimation(members)
+                            )
+                            energy_self_consump = model.estimate_self_consumed_energy(
+                                consumption, percentage_daily_consumption, production
+                            )
+                            energy_difference_produc_consum = model.energy_difference(
+                                energy_self_consump, production
+                            )
+                            overproduction_or_undeprodcution = (
+                                model.presence_of_overproduction_or_underproduction(
+                                    energy_difference_produc_consum, region
+                                )
+                            )
+                            result_view = results.see_results()
+                            if result_view:
+                                results.see_production(production)
+                                if overproduction_or_undeprodcution == "Overproduction":
+                                    optimal_members = model.optimal_members(
+                                        energy_difference_produc_consum
+                                    )
+                                    benefit_b_present_memebers = (
+                                        model.economical_benefit_b(
+                                            power_pv,
+                                            year_pv,
+                                            add_power,
+                                            region,
+                                            energy_self_consump,
+                                        )
+                                    )
+                                    benefit_b_added_members = (
+                                        model.economical_benefit_b(
+                                            power_pv,
+                                            year_pv,
+                                            add_power,
+                                            region,
+                                            production,
+                                        )
+                                    )
+                                    results.see_optimal_members(
+                                        optimal_members, "membri già presenti"
+                                    )
+
                 elif knowledge_cer_consumption == "Si":
                     consumption = user_input.insert_annual_consumption(
                         "Inserisci i consumi annui totali, in kwh, della tua CER "

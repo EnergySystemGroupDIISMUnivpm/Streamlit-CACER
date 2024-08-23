@@ -1,7 +1,7 @@
 import datetime
 
 import streamlit as st
-from pydantic import validate_call, BaseModel
+from pydantic import PositiveFloat, validate_call, BaseModel
 
 import cacer_simulator.common as common
 
@@ -15,7 +15,7 @@ class UserInput(BaseModel):
             "Seleziona la tua regione", common.REGIONS, index=None
         )
         return region
-    
+
     # Municipality
     def municipality(self) -> str | None:
         inhabitants: str | None = st.radio(
@@ -92,19 +92,17 @@ class UserInput(BaseModel):
             key="pv_or_area",
         )
         return has_pv_or_area
-    
 
     def boosting_power(self) -> int:
         added_power = st.number_input(
-            "Di quanto vuoi potenziare il tuo impianto in kWh?",
+            "Di quanto vuoi potenziare il tuo impianto in kW?",
             key="boosted_power",
+            min_value=0,
             step=1,
             format="%d",
             help="Se non vuoi potenziare l'impianto inserisci 0",
         )
         return int(added_power)
-
-    
 
     ## Input for only CER
     # Knowing with making the cer
@@ -140,12 +138,34 @@ class UserInput(BaseModel):
             key="cer_members_consumption",
         )
         return members_consumption
-    
+
 
 class Results(BaseModel):
 
     def see_results(self) -> bool:
-        view_result = st.button("Clicca qui per vedere i risultati", key = "visualize-result")
-        
+        view_result = st.button(
+            "Clicca qui per vedere i risultati", key="visualize-result"
+        )
+
         return view_result
-    
+
+    def see_production(self, production: PositiveFloat):
+        production = round(production)
+        st.write(
+            f"""Abbiamo stimato che il tuo pannello produce circa {production} kWh in un anno"""
+        )
+
+    def see_optimal_members(
+        self, optimal_members: common.MembersWithValues, label: str
+    ):
+        messages = {
+            "membri non presenti": "I membri ideali con cui potresti costituire la CER per ottimizzare l'energia autoconsumata e gli incentivi sono:",
+            "membri già presenti": "Ai membri della tua CER, potresti aggiungere i seguenti membri per ottimizzare l'energia autoconsumata e gli incentivi:",
+        }
+
+        message = messages.get(label, None)
+
+        if message:
+            st.write(f"{message} {optimal_members}")
+        else:
+            st.write("Label non riconosciuto.")

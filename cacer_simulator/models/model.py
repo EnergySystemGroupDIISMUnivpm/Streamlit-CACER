@@ -198,6 +198,25 @@ def computation_optimal_area(optimal_plant_power: PositiveFloat) -> float:
     return optimal_area
 
 
+def presence_of_overproduction_or_underproduction(
+    difference_produc_consum: float, region: common.RegionType
+) -> str:
+    """
+    Computation of the fact that it is necessary to increase the PV power, to include other members to share with energy or consumptions are almost equal to production.
+
+    Attrs:
+        difference_produc_consum: float - difference between production and consumption in kWh. Can be even negative.
+        region: RegionType - region
+    """
+    energy_one_pv = production_estimate(common.POWER_PEAK / 1000, region)
+    if -energy_one_pv < difference_produc_consum <= 0:
+        return "Optimal"
+    elif difference_produc_consum < 0:
+        return "Underproduction"
+    else:
+        return "Overproduction"
+
+
 ## FUNCTION FOR CER AND GROUPS OF SELF CONSUMERS
 
 
@@ -251,6 +270,35 @@ def consumption_estimation(members: common.MembersWithValues) -> int:
     return total_consumption
 
 
+@validate_call
+def percentage_daytime_consumption_estimation(
+    members: common.MembersWithValues,
+) -> PositiveFloat:
+    """
+    Estimation of the percentage of the annual consumption related to how much energy is consumed during daytime,
+    starting from the number and type of members.
+
+    For Groups of self consumers the only typology is appartments.
+
+    Attrs:
+
+    members: MembersWithValues - number and type of members.
+    """
+    total_percentage = 0
+    total_members_count = 0
+    for member_type, member_count in members.items():
+        percentage = common.ConsumptionByMember().get_consumption_percentage(
+            member_type
+        )
+        total_percentage += member_count * percentage  # type: ignore
+        total_members_count += member_count  # type: ignore
+    total_percentage = total_percentage / 100
+    if total_members_count > 0:
+        return round(total_percentage / total_members_count, 2)
+    else:
+        return 0.0
+
+
 ## FUNCTION FOR CER
 
 
@@ -278,14 +326,23 @@ def optimal_members(energy_year: PositiveFloat) -> common.MembersWithValues:
     members = {key: 0 for key in common.ConsumptionByMember().members}
     remaining_overproduction = energy_year
 
-    for (
-        member_type,
-        consumption_rates_diurnal_hours,
-    ) in common.ConsumptionByMember().get_sorted_diurnal(reverse=True):
+    # Get sorted consumption rates by member type
+    sorted_consumption = common.ConsumptionByMember().get_sorted_diurnal(reverse=True)
+
+    # Find the member with the minimum consumption rate
+    min_consumption_member = min(sorted_consumption, key=lambda x: x[1])
+    min_member_type = min_consumption_member[0]
+
+    for member_type, consumption_rates_diurnal_hours in sorted_consumption:
         if remaining_overproduction <= 0:
             break
+
         num_members = int(remaining_overproduction // consumption_rates_diurnal_hours)
         members[member_type] = num_members
         remaining_overproduction -= num_members * consumption_rates_diurnal_hours
+
+    # If remaining energy is still greater than zero but not enough for a full member, assign it to the min consumption member
+    if remaining_overproduction > 0:
+        members[min_member_type] += 1
 
     return members  # type: ignore

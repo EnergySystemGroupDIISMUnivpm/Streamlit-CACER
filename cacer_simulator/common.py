@@ -197,6 +197,14 @@ class ConsumptionByMember(BaseModel):
         "ristoranti": 26000,
     }
 
+    CONSUMPTION_PERCENTAGE: MembersWithValues = {
+        "bar": 70,
+        "appartamenti": 30,
+        "pmi": 80,
+        "hotel": 40,
+        "ristoranti": 50,
+    }
+
     @property
     def members(self) -> list[str]:
         return MEMBERS
@@ -220,5 +228,5 @@ class ConsumptionByMember(BaseModel):
             return self.CONSUMPTION_RATES_DIURNAL_HOURS.get(member, 0)
         return self.CONSUMPTION_RATES.get(member, 0)
 
-
-# avg annual consumptions during 10 to 15 (central hours of the day) in kWh.
+    def get_consumption_percentage(self, member: str) -> int:
+        return self.CONSUMPTION_PERCENTAGE.get(member, 0)

@@ -149,35 +149,38 @@ class Results(BaseModel):
 
         return view_result
 
-    def see_production(self, production: PositiveFloat, label : str):
+    def see_production(self, production: PositiveFloat, label: str):
         production = round(production)
         if label == "PV":
             st.write(
                 f"""Abbiamo stimato che il tuo pannello produce circa {production} kWh in un anno"""
             )
-        elif label =="area":
+        elif label == "area":
             st.write(
                 f"""Abbiamo stimato che con l'area che hai inserito l'impianto che potresti costruirci produrrebbe circa {production} kWh in un anno"""
             )
+
     def see_optimal_members(
         self, optimal_members: common.MembersWithValues, label: str
     ):
         messages = {
-            "membri non presenti": "I membri ideali con cui potresti costituire la CER per ottimizzare l'energia autoconsumata :",
+            "membri non presenti": "I membri ideali con cui potresti costituire la CER per ottimizzare l'energia autoconsumata sono:",
             "membri già presenti": "Ai membri della tua CER, potresti aggiungere i seguenti membri per ottimizzare l'energia autoconsumata :",
         }
 
         message = messages.get(label, None)
-
+        filtered_data = {k: v for k, v in optimal_members.items() if v > 0}  # type: ignore
+        result_list = [f"{v} {k}" for k, v in filtered_data.items()]
+        result_string = ", ".join(result_list)
         if message:
-            st.write(f"{message} {optimal_members}")
+            st.write(f"{message} {result_string}")
         else:
             st.write("Label non riconosciuto.")
 
     def see_economical_benefit_b(self, benefit_b_pres, benefit_b_new=None):
         benefit_b_pres = round(benefit_b_pres)
         st.write(
-            f"Abbiamo calcolato che i tuoi incentivi economici di tipo B considerando i membri già presenti corrispondono a {benefit_b_pres}€."
+            f"Abbiamo calcolato che i tuoi incentivi economici di tipo B corrispondono a {benefit_b_pres}€."
         )
 
         if benefit_b_new is not None:

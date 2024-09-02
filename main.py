@@ -620,6 +620,86 @@ def main():
                 area, year_pv, power_pv, add_power = (
                     controller_functions.info_pv_or_area(user_input)
                 )
+                if power_pv and year_pv and region:
+                    if add_power is not None:  # va bene anche se è 0
+                        production = model.production_estimate(
+                            power_pv + add_power, region
+                        )
+                        optimal_members = model.optimal_members(production)
+                        result_view = results.see_results()
+                        if result_view:
+                            results.see_production(production, "PV")
+                            benefit_b_present_members = model.economical_benefit_b(
+                                power_pv,
+                                year_pv,
+                                add_power,
+                                region,
+                                production,
+                            )
+                            environmental_benefit_present_members = (
+                                model.environmental_benefits(production)
+                            )
+
+                            results.see_optimal_members(
+                                optimal_members, "membri non presenti"
+                            )
+                            if inhabitants == "Si":
+                                benefit_a = model.economical_benefit_a(
+                                    power_pv + add_power
+                                )
+
+                                results.see_economical_benefit_a(
+                                    benefit_a,
+                                )
+                            results.see_economical_benefit_b(
+                                benefit_b_present_members,
+                            )
+
+                            results.see_environmental_benefit(
+                                environmental_benefit_present_members,
+                            )
+                if area and region:
+                    add_power = 0
+                    year_pv = datetime.date.today()
+                    installable_power = model.computation_installable_power(area)
+                    production = model.production_estimate(
+                        installable_power + add_power, region
+                    )
+                    result_view = results.see_results()
+                    if result_view:
+                        optimal_members = model.optimal_members(production)
+                        results.see_installable_power(installable_power)
+                        results.see_production(production, "area")
+                        benefit_b_present_members = model.economical_benefit_b(
+                            installable_power,
+                            year_pv,
+                            add_power,
+                            region,
+                            production,
+                        )
+                        environmental_benefit_present_members = (
+                            model.environmental_benefits(production)
+                        )
+
+                        results.see_optimal_members(
+                            optimal_members, "membri non presenti"
+                        )
+                        if inhabitants == "Si":
+                            benefit_a = model.economical_benefit_a(
+                                installable_power + add_power
+                            )
+
+                            results.see_economical_benefit_a(
+                                benefit_a,
+                            )
+                        results.see_economical_benefit_b(
+                            benefit_b_present_members,
+                        )
+
+                        results.see_environmental_benefit(
+                            environmental_benefit_present_members
+                        )
+
         case MacroGroup.GruppoAutoconsumo:
             st.toast("SELECTED: Gruppo Autoconsumo", icon="💡")
 

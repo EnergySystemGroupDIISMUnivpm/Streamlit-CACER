@@ -116,26 +116,44 @@ class UserInput(BaseModel):
         )
         return members_info
 
-    def insert_members(self) -> common.MembersWithValues:
-        st.markdown("Inserisci il numero di membri della tua CER per ogni categoria")
-        member_dict = common.MembersWithValues(
-            bar=0, appartamenti=0, pmi=0, hotel=0, ristoranti=0
-        )
-        for member in member_dict.keys():
-            number = st.number_input(
-                str(member), min_value=0, step=1, key=f"cer_member_{member}"
+    def insert_members(self, label: str) -> common.MembersWithValues:
+        if label == "CER":
+            st.markdown(
+                "Inserisci il numero di membri della tua CER per ogni categoria"
             )
-            number = int(number)
-            member_dict[member] = number
-        return member_dict
+            member_dict = common.MembersWithValues(
+                bar=0, appartamenti=0, pmi=0, hotel=0, ristoranti=0
+            )
+            for member in member_dict.keys():
+                number = st.number_input(
+                    str(member), min_value=0, step=1, key=f"cer_member_{member}"
+                )
+                number = int(number)
+                member_dict[member] = number
+        elif label == "Group":
+            appartments = st.number_input(
+                "Inserisci il numero di appartamenti presenti nel tuo condominio",
+                min_value=0,
+                step=1,
+                key="appartments",
+            )
+            appartments = int(appartments)
+            member_dict = common.MembersWithValues(
+                bar=0, appartamenti=appartments, pmi=0, hotel=0, ristoranti=0
+            )
+        return member_dict  # type: ignore
 
-    def know_members_consumption(self) -> str | None:
+    def know_members_consumption(self, label: str) -> str | None:
+        if label == "CER":
+            stringa = "dei membri della tua CER"
+        elif label == "Group":
+            stringa = "del tuo condominio"
         members_consumption: str | None = st.radio(
-            "Conosci i consumi energetici dei membri della tua CER?",
+            f"Conosci i consumi energetici {stringa}?",  # type: ignore
             options=["Si", "No"],
             index=None,
             horizontal=True,
-            key="cer_members_consumption",
+            key="members_consumption",
         )
         return members_consumption
 
@@ -222,4 +240,13 @@ class Results(BaseModel):
 
         st.write(
             f"Abbiamo calcolato che con l'area che hai fornito potresti costruire un impianto fino a {power_pv} Kw."
+        )
+
+    def see_CER_info(self) -> None:
+        st.write(
+            f"""Abbiamo stimato che in media produci più energia di quella di quella che consumi. Potresti condividere questa energia con altre persone.
+                 Per esempio potresti valutare l'idea di partecipare a una Comunità Energetica Rinnovabile (CER).
+                 Potresti ricevere ulteriori incetivi statali e migliorersti il tuo impatto ambientale.
+                 Per maggiori informazioni puoi provare la sezione CER di questo simulatore.
+"""
         )

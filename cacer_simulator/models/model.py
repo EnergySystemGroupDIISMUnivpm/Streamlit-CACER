@@ -56,7 +56,7 @@ def production_estimate(
 
     """
     regional_irradiance = computation_regional_irradiance(region)
-    energy_year = plant_power * regional_irradiance * common.LOSS_FACTOR
+    energy_year = plant_power * regional_irradiance * common.LOSS_FACTOR *common.EFFICIENCY
     return energy_year
 
 

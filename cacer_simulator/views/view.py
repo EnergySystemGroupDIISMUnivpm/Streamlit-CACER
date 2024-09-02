@@ -149,12 +149,16 @@ class Results(BaseModel):
 
         return view_result
 
-    def see_production(self, production: PositiveFloat):
+    def see_production(self, production: PositiveFloat, label : str):
         production = round(production)
-        st.write(
-            f"""Abbiamo stimato che il tuo pannello produce circa {production} kWh in un anno"""
-        )
-
+        if label == "PV":
+            st.write(
+                f"""Abbiamo stimato che il tuo pannello produce circa {production} kWh in un anno"""
+            )
+        elif label =="area":
+            st.write(
+                f"""Abbiamo stimato che con l'area che hai inserito l'impianto che potresti costruirci produrrebbe circa {production} kWh in un anno"""
+            )
     def see_optimal_members(
         self, optimal_members: common.MembersWithValues, label: str
     ):
@@ -200,7 +204,7 @@ class Results(BaseModel):
         if environmental_benefit_added is not None:
             environmental_benefit_added = round(environmental_benefit_added)
             st.write(
-                f"Abbiamo calcolato che ridurresti le emissioni, considernado i nuovi membri, di {environmental_benefit_added} kg CO2."
+                f"Abbiamo calcolato che ridurresti le emissioni, considerando i nuovi membri, di {environmental_benefit_added} kg CO2."
             )
 
     def see_optimal_size(self, optim_size):
@@ -208,4 +212,11 @@ class Results(BaseModel):
 
         st.write(
             f"Abbiamo calcolato che il dimensionamento ottimo del tuo impianto in base a i tuoi consumi corrisponde a {optim_size} Kw."
+        )
+
+    def see_installable_power(self, power_pv):
+        power_pv = round(power_pv)
+
+        st.write(
+            f"Abbiamo calcolato che con l'area che hai fornito potresti costruire un impianto fino a {power_pv} Kw."
         )

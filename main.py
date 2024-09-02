@@ -38,22 +38,26 @@ def main():
                             energy_self_consump = model.estimate_self_consumed_energy(
                                 consumption, percentage_daily_consumption, production
                             )
-                            energy_difference_produc_consum = model.energy_difference(
-                                energy_self_consump, production
+                            diurnal_consum = percentage_daily_consumption * consumption
+                            energy_difference_produc_consum = model.energy_difference(  ### non può mai essere <0?? ho sostituito 'energy_self_consump' con 'diurnal_consum'
+                                diurnal_consum, production
                             )
-                            overproduction_or_undeprodcution = (
+                            overproduction_or_undeproduction = (
                                 model.presence_of_overproduction_or_underproduction(
                                     energy_difference_produc_consum, region
                                 )
                             )
+
                             result_view = results.see_results()
+
                             if result_view:
                                 results.see_production(production)
-                                if overproduction_or_undeprodcution == "Overproduction":
+                                if overproduction_or_undeproduction == "Overproduction":
                                     optimal_members = model.optimal_members(
                                         energy_difference_produc_consum
                                     )
-                                    benefit_b_present_memebers = (
+
+                                    benefit_b_present_members = (
                                         model.economical_benefit_b(
                                             power_pv,
                                             year_pv,
@@ -71,9 +75,78 @@ def main():
                                             production,
                                         )
                                     )
+
+                                    environmental_benefit_present_members = (
+                                        model.environmental_benefits(
+                                            energy_self_consump
+                                        )
+                                    )
+                                    environmental_benefit_added_members = (
+                                        model.environmental_benefits(production)
+                                    )  
                                     results.see_optimal_members(
                                         optimal_members, "membri già presenti"
                                     )
+                                    if inhabitants == "Si":
+                                        benefit_a = model.economical_benefit_a(
+                                            power_pv + add_power
+                                        )
+
+                                        results.see_economical_benefit_a(
+                                            benefit_a,
+                                        )
+                                    results.see_economical_benefit_b(
+                                        benefit_b_present_members,
+                                        benefit_b_added_members,
+                                    )
+
+                                    results.see_environmental_benefit(
+                                        environmental_benefit_present_members,
+                                        environmental_benefit_added_members,
+                                    )
+
+                                elif (
+                                    overproduction_or_undeproduction
+                                    == "Underproduction"
+                                ):
+                                    optimal_PV_size = model.optimal_sizing(  
+                                        consumption,
+                                        region,
+                                        percentage_daily_consumption,  
+                                    )
+                                    
+                                    benefit_b_present_members = (
+                                        model.economical_benefit_b(
+                                            power_pv,
+                                            year_pv,
+                                            add_power,
+                                            region,
+                                            energy_self_consump,
+                                        )
+                                    )
+
+                                    environmental_benefit_present_members = (
+                                        model.environmental_benefits(
+                                            energy_self_consump
+                                        )
+                                    )
+
+                                    if inhabitants == "Si":
+                                        benefit_a = model.economical_benefit_a(
+                                            power_pv + add_power
+                                        )
+
+                                        results.see_economical_benefit_a(benefit_a)
+
+                                    results.see_economical_benefit_b(
+                                        benefit_b_present_members
+                                    )
+
+                                    results.see_environmental_benefit(
+                                        environmental_benefit_present_members
+                                    )
+
+                                    results.see_optimal_size(optimal_PV_size)
 
                 elif knowledge_cer_consumption == "Si":
                     consumption = user_input.insert_annual_consumption(

@@ -181,11 +181,11 @@ class MembersWithValues(TypedDict):
 class ConsumptionByMember(BaseModel):
 
     CONSUMPTION_RATES_DIURNAL_HOURS: MembersWithValues = {
-        "bar": 8000,
-        "appartamenti": 100,
-        "pmi": 25000,
-        "hotel": 30000,
-        "ristoranti": 10000,
+        "bar": 18000,
+        "appartamenti": 600,
+        "pmi": 20000,
+        "hotel": 280000,
+        "ristoranti": 13000,
     }
 
     # avg annual consumptions in kWh

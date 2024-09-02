@@ -31,7 +31,7 @@ def optimal_sizing(
         annual_consumption: PositiveFloat - consumed energy in kWh
         region: RegionType - region in which there is the PV plant
         percentage_daytime_consum: PercentageType - percentage of the total consumption referring to how much of the total consumption is
-        consumed during the daytime.
+        consumed during the daytime (i want it from 0 to 1)
 
     """
     required_PV_energy = annual_consumption * percentage_daytime_consum
@@ -209,12 +209,12 @@ def presence_of_overproduction_or_underproduction(
         region: RegionType - region
     """
     energy_one_pv = production_estimate(common.POWER_PEAK / 1000, region)
-    if -energy_one_pv < difference_produc_consum <= 0:
-        return "Optimal"
-    elif difference_produc_consum < 0:
-        return "Underproduction"
-    else:
+    if difference_produc_consum > 0:
         return "Overproduction"
+    elif -energy_one_pv < difference_produc_consum <= 0:
+        return "Optimal"
+    else:
+        return "Underproduction"
 
 
 ## FUNCTION FOR CER AND GROUPS OF SELF CONSUMERS
@@ -223,7 +223,6 @@ def presence_of_overproduction_or_underproduction(
 @validate_call
 def economical_benefit_a(
     plant_power: PositiveFloat,
-    inhabitants: bool = False,
 ) -> float:
     """
     Computation of benefit A (only for municipalities with less than 5000 inhabitants).
@@ -232,10 +231,9 @@ def economical_benefit_a(
         plant_power: PositiveFloat - power of PV plant in kW
         inhabitants: bool - True if the municipality has less than 5000 inhabitants.
     """
-    benefit = 0
-    if inhabitants == True:
-        # Determine the benefit based on the power range
-        benefit = common.Tariff().get_tariff_municipality(plant_power) * plant_power
+
+    # Determine the benefit based on the power range
+    benefit = common.Tariff().get_tariff_municipality(plant_power) * plant_power
     return benefit
 
 

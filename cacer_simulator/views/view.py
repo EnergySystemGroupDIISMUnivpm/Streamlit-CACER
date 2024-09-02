@@ -159,8 +159,8 @@ class Results(BaseModel):
         self, optimal_members: common.MembersWithValues, label: str
     ):
         messages = {
-            "membri non presenti": "I membri ideali con cui potresti costituire la CER per ottimizzare l'energia autoconsumata e gli incentivi sono:",
-            "membri già presenti": "Ai membri della tua CER, potresti aggiungere i seguenti membri per ottimizzare l'energia autoconsumata e gli incentivi:",
+            "membri non presenti": "I membri ideali con cui potresti costituire la CER per ottimizzare l'energia autoconsumata :",
+            "membri già presenti": "Ai membri della tua CER, potresti aggiungere i seguenti membri per ottimizzare l'energia autoconsumata :",
         }
 
         message = messages.get(label, None)
@@ -169,3 +169,43 @@ class Results(BaseModel):
             st.write(f"{message} {optimal_members}")
         else:
             st.write("Label non riconosciuto.")
+
+    def see_economical_benefit_b(self, benefit_b_pres, benefit_b_new=None):
+        benefit_b_pres = round(benefit_b_pres)
+        st.write(
+            f"Abbiamo calcolato che i tuoi incentivi economici di tipo B considerando i membri già presenti corrispondono a {benefit_b_pres}€."
+        )
+
+        if benefit_b_new is not None:
+            benefit_b_new = round(benefit_b_new)
+            st.write(
+                f"Abbiamo calcolato che i tuoi incentivi economici di tipo B considerando anche i nuovi membri corrispondono a {benefit_b_new}€."
+            )
+
+    def see_economical_benefit_a(self, benefit_a):
+        benefit_a = round(benefit_a)
+
+        st.write(
+            f"Abbiamo calcolato che i tuoi incentivi economici di tipo A corrispondono a {benefit_a}€."
+        )
+
+    def see_environmental_benefit(
+        self, environmental_benefit_pres, environmental_benefit_added=None
+    ):
+        environmental_benefit_pres = round(environmental_benefit_pres)
+        st.write(
+            f"Abbiamo calcolato che ridurresti le emissioni di {environmental_benefit_pres} kg CO2."
+        )
+
+        if environmental_benefit_added is not None:
+            environmental_benefit_added = round(environmental_benefit_added)
+            st.write(
+                f"Abbiamo calcolato che ridurresti le emissioni, considernado i nuovi membri, di {environmental_benefit_added} kg CO2."
+            )
+
+    def see_optimal_size(self, optim_size):
+        optim_size = round(optim_size)
+
+        st.write(
+            f"Abbiamo calcolato che il dimensionamento ottimo del tuo impianto in base a i tuoi consumi corrisponde a {optim_size} Kw."
+        )

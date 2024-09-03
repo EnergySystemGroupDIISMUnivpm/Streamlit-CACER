@@ -833,58 +833,19 @@ def main():
                 percentage_daily_consumption = (
                     model.percentage_daytime_consumption_estimation(members)
                 )
-                if power_pv and year_pv:
+                if power_pv and year_pv and inhabitants:
                     if add_power is not None:  # va bene anche se è 0
-                        production = model.production_estimate(
-                            power_pv + add_power, region
-                        )
-                        energy_self_consump = model.estimate_self_consumed_energy(
-                            consumption, percentage_daily_consumption, production
-                        )
-                        diurnal_consum = percentage_daily_consumption * consumption
-                        energy_difference_produc_consum = model.energy_difference(
-                            diurnal_consum, production
-                        )
-                        overproduction_or_undeproduction = (
-                            model.presence_of_overproduction_or_underproduction(
-                                energy_difference_produc_consum, region
-                            )
+                        controller_functions.presence_of_PV(
+                            power_pv,
+                            consumption,
+                            percentage_daily_consumption,
+                            region,
+                            year_pv,
+                            results,
+                            inhabitants,
+                            add_power,
                         )
 
-                        result_view = results.see_results()
-                        if result_view:
-                            results.see_production(production, "PV")
-                            benefit_b = model.economical_benefit_b(
-                                power_pv,
-                                year_pv,
-                                add_power,
-                                region,
-                                energy_self_consump,
-                            )
-                            environmental_benefit = model.environmental_benefits(
-                                energy_self_consump
-                            )
-                            results.see_economical_benefit_b(
-                                benefit_b,
-                            )
-
-                            results.see_environmental_benefit(
-                                environmental_benefit,
-                            )
-                            if inhabitants == "Si":
-                                benefit_a = model.economical_benefit_a(add_power)
-                                results.see_economical_benefit_a(benefit_a)
-                            if overproduction_or_undeproduction == "Overproduction":
-                                results.see_CER_info("Group")
-
-                            elif overproduction_or_undeproduction == "Underproduction":
-                                optimal_PV_size = model.optimal_sizing(
-                                    consumption,
-                                    region,
-                                    percentage_daily_consumption,
-                                )
-
-                                results.see_optimal_size(optimal_PV_size)
                 elif area:
                     add_power = 0
                     year_pv = datetime.date.today()

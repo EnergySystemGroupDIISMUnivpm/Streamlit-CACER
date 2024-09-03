@@ -24,7 +24,9 @@ def info_pv_or_area(
     return area, year_pv, power_pv, add_power
 
 
-def presence_of_PV(
+def results_from_PV_power(
+    label_use_case: str,
+    label_pv_or_area: str,
     power_pv: PositiveFloat,
     consumption: PositiveFloat,
     percentage_daily_consumption: common.PercentageType,
@@ -50,7 +52,9 @@ def presence_of_PV(
 
     result_view = results.see_results()
     if result_view:
-        results.see_production(production, "PV")
+        if label_pv_or_area == "area":
+            results.see_installable_power(power_pv)
+        results.see_production(production, label_pv_or_area)
         benefit_b = model.economical_benefit_b(
             power_pv,
             year_pv,
@@ -67,10 +71,14 @@ def presence_of_PV(
             environmental_benefit,
         )
         if inhabitants == "Si":
-            benefit_a = model.economical_benefit_a(add_power)
-            results.see_economical_benefit_a(benefit_a)
+            if label_pv_or_area == "PV":
+                benefit_a = model.economical_benefit_a(add_power)
+            elif label_pv_or_area == "area":
+                benefit_a = model.economical_benefit_a(power_pv)
+            results.see_economical_benefit_a(benefit_a)  # type: ignore
 
         presence_overproduction_or_undeproduction(
+            label_use_case,
             overproduction_or_undeproduction,
             results,
             consumption,
@@ -80,6 +88,7 @@ def presence_of_PV(
 
 
 def presence_overproduction_or_undeproduction(
+    label_use_case: str,
     overproduction_or_undeproduction: str,
     results: Results,
     consumption: PositiveFloat,
@@ -87,7 +96,7 @@ def presence_overproduction_or_undeproduction(
     percentage_daily_consumption: common.PercentageType,
 ):
     if overproduction_or_undeproduction == "Overproduction":
-        results.see_CER_info("Group")
+        results.see_CER_info(label_use_case)
     elif overproduction_or_undeproduction == "Underproduction":
         optimal_PV_size = model.optimal_sizing(
             consumption,

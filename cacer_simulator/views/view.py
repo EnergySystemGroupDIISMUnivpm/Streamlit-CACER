@@ -1,3 +1,4 @@
+from cProfile import label
 import datetime
 
 import streamlit as st
@@ -29,9 +30,15 @@ class UserInput(BaseModel):
 
     # Annual consumption  ----'label' da implemntare nel controller.py ??????
 
-    def insert_annual_consumption(self, label: str) -> int:
+    def insert_annual_consumption(self, label_use_case: str) -> int:
+        if label_use_case == "Group":
+            title = "Inserisci i consumi annui totali del tuo condominio in kWh"
+        elif label_use_case == "CER":
+            title = "Inserisci i consumi annui totali della tua CER in kWh"
+        elif label_use_case == "Self_consumer":
+            title = "Inserisci i tuoi consumi annui in kWh"
         annual_consumption = st.number_input(
-            label,
+            title,
             key="consumption",
             step=1,
             format="%d",

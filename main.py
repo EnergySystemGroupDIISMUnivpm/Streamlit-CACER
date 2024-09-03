@@ -15,9 +15,7 @@ def main():
             user_input = UserInput()
             results = Results()
             region = user_input.insert_region()
-            consumption = user_input.insert_annual_consumption(
-                "Inserisci il tuo consumo annuo in kWh"
-            )
+            consumption = user_input.insert_annual_consumption("Self_consumer")
             percentage_daily_consumption = (
                 user_input.insert_percentage_daytime_consumption()
             )
@@ -439,9 +437,7 @@ def main():
                                 )
 
                 elif knowledge_cer_consumption == "Si" and region:
-                    consumption = user_input.insert_annual_consumption(
-                        "Inserisci i consumi annui totali, in kwh, della tua CER "
-                    )
+                    consumption = user_input.insert_annual_consumption("CER")
                     percentage_daily_consumption = (
                         user_input.insert_percentage_daytime_consumption()
                     )
@@ -835,7 +831,9 @@ def main():
                 )
                 if power_pv and year_pv and inhabitants:
                     if add_power is not None:  # va bene anche se è 0
-                        controller_functions.presence_of_PV(
+                        controller_functions.results_from_PV_power(
+                            "Group",
+                            "PV",
                             power_pv,
                             consumption,
                             percentage_daily_consumption,
@@ -846,59 +844,66 @@ def main():
                             add_power,
                         )
 
-                elif area:
+                elif area and inhabitants:
                     add_power = 0
                     year_pv = datetime.date.today()
                     power_pv = model.computation_installable_power(area)
-                    production = model.production_estimate(power_pv + add_power, region)
-                    energy_self_consump = model.estimate_self_consumed_energy(
-                        consumption, percentage_daily_consumption, production
+                    controller_functions.results_from_PV_power(
+                        "Group",
+                        "area",
+                        power_pv,
+                        consumption,
+                        percentage_daily_consumption,
+                        region,
+                        year_pv,
+                        results,
+                        inhabitants,
+                        add_power,
                     )
-                    diurnal_consum = percentage_daily_consumption * consumption
-                    energy_difference_produc_consum = model.energy_difference(
-                        diurnal_consum, production
-                    )
-                    overproduction_or_undeproduction = (
-                        model.presence_of_overproduction_or_underproduction(
-                            energy_difference_produc_consum, region
-                        )
-                    )
-
-                    result_view = results.see_results()
-
-                    if result_view:
-                        results.see_installable_power(power_pv)
-                        results.see_production(production, "area")
-                        benefit_b = model.economical_benefit_b(
+            if knowledge_group_consumption == "Si" and region:
+                consumption = user_input.insert_annual_consumption("Group")
+                percentage_daily_consumption = (
+                    user_input.insert_percentage_daytime_consumption()
+                )
+                area, year_pv, power_pv, add_power = (
+                    controller_functions.info_pv_or_area(user_input)
+                )
+                if (
+                    power_pv
+                    and year_pv
+                    and inhabitants
+                    and percentage_daily_consumption
+                ):
+                    if add_power is not None:  # va bene anche se è 0
+                        controller_functions.results_from_PV_power(
+                            "Group",
+                            "PV",
                             power_pv,
-                            year_pv,
-                            add_power,
+                            consumption,
+                            percentage_daily_consumption,
                             region,
-                            energy_self_consump,
-                        )
-                        environmental_benefit = model.environmental_benefits(
-                            energy_self_consump
-                        )
-
-                        results.see_economical_benefit_b(
-                            benefit_b,
+                            year_pv,
+                            results,
+                            inhabitants,
+                            add_power,
                         )
 
-                        results.see_environmental_benefit(
-                            environmental_benefit,
-                        )
-
-                        if overproduction_or_undeproduction == "Overproduction":
-                            results.see_CER_info("Group")
-
-                        elif overproduction_or_undeproduction == "Underproduction":
-                            optimal_PV_size = model.optimal_sizing(
-                                consumption,
-                                region,
-                                percentage_daily_consumption,
-                            )
-
-                            results.see_optimal_size(optimal_PV_size)
+                elif area and inhabitants and percentage_daily_consumption:
+                    add_power = 0
+                    year_pv = datetime.date.today()
+                    power_pv = model.computation_installable_power(area)
+                    controller_functions.results_from_PV_power(
+                        "Group",
+                        "area",
+                        power_pv,
+                        consumption,
+                        percentage_daily_consumption,
+                        region,
+                        year_pv,
+                        results,
+                        inhabitants,
+                        add_power,
+                    )
 
 
 if __name__ == "__main__":

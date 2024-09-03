@@ -1,22 +1,4 @@
-import streamlit as st
-import datetime
-from cacer_simulator.views.macro_selection import (
-    MacroGroup,
-    show_macro_group_selector,
-    homepage,
-    MacroSelection,
-)
-from cacer_simulator.views.view import UserInput, Results
-import controller_functions
-from cacer_simulator.models import model
-
-
-def main():
-    macro_selection = homepage()
-    match macro_selection:
-        case MacroSelection.CACER:
-
-            choice = show_macro_group_selector()
+choice = show_macro_group_selector()
 
             match choice:
                 case MacroGroup.AutoconsumatoreADistanza:
@@ -939,9 +921,3 @@ def main():
                                 inhabitants,
                                 add_power,
                             )
-        case MacroSelection.Multivettore:
-            pass
-
-
-if __name__ == "__main__":
-    main()

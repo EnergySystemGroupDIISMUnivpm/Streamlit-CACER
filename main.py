@@ -67,7 +67,7 @@ def main():
                             )
 
                             if overproduction_or_undeproduction == "Overproduction":
-                                results.see_CER_info()
+                                results.see_CER_info("Self_consumer")
 
                             elif overproduction_or_undeproduction == "Underproduction":
                                 optimal_PV_size = model.optimal_sizing(
@@ -120,7 +120,7 @@ def main():
                         )
 
                         if overproduction_or_undeproduction == "Overproduction":
-                            results.see_CER_info()
+                            results.see_CER_info("Self_consumer")
 
                         elif overproduction_or_undeproduction == "Underproduction":
                             optimal_PV_size = model.optimal_sizing(
@@ -830,14 +830,13 @@ def main():
                     controller_functions.info_pv_or_area(user_input)
                 )
                 consumption = model.consumption_estimation(members)
-                ### RICOMINCIARE DA QUI
+                percentage_daily_consumption = (
+                    model.percentage_daytime_consumption_estimation(members)
+                )
                 if power_pv and year_pv:
                     if add_power is not None:  # va bene anche se è 0
                         production = model.production_estimate(
                             power_pv + add_power, region
-                        )
-                        percentage_daily_consumption = (
-                            model.percentage_daytime_consumption_estimation(members)
                         )
                         energy_self_consump = model.estimate_self_consumed_energy(
                             consumption, percentage_daily_consumption, production
@@ -876,7 +875,7 @@ def main():
                                 benefit_a = model.economical_benefit_a(add_power)
                                 results.see_economical_benefit_a(benefit_a)
                             if overproduction_or_undeproduction == "Overproduction":
-                                results.see_CER_info()
+                                results.see_CER_info("Group")
 
                             elif overproduction_or_undeproduction == "Underproduction":
                                 optimal_PV_size = model.optimal_sizing(
@@ -929,7 +928,7 @@ def main():
                         )
 
                         if overproduction_or_undeproduction == "Overproduction":
-                            results.see_CER_info()
+                            results.see_CER_info("Group")
 
                         elif overproduction_or_undeproduction == "Underproduction":
                             optimal_PV_size = model.optimal_sizing(

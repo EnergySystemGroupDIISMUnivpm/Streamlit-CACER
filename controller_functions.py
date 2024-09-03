@@ -53,32 +53,20 @@ def results_from_PV_power(
 
     result_view = results.see_results()
     if result_view:
-        if label_pv_or_area == "area":
-            results.see_installable_power(power_pv)
-        results.see_production(production, label_pv_or_area)
-        benefit_b = model.economical_benefit_b(
-            power_pv,
-            year_pv,
-            add_power,
-            region,
+        benefit_results(
             energy_self_consump,
+            production,
+            label_use_case,
+            label_pv_or_area,
+            power_pv,
+            consumption,
+            percentage_daily_consumption,
+            region,
+            year_pv,
+            results,
+            inhabitants,
+            add_power,
         )
-        environmental_benefit = model.environmental_benefits(energy_self_consump)
-        results.see_economical_benefit_b(
-            benefit_b,
-        )
-
-        results.see_environmental_benefit(
-            environmental_benefit,
-        )
-        if label_use_case == "CER" or label_use_case == "Group":
-            if inhabitants == "Si":
-                if label_pv_or_area == "PV":
-                    benefit_a = model.economical_benefit_a(add_power)
-                elif label_pv_or_area == "area":
-                    benefit_a = model.economical_benefit_a(power_pv)
-                results.see_economical_benefit_a(benefit_a)  # type: ignore
-
         presence_overproduction_or_undeproduction(
             label_use_case,
             overproduction_or_undeproduction,
@@ -107,3 +95,45 @@ def presence_overproduction_or_undeproduction(
             percentage_daily_consumption,
         )
         results.see_optimal_size(optimal_PV_size)
+
+
+@validate_call
+def benefit_results(
+    energy_self_consump: PositiveFloat,
+    production: PositiveFloat,
+    label_use_case: common.LabelUseCaseType,
+    label_pv_or_area: common.LabelPVAreaType,
+    power_pv: PositiveFloat,
+    consumption: PositiveFloat,
+    percentage_daily_consumption: common.PercentageType,
+    region: common.RegionType,
+    year_pv: datetime.date,
+    results: Results,
+    inhabitants="No",
+    add_power=0,
+):
+    if label_pv_or_area == "area":
+        results.see_installable_power(power_pv)
+    results.see_production(production, label_pv_or_area)
+    benefit_b = model.economical_benefit_b(
+        power_pv,
+        year_pv,
+        add_power,
+        region,
+        energy_self_consump,
+    )
+    environmental_benefit = model.environmental_benefits(energy_self_consump)
+    results.see_economical_benefit_b(
+        benefit_b,
+    )
+
+    results.see_environmental_benefit(
+        environmental_benefit,
+    )
+    if label_use_case == "CER" or label_use_case == "Group":
+        if inhabitants == "Si":
+            if label_pv_or_area == "PV":
+                benefit_a = model.economical_benefit_a(add_power)
+            elif label_pv_or_area == "area":
+                benefit_a = model.economical_benefit_a(power_pv)
+            results.see_economical_benefit_a(benefit_a)  # type: ignore

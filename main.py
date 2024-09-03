@@ -66,6 +66,9 @@ def main():
                 knowledge_cer_consumption = user_input.know_members_consumption("CER")
                 if knowledge_cer_consumption == "No" and region:
                     members = user_input.insert_members("CER")
+                    percentage_daily_consumption = (
+                        model.percentage_daytime_consumption_estimation(members)
+                    )
                     area, year_pv, power_pv, add_power = (
                         controller_functions.info_pv_or_area(user_input)
                     )
@@ -74,9 +77,6 @@ def main():
                         if add_power is not None:  # va bene anche se è 0
                             production = model.production_estimate(
                                 power_pv + add_power, region
-                            )
-                            percentage_daily_consumption = (
-                                model.percentage_daytime_consumption_estimation(members)
                             )
                             energy_self_consump = model.estimate_self_consumed_energy(
                                 consumption, percentage_daily_consumption, production

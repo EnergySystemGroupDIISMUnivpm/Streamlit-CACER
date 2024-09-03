@@ -38,7 +38,7 @@ class UserInput(BaseModel):
         elif label_use_case == "Self_consumer":
             title = "Inserisci i tuoi consumi annui in kWh"
         annual_consumption = st.number_input(
-            title,
+            title,  # type:ignore
             key="consumption",
             step=1,
             format="%d",

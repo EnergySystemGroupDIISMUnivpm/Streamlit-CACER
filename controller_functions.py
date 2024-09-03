@@ -1,6 +1,6 @@
 import datetime
 
-from pydantic import PositiveFloat
+from pydantic import PositiveFloat, validate_call
 from cacer_simulator.views.view import UserInput, Results
 from cacer_simulator.models import model
 import cacer_simulator.common as common
@@ -24,9 +24,10 @@ def info_pv_or_area(
     return area, year_pv, power_pv, add_power
 
 
+@validate_call
 def results_from_PV_power(
-    label_use_case: str,
-    label_pv_or_area: str,
+    label_use_case: common.LabelUseCaseType,
+    label_pv_or_area: common.LabelPVAreaType,
     power_pv: PositiveFloat,
     consumption: PositiveFloat,
     percentage_daily_consumption: common.PercentageType,
@@ -70,12 +71,13 @@ def results_from_PV_power(
         results.see_environmental_benefit(
             environmental_benefit,
         )
-        if inhabitants == "Si":
-            if label_pv_or_area == "PV":
-                benefit_a = model.economical_benefit_a(add_power)
-            elif label_pv_or_area == "area":
-                benefit_a = model.economical_benefit_a(power_pv)
-            results.see_economical_benefit_a(benefit_a)  # type: ignore
+        if label_use_case == "CER" or label_use_case == "Group":
+            if inhabitants == "Si":
+                if label_pv_or_area == "PV":
+                    benefit_a = model.economical_benefit_a(add_power)
+                elif label_pv_or_area == "area":
+                    benefit_a = model.economical_benefit_a(power_pv)
+                results.see_economical_benefit_a(benefit_a)  # type: ignore
 
         presence_overproduction_or_undeproduction(
             label_use_case,
@@ -87,9 +89,10 @@ def results_from_PV_power(
         )
 
 
+@validate_call
 def presence_overproduction_or_undeproduction(
-    label_use_case: str,
-    overproduction_or_undeproduction: str,
+    label_use_case: common.LabelUseCaseType,
+    overproduction_or_undeproduction: common.LabelOverproUnderprodType,
     results: Results,
     consumption: PositiveFloat,
     region: common.RegionType,

@@ -40,6 +40,57 @@ RegionType = Annotated[
     Field(description=f"Region among {REGIONS}"),
 ]
 
+LABEL_USE_CASE = ["CER", "Group", "Self_consumer"]
+
+
+def is_valid_use_case(x: str) -> str:
+    if x not in LABEL_USE_CASE:
+        raise ValueError(f"Invalid Lable use case {x}, must be in {LABEL_USE_CASE}")
+    return x
+
+
+LabelUseCaseType = Annotated[
+    str,
+    AfterValidator(is_valid_use_case),
+    Field(description=f"Label use case among {LABEL_USE_CASE}"),
+]
+
+LABEL_PV_AREA = ["PV", "area"]
+
+
+def is_valid_label_pv_area(x: str) -> str:
+    if x not in LABEL_PV_AREA:
+        raise ValueError(
+            f"Invalid Lable for pv or area {x}, must be in {LABEL_PV_AREA}"
+        )
+    return x
+
+
+LabelPVAreaType = Annotated[
+    str,
+    AfterValidator(is_valid_label_pv_area),
+    Field(description=f"Label use case among {LABEL_PV_AREA}"),
+]
+
+LABEL_OVER_UNDER = ["Overproduction", "Underproduction", "Optimal"]
+
+
+def is_valid_label_over_under(x: str) -> str:
+    if x not in LABEL_OVER_UNDER:
+        raise ValueError(
+            f"Invalid Lable for overproduction or underproduction {x}, must be in {LABEL_OVER_UNDER}"
+        )
+    return x
+
+
+LabelOverproUnderprodType = Annotated[
+    str,
+    AfterValidator(is_valid_label_over_under),
+    Field(
+        description=f"Label Overproduction or Underproduction among {LABEL_OVER_UNDER}"
+    ),
+]
+
 PercentageType = Annotated[
     float,
     Field(ge=0, le=1, description="Percentage value"),

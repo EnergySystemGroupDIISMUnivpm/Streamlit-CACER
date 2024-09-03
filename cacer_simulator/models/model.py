@@ -56,7 +56,9 @@ def production_estimate(
 
     """
     regional_irradiance = computation_regional_irradiance(region)
-    energy_year = plant_power * regional_irradiance * common.LOSS_FACTOR *common.EFFICIENCY
+    energy_year = (
+        plant_power * regional_irradiance * common.LOSS_FACTOR * common.EFFICIENCY
+    )
     return energy_year
 
 
@@ -198,9 +200,10 @@ def computation_optimal_area(optimal_plant_power: PositiveFloat) -> float:
     return optimal_area
 
 
+@validate_call
 def presence_of_overproduction_or_underproduction(
     difference_produc_consum: float, region: common.RegionType
-) -> str:
+) -> common.LabelOverproUnderprodType:
     """
     Computation of the fact that it is necessary to increase the PV power, to include other members to share with energy or consumptions are almost equal to production.
 

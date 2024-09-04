@@ -11,6 +11,7 @@ from CACER_page import Simulator_CACER
 
 def main():
     macro_selection = homepage()
+  
     match macro_selection:
         case MacroSelection.CACER:
             Simulator_CACER()

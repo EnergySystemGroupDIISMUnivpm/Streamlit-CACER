@@ -13,6 +13,7 @@ from cacer_simulator.models import model
 
 def Simulator_CACER():
     choice = show_macro_group_selector()
+    
     match choice:
         case MacroGroup.AutoconsumatoreADistanza:
             st.toast("SELECTED: Autoconsumatore a distanza", icon="💡")

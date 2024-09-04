@@ -17,10 +17,11 @@ def show_macro_group_selector() -> MacroGroup | None:
         index=None,
         key="Type CACER selection",
     )
+    
     if choice is None:
         return None
     return MacroGroup(choice)
-
+    
 
 class MacroSelection(StrEnum):
     CACER = "CACER"
@@ -31,29 +32,23 @@ def homepage() -> MacroSelection | None:
     st.title("Benvenuto in ENEA Simulatore CACER e Multivettore Energetico")
 
     col1, col2 = st.columns(2)
-    selection = None
-    # Sezione CACER nella colonna di sinistra
+    
+    # Usare session_state per memorizzare la selezione
+    if 'selection' not in st.session_state:
+        st.session_state['selection'] = None
+
+    # Sezione CACER
     with col1:
         st.header("CACER")
-        st.write(
-            """
-            Questa sezione contiene una spiegazione dettagliata delle  CACER 
-        """
-        )
+        st.write("Questa sezione contiene una spiegazione dettagliata delle CACER.")
         if st.button("CACER Simulatore"):
-            selection = MacroSelection.CACER
+            st.session_state['selection'] = MacroSelection.CACER
 
-    # Sezione Multivettore energetico nella colonna di destra
+    # Sezione Multivettore energetico
     with col2:
         st.header("Multivettore energetico")
-        st.write(
-            """
-            Questa sezione si concentra sulla simulazione di sistemi multivettore energetici. 
-            Questi sistemi integrano diverse fonti energetiche per ottimizzare la produzione 
-            e distribuzione di energia. Qui puoi eseguire simulazioni per valutare l'efficienza
-            e la sostenibilità dei sistemi multivettore.
-        """
-        )
+        st.write("Simulatore per i sistemi multivettore energetici.")
         if st.button("Multivettore Simulatore"):
-            selection = MacroSelection.Multivettore
-    return selection
+            st.session_state['selection'] = MacroSelection.Multivettore
+
+    return st.session_state['selection']

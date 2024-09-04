@@ -43,14 +43,19 @@ class UserInput(BaseModel):
             step=1,
             format="%d",
             help="Inserisci il consumo annuo in kWh, puoi trovare i consumi annui all'interno delle bollette",
+            min_value=1,
         )
         return int(annual_consumption)
 
     # Daytime percentage consumption
     def insert_percentage_daytime_consumption(self) -> float | None:
-        consumption_options = {"poco": 0.25, "non c'è differenza": 0.5, "molto": 0.75}
+        consumption_options = {
+            "più bassi": 0.25,
+            "all'incirca uguali": 0.5,
+            "più alti": 0.75,
+        }
         option = st.selectbox(
-            "In una giornata tipo quanto diresti che i consumi sono più alti di giorno piuttosto che di notte?",
+            "In una giornata tipo, come sono i consumi diurni rispetto ai consumi notturni?",
             options=list(consumption_options.keys()),
             index=None,
             key="daytime_consump",
@@ -74,9 +79,10 @@ class UserInput(BaseModel):
         )
         power_PV = st.number_input(
             "Inserisci la potenza dell'impianto PV in kW",
-            step=1,
-            format="%d",
+            step=0.1,
+            format="%.1f",
             key="PV_power",
+            min_value=common.POWER_PEAK / 1000,
         )
 
         return year_PV, int(power_PV)  # type: ignore
@@ -85,8 +91,9 @@ class UserInput(BaseModel):
         area_PV: int | float = st.number_input(
             "Inserisci le dimensioni dell'area in m² in cui costruire l'impianto",
             key="PV_area_dim",
-            step=1,
-            format="%d",
+            step=0.1,
+            format="%.1d",
+            min_value=round(common.AREA_ONE_PV, 1),
         )
         return int(area_PV)
 
@@ -282,10 +289,10 @@ class Results(BaseModel):
             )
 
     def visualize_useful_information(self):
-        st.markdown("**Informazioni sull'impianto**")
+        st.markdown("##### **Informazioni sull'impianto**")
 
     def visualize_economical_environmental_benefits(self):
-        st.markdown("**Benefici economici e ambientali**")
+        st.markdown("##### **Benefici economici e ambientali**")
 
     def visualize_advices(self):
-        st.markdown("**Consigli**")
+        st.markdown("##### **Consigli**")

@@ -13,7 +13,7 @@ from cacer_simulator.models import model
 
 def Simulator_CACER():
     choice = show_macro_group_selector()
-    
+
     match choice:
         case MacroGroup.AutoconsumatoreADistanza:
             st.toast("SELECTED: Autoconsumatore a distanza", icon="💡")
@@ -44,7 +44,7 @@ def Simulator_CACER():
                             results,
                             add_power=add_power,
                         )
-                        
+
                 elif area:
                     add_power = 0
                     year_pv = datetime.date.today()
@@ -102,6 +102,7 @@ def Simulator_CACER():
                             result_view = results.see_results()
 
                             if result_view:
+                                results.visualize_useful_information()
                                 results.see_production(production, "PV")
                                 if overproduction_or_undeproduction == "Overproduction":
                                     optimal_members = model.optimal_members(
@@ -135,10 +136,12 @@ def Simulator_CACER():
                                     environmental_benefit_added_members = (
                                         model.environmental_benefits(production)
                                     )
+                                    results.visualize_advices()
                                     results.see_optimal_members(
                                         optimal_members, "membri già presenti"
                                     )
-                                    if inhabitants == "Si":
+                                    results.visualize_economical_environmental_benefits()
+                                    if inhabitants == "Si" and add_power > 0:
                                         benefit_a = model.economical_benefit_a(
                                             add_power
                                         )
@@ -160,6 +163,7 @@ def Simulator_CACER():
                                     overproduction_or_undeproduction
                                     == "Underproduction"
                                 ):
+                                    results.visualize_advices()
                                     optimal_PV_size = model.optimal_sizing(
                                         consumption,
                                         region,
@@ -182,7 +186,8 @@ def Simulator_CACER():
                                         )
                                     )
 
-                                    if inhabitants == "Si":
+                                    results.visualize_economical_environmental_benefits()
+                                    if inhabitants == "Si" and add_power > 0:
                                         benefit_a = model.economical_benefit_a(
                                             add_power
                                         )
@@ -196,10 +201,15 @@ def Simulator_CACER():
                                     results.see_environmental_benefit(
                                         environmental_benefit_present_members
                                     )
+                                    results.visualize_advices()
 
                                     results.see_optimal_size(optimal_PV_size)
-                                    cost_plant = model.compute_cost_plant(optimal_PV_size - power_pv)
-                                    results.see_computed_costs_plant(cost_plant, "Potenziamento")
+                                    cost_plant = model.compute_cost_plant(
+                                        optimal_PV_size - power_pv
+                                    )
+                                    results.see_computed_costs_plant(
+                                        cost_plant, "Potenziamento"
+                                    )
                                 elif overproduction_or_undeproduction == "Optimal":
 
                                     benefit_b_present_members = (
@@ -217,8 +227,8 @@ def Simulator_CACER():
                                             energy_self_consump
                                         )
                                     )
-
-                                    if inhabitants == "Si":
+                                    results.visualize_economical_environmental_benefits()
+                                    if inhabitants == "Si" and add_power > 0:
                                         benefit_a = model.economical_benefit_a(
                                             add_power
                                         )
@@ -261,8 +271,9 @@ def Simulator_CACER():
                         result_view = results.see_results()
 
                         if result_view:
+                            results.visualize_useful_information()
                             results.see_installable_power(installable_power)
-                            cost_plant = model.compute_cost_plant(installable_power) 
+                            cost_plant = model.compute_cost_plant(installable_power)
                             results.see_computed_costs_plant(cost_plant, "Costruzione")
                             results.see_production(production, "area")
                             if overproduction_or_undeproduction == "Overproduction":
@@ -291,9 +302,11 @@ def Simulator_CACER():
                                 environmental_benefit_added_members = (
                                     model.environmental_benefits(production)
                                 )
+                                results.visualize_advices()
                                 results.see_optimal_members(
                                     optimal_members, "membri già presenti"
                                 )
+                                results.visualize_economical_environmental_benefits()
                                 if inhabitants == "Si":
                                     benefit_a = model.economical_benefit_a(
                                         installable_power + add_power
@@ -330,7 +343,7 @@ def Simulator_CACER():
                                 environmental_benefit_present_members = (
                                     model.environmental_benefits(energy_self_consump)
                                 )
-
+                                results.visualize_economical_environmental_benefits()
                                 if inhabitants == "Si":
                                     benefit_a = model.economical_benefit_a(
                                         installable_power + add_power
@@ -345,10 +358,14 @@ def Simulator_CACER():
                                 results.see_environmental_benefit(
                                     environmental_benefit_present_members
                                 )
-
+                                results.visualize_advices()
                                 results.see_optimal_size(optimal_PV_size)
-                                cost_plant = model.compute_cost_plant(optimal_PV_size-installable_power) 
-                                results.see_computed_costs_plant(cost_plant, "Potenziamento")
+                                cost_plant = model.compute_cost_plant(
+                                    optimal_PV_size - installable_power
+                                )
+                                results.see_computed_costs_plant(
+                                    cost_plant, "Potenziamento"
+                                )
                             elif overproduction_or_undeproduction == "Optimal":
 
                                 benefit_b_present_members = model.economical_benefit_b(
@@ -362,7 +379,7 @@ def Simulator_CACER():
                                 environmental_benefit_present_members = (
                                     model.environmental_benefits(energy_self_consump)
                                 )
-
+                                results.visualize_economical_environmental_benefits()
                                 if inhabitants == "Si":
                                     benefit_a = model.economical_benefit_a(
                                         installable_power + add_power
@@ -410,6 +427,7 @@ def Simulator_CACER():
                             result_view = results.see_results()
 
                             if result_view:
+                                results.visualize_useful_information()
                                 results.see_production(production, "PV")
                                 if overproduction_or_undeproduction == "Overproduction":
                                     optimal_members = model.optimal_members(
@@ -443,10 +461,12 @@ def Simulator_CACER():
                                     environmental_benefit_added_members = (
                                         model.environmental_benefits(production)
                                     )
+                                    results.visualize_advices()
                                     results.see_optimal_members(
                                         optimal_members, "membri già presenti"
                                     )
-                                    if inhabitants == "Si":
+                                    results.visualize_economical_environmental_benefits()
+                                    if inhabitants == "Si" and add_power > 0:
                                         benefit_a = model.economical_benefit_a(
                                             add_power
                                         )
@@ -489,8 +509,9 @@ def Simulator_CACER():
                                             energy_self_consump
                                         )
                                     )
+                                    results.visualize_economical_environmental_benefits()
 
-                                    if inhabitants == "Si":
+                                    if inhabitants == "Si" and add_power > 0:
                                         benefit_a = model.economical_benefit_a(
                                             add_power
                                         )
@@ -504,10 +525,14 @@ def Simulator_CACER():
                                     results.see_environmental_benefit(
                                         environmental_benefit_present_members
                                     )
-
+                                    results.visualize_advices()
                                     results.see_optimal_size(optimal_PV_size)
-                                    cost_plant = model.compute_cost_plant(optimal_PV_size-power_pv) 
-                                    results.see_computed_costs_plant(cost_plant, "Potenziamento")
+                                    cost_plant = model.compute_cost_plant(
+                                        optimal_PV_size - power_pv
+                                    )
+                                    results.see_computed_costs_plant(
+                                        cost_plant, "Potenziamento"
+                                    )
                                 elif overproduction_or_undeproduction == "Optimal":
 
                                     benefit_b_present_members = (
@@ -525,8 +550,8 @@ def Simulator_CACER():
                                             energy_self_consump
                                         )
                                     )
-
-                                    if inhabitants == "Si":
+                                    results.visualize_economical_environmental_benefits()
+                                    if inhabitants == "Si" and add_power > 0:
                                         benefit_a = model.economical_benefit_a(
                                             add_power
                                         )
@@ -566,8 +591,9 @@ def Simulator_CACER():
                         result_view = results.see_results()
 
                         if result_view:
+                            results.visualize_useful_information()
                             results.see_installable_power(installable_power)
-                            cost_plant = model.compute_cost_plant(installable_power) 
+                            cost_plant = model.compute_cost_plant(installable_power)
                             results.see_computed_costs_plant(cost_plant, "Creazione")
                             results.see_production(production, "area")
                             if overproduction_or_undeproduction == "Overproduction":
@@ -596,9 +622,11 @@ def Simulator_CACER():
                                 environmental_benefit_added_members = (
                                     model.environmental_benefits(production)
                                 )
+                                results.visualize_advices()
                                 results.see_optimal_members(
                                     optimal_members, "membri già presenti"
                                 )
+                                results.visualize_economical_environmental_benefits()
                                 if inhabitants == "Si":
                                     benefit_a = model.economical_benefit_a(
                                         installable_power + add_power
@@ -635,7 +663,7 @@ def Simulator_CACER():
                                 environmental_benefit_present_members = (
                                     model.environmental_benefits(energy_self_consump)
                                 )
-
+                                results.visualize_economical_environmental_benefits()
                                 if inhabitants == "Si":
                                     benefit_a = model.economical_benefit_a(
                                         installable_power + add_power
@@ -650,10 +678,14 @@ def Simulator_CACER():
                                 results.see_environmental_benefit(
                                     environmental_benefit_present_members
                                 )
-
+                                results.visualize_advices()
                                 results.see_optimal_size(optimal_PV_size)
-                                cost_plant = model.compute_cost_plant(optimal_PV_size-installable_power) 
-                                results.see_computed_costs_plant(cost_plant, "Potenziamento")
+                                cost_plant = model.compute_cost_plant(
+                                    optimal_PV_size - installable_power
+                                )
+                                results.see_computed_costs_plant(
+                                    cost_plant, "Potenziamento"
+                                )
                             elif overproduction_or_undeproduction == "Optimal":
 
                                 benefit_b_present_members = model.economical_benefit_b(
@@ -667,7 +699,7 @@ def Simulator_CACER():
                                 environmental_benefit_present_members = (
                                     model.environmental_benefits(energy_self_consump)
                                 )
-
+                                results.visualize_economical_environmental_benefits()
                                 if inhabitants == "Si":
                                     benefit_a = model.economical_benefit_a(
                                         installable_power + add_power
@@ -695,6 +727,7 @@ def Simulator_CACER():
                         optimal_members = model.optimal_members(production)
                         result_view = results.see_results()
                         if result_view:
+                            results.visualize_useful_information()
                             results.see_production(production, "PV")
                             benefit_b_present_members = model.economical_benefit_b(
                                 power_pv,
@@ -706,11 +739,12 @@ def Simulator_CACER():
                             environmental_benefit_present_members = (
                                 model.environmental_benefits(production)
                             )
-
+                            results.visualize_advices()
                             results.see_optimal_members(
                                 optimal_members, "membri non presenti"
                             )
-                            if inhabitants == "Si":
+                            results.visualize_economical_environmental_benefits()
+                            if inhabitants == "Si" and add_power > 0:
                                 benefit_a = model.economical_benefit_a(add_power)
 
                                 results.see_economical_benefit_a(
@@ -733,8 +767,9 @@ def Simulator_CACER():
                     result_view = results.see_results()
                     if result_view:
                         optimal_members = model.optimal_members(production)
+                        results.visualize_useful_information()
                         results.see_installable_power(installable_power)
-                        cost_plant = model.compute_cost_plant(installable_power) 
+                        cost_plant = model.compute_cost_plant(installable_power)
                         results.see_computed_costs_plant(cost_plant, "Creazione")
                         results.see_production(production, "area")
                         benefit_b_present_members = model.economical_benefit_b(
@@ -747,10 +782,11 @@ def Simulator_CACER():
                         environmental_benefit_present_members = (
                             model.environmental_benefits(production)
                         )
-
+                        results.visualize_advices()
                         results.see_optimal_members(
                             optimal_members, "membri non presenti"
                         )
+                        results.visualize_economical_environmental_benefits()
                         if inhabitants == "Si":
                             benefit_a = model.economical_benefit_a(
                                 installable_power + add_power

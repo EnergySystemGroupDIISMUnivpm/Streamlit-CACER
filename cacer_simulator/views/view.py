@@ -205,13 +205,13 @@ class Results(BaseModel):
     def see_economical_benefit_b(self, benefit_b_pres, benefit_b_new=None):
         benefit_b_pres = round(benefit_b_pres)
         st.write(
-            f"Abbiamo calcolato che i tuoi incentivi economici di tipo B corrispondono a {benefit_b_pres}€."
+            f"Abbiamo calcolato che i tuoi incentivi economici di tipo B corrispondono a {benefit_b_pres}€ all'anno."
         )
 
         if benefit_b_new is not None:
             benefit_b_new = round(benefit_b_new)
             st.write(
-                f"Abbiamo calcolato che i tuoi incentivi economici di tipo B considerando anche i nuovi membri corrispondono a {benefit_b_new}€."
+                f"Abbiamo calcolato che i tuoi incentivi economici di tipo B considerando anche i nuovi membri corrispondono a {benefit_b_new}€ all'anno."
             )
 
     def see_economical_benefit_a(self, benefit_a):
@@ -226,13 +226,13 @@ class Results(BaseModel):
     ):
         environmental_benefit_pres = round(environmental_benefit_pres)
         st.write(
-            f"Abbiamo calcolato che ridurresti le emissioni di {environmental_benefit_pres} kg CO2."
+            f"Abbiamo calcolato che ridurresti le emissioni di {environmental_benefit_pres} kg CO2 ogni anno."
         )
 
         if environmental_benefit_added is not None:
             environmental_benefit_added = round(environmental_benefit_added)
             st.write(
-                f"Abbiamo calcolato che ridurresti le emissioni, considerando i nuovi membri, di {environmental_benefit_added} kg CO2."
+                f"Abbiamo calcolato che ridurresti le emissioni, considerando i nuovi membri, di {environmental_benefit_added} kg CO2 ogni anno."
             )
 
     def see_optimal_size(self, optim_size):

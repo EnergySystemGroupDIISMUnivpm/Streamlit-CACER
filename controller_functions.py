@@ -134,8 +134,8 @@ def benefit_results(
         if inhabitants == "Si":
             if label_pv_or_area == "PV" and add_power>0:
                 benefit_a = model.economical_benefit_a(add_power)
-                 results.see_economical_benefit_a(benefit_a)  # type: ignore
+                results.see_economical_benefit_a(benefit_a)  # type: ignore
             elif label_pv_or_area == "area":
                 benefit_a = model.economical_benefit_a(power_pv)
-                 results.see_economical_benefit_a(benefit_a)  # type: ignore
+                results.see_economical_benefit_a(benefit_a)  # type: ignore
            

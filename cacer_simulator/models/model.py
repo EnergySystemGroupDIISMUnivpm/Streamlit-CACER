@@ -270,6 +270,17 @@ def consumption_estimation(members: common.MembersWithValues) -> int:
         )
     return total_consumption
 
+def compute_cost_plant(power_pv: PositiveFloat)-> PositiveFloat:
+    """
+    Computation of costs pv_plant
+
+    Attrs:
+        power_pv: PositiveFloat - power of PV plant in kW        
+    """
+    cost_plant = power_pv*common.KW_COST
+
+    return cost_plant
+
 
 @validate_call
 def percentage_daytime_consumption_estimation(

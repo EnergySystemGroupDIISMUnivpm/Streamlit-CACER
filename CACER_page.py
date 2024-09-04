@@ -44,6 +44,7 @@ def Simulator_CACER():
                             results,
                             add_power=add_power,
                         )
+                        
                 elif area:
                     add_power = 0
                     year_pv = datetime.date.today()
@@ -197,6 +198,8 @@ def Simulator_CACER():
                                     )
 
                                     results.see_optimal_size(optimal_PV_size)
+                                    cost_plant = model.compute_cost_plant(optimal_PV_size - power_pv)
+                                    results.see_computed_costs_plant(cost_plant, "Potenziamento")
                                 elif overproduction_or_undeproduction == "Optimal":
 
                                     benefit_b_present_members = (
@@ -259,6 +262,8 @@ def Simulator_CACER():
 
                         if result_view:
                             results.see_installable_power(installable_power)
+                            cost_plant = model.compute_cost_plant(installable_power) 
+                            results.see_computed_costs_plant(cost_plant, "Costruzione")
                             results.see_production(production, "area")
                             if overproduction_or_undeproduction == "Overproduction":
                                 optimal_members = model.optimal_members(
@@ -342,6 +347,8 @@ def Simulator_CACER():
                                 )
 
                                 results.see_optimal_size(optimal_PV_size)
+                                cost_plant = model.compute_cost_plant(optimal_PV_size-installable_power) 
+                                results.see_computed_costs_plant(cost_plant, "Potenziamento")
                             elif overproduction_or_undeproduction == "Optimal":
 
                                 benefit_b_present_members = model.economical_benefit_b(
@@ -499,6 +506,8 @@ def Simulator_CACER():
                                     )
 
                                     results.see_optimal_size(optimal_PV_size)
+                                    cost_plant = model.compute_cost_plant(optimal_PV_size-power_pv) 
+                                    results.see_computed_costs_plant(cost_plant, "Potenziamento")
                                 elif overproduction_or_undeproduction == "Optimal":
 
                                     benefit_b_present_members = (
@@ -558,6 +567,8 @@ def Simulator_CACER():
 
                         if result_view:
                             results.see_installable_power(installable_power)
+                            cost_plant = model.compute_cost_plant(installable_power) 
+                            results.see_computed_costs_plant(cost_plant, "Creazione")
                             results.see_production(production, "area")
                             if overproduction_or_undeproduction == "Overproduction":
                                 optimal_members = model.optimal_members(
@@ -641,6 +652,8 @@ def Simulator_CACER():
                                 )
 
                                 results.see_optimal_size(optimal_PV_size)
+                                cost_plant = model.compute_cost_plant(optimal_PV_size-installable_power) 
+                                results.see_computed_costs_plant(cost_plant, "Potenziamento")
                             elif overproduction_or_undeproduction == "Optimal":
 
                                 benefit_b_present_members = model.economical_benefit_b(
@@ -721,6 +734,8 @@ def Simulator_CACER():
                     if result_view:
                         optimal_members = model.optimal_members(production)
                         results.see_installable_power(installable_power)
+                        cost_plant = model.compute_cost_plant(installable_power) 
+                        results.see_computed_costs_plant(cost_plant, "Creazione")
                         results.see_production(production, "area")
                         benefit_b_present_members = model.economical_benefit_b(
                             installable_power,

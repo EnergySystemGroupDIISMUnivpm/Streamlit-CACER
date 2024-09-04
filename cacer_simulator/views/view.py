@@ -60,7 +60,7 @@ class UserInput(BaseModel):
             return None
 
         return consumption_options[option]
-
+   
     # Power and year of PV
     @validate_call(validate_return=True)
     def insert_year_power_PV(
@@ -266,3 +266,14 @@ class Results(BaseModel):
                     Per maggiori informazioni puoi provare la sezione CER di questo simulatore.
     """
             )
+    def see_computed_costs_plant(self, cost_plant: PositiveFloat, label_potenziamento_creazione: str):
+        cost_plant = round(cost_plant)
+        if label_potenziamento_creazione == "Potenziamento":
+            st.write(
+                f"Il costo del potenziamento del tuo impianto corrisponde circa a {cost_plant} €."
+            )
+
+        elif label_potenziamento_creazione == "Creazione":
+            st.write(
+                f"Il costo dell'installazione dell'impianto corrisponde circa a {cost_plant} €."
+            )    

@@ -74,7 +74,7 @@ def results_from_PV_power(
             consumption,
             region,
             percentage_daily_consumption,
-            power_pv
+            power_pv,
         )
 
 
@@ -86,12 +86,14 @@ def presence_overproduction_or_undeproduction(
     consumption: PositiveFloat,
     region: common.RegionType,
     percentage_daily_consumption: common.PercentageType,
-    power_pv: PositiveFloat, 
+    power_pv: PositiveFloat,
 ):
     if overproduction_or_undeproduction == "Overproduction":
+        results.visualize_advices()
         results.see_CER_info(label_use_case)
-    
+
     elif overproduction_or_undeproduction == "Underproduction":
+        results.visualize_advices()
         optimal_PV_size = model.optimal_sizing(
             consumption,
             region,
@@ -100,6 +102,7 @@ def presence_overproduction_or_undeproduction(
         results.see_optimal_size(optimal_PV_size)
         cost_plants = model.compute_cost_plant(optimal_PV_size - power_pv)
         results.see_computed_costs_plant(cost_plants, "Potenziamento")
+
 
 @validate_call
 def benefit_results(
@@ -116,11 +119,13 @@ def benefit_results(
     inhabitants="No",
     add_power=0,
 ):
+    results.visualize_useful_information()
     if label_pv_or_area == "area":
         results.see_installable_power(power_pv)
         cost_plant = model.compute_cost_plant(power_pv)
         results.see_computed_costs_plant(cost_plant, "Costruzione")
     results.see_production(production, label_pv_or_area)
+    results.visualize_economical_environmental_benefits()
     benefit_b = model.economical_benefit_b(
         power_pv,
         year_pv,
@@ -138,10 +143,9 @@ def benefit_results(
     )
     if label_use_case == "CER" or label_use_case == "Group":
         if inhabitants == "Si":
-            if label_pv_or_area == "PV" and add_power>0:
+            if label_pv_or_area == "PV" and add_power > 0:
                 benefit_a = model.economical_benefit_a(add_power)
                 results.see_economical_benefit_a(benefit_a)  # type: ignore
             elif label_pv_or_area == "area":
                 benefit_a = model.economical_benefit_a(power_pv)
                 results.see_economical_benefit_a(benefit_a)  # type: ignore
-           

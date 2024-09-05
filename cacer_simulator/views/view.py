@@ -7,6 +7,11 @@ from pydantic import PositiveFloat, validate_call, BaseModel
 import cacer_simulator.common as common
 
 
+def title_CACER():
+    st.markdown(" ")
+    st.markdown("## Simulatore CACER")
+
+
 class UserInput(BaseModel):
 
     ## Input in common for all 3 use case

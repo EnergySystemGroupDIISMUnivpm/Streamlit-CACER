@@ -1,3 +1,4 @@
+from django import views
 import streamlit as st
 import datetime
 from cacer_simulator.views.macro_selection import (
@@ -6,14 +7,13 @@ from cacer_simulator.views.macro_selection import (
     homepage,
     MacroSelection,
 )
-from cacer_simulator.views.view import UserInput, Results
+from cacer_simulator.views.view import UserInput, Results, title_CACER
 import controller_functions
 from cacer_simulator.models import model
 
 
 def Simulator_CACER():
-    st.markdown(" ")
-    st.markdown("## Simulatore CACER")
+    title_CACER()
     choice = show_macro_group_selector()
 
     match choice:

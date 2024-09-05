@@ -8,7 +8,7 @@ from cacer_simulator.views.macro_selection import (
     MacroSelection,
 )
 from cacer_simulator.views.view import UserInput, Results, title_CACER
-import controller_functions
+import controller_wrapped_functions
 from cacer_simulator.models import model
 
 
@@ -26,8 +26,8 @@ def Simulator_CACER():
             percentage_daily_consumption = (
                 user_input.insert_percentage_daytime_consumption()
             )
-            area, year_pv, power_pv, add_power = controller_functions.info_pv_or_area(
-                user_input
+            area, year_pv, power_pv, add_power = (
+                controller_wrapped_functions.info_pv_or_area(user_input)
             )
             if region and percentage_daily_consumption and consumption:
                 if power_pv and year_pv:
@@ -35,7 +35,7 @@ def Simulator_CACER():
                         production = model.production_estimate(
                             power_pv + add_power, region
                         )
-                        controller_functions.results_from_PV_power(
+                        controller_wrapped_functions.results_from_PV_power(
                             "Self_consumer",
                             "PV",
                             power_pv,
@@ -51,7 +51,7 @@ def Simulator_CACER():
                     add_power = 0
                     year_pv = datetime.date.today()
                     power_pv = model.computation_installable_power(area)
-                    controller_functions.results_from_PV_power(
+                    controller_wrapped_functions.results_from_PV_power(
                         "Self_consumer",
                         "area",
                         power_pv,
@@ -78,7 +78,7 @@ def Simulator_CACER():
                         model.percentage_daytime_consumption_estimation(members)
                     )
                     area, year_pv, power_pv, add_power = (
-                        controller_functions.info_pv_or_area(user_input)
+                        controller_wrapped_functions.info_pv_or_area(user_input)
                     )
                     consumption = model.consumption_estimation(members)
                     if power_pv and year_pv:
@@ -403,7 +403,7 @@ def Simulator_CACER():
                         user_input.insert_percentage_daytime_consumption()
                     )
                     area, year_pv, power_pv, add_power = (
-                        controller_functions.info_pv_or_area(user_input)
+                        controller_wrapped_functions.info_pv_or_area(user_input)
                     )
                     if power_pv and year_pv and percentage_daily_consumption:
                         if add_power is not None:  # va bene anche se è 0
@@ -719,7 +719,7 @@ def Simulator_CACER():
 
             elif know_cer_members == "No":
                 area, year_pv, power_pv, add_power = (
-                    controller_functions.info_pv_or_area(user_input)
+                    controller_wrapped_functions.info_pv_or_area(user_input)
                 )
                 if power_pv and year_pv and region:
                     if add_power is not None:  # va bene anche se è 0
@@ -815,7 +815,7 @@ def Simulator_CACER():
             if knowledge_group_consumption == "No" and region:
                 members = user_input.insert_members("Group")
                 area, year_pv, power_pv, add_power = (
-                    controller_functions.info_pv_or_area(user_input)
+                    controller_wrapped_functions.info_pv_or_area(user_input)
                 )
                 consumption = model.consumption_estimation(members)
                 percentage_daily_consumption = (
@@ -823,7 +823,7 @@ def Simulator_CACER():
                 )
                 if power_pv and year_pv and inhabitants:
                     if add_power is not None:  # va bene anche se è 0
-                        controller_functions.results_from_PV_power(
+                        controller_wrapped_functions.results_from_PV_power(
                             "Group",
                             "PV",
                             power_pv,
@@ -840,7 +840,7 @@ def Simulator_CACER():
                     add_power = 0
                     year_pv = datetime.date.today()
                     power_pv = model.computation_installable_power(area)
-                    controller_functions.results_from_PV_power(
+                    controller_wrapped_functions.results_from_PV_power(
                         "Group",
                         "area",
                         power_pv,
@@ -858,7 +858,7 @@ def Simulator_CACER():
                     user_input.insert_percentage_daytime_consumption()
                 )
                 area, year_pv, power_pv, add_power = (
-                    controller_functions.info_pv_or_area(user_input)
+                    controller_wrapped_functions.info_pv_or_area(user_input)
                 )
                 if (
                     power_pv
@@ -867,7 +867,7 @@ def Simulator_CACER():
                     and percentage_daily_consumption
                 ):
                     if add_power is not None:  # va bene anche se è 0
-                        controller_functions.results_from_PV_power(
+                        controller_wrapped_functions.results_from_PV_power(
                             "Group",
                             "PV",
                             power_pv,
@@ -884,7 +884,7 @@ def Simulator_CACER():
                     add_power = 0
                     year_pv = datetime.date.today()
                     power_pv = model.computation_installable_power(area)
-                    controller_functions.results_from_PV_power(
+                    controller_wrapped_functions.results_from_PV_power(
                         "Group",
                         "area",
                         power_pv,

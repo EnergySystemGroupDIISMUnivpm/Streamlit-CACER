@@ -1,6 +1,7 @@
 import streamlit as st
-from pydantic import PositiveFloat, validate_call, BaseModel
+from pydantic import BaseModel, ConfigDict, Field, AfterValidator, validate_call
 import pandas as pd
+import multivector_simulator.common as common
 
 
 def title_multivettore():
@@ -15,7 +16,9 @@ def read_excel_file(file_path):
 
 class UserInput(BaseModel):
 
-    def download_upload_consumption(self) -> pd.DataFrame | None:
+    @validate_call
+    def download_upload_consumption(self) -> common.ConsumptionDataFrameType | None:
+        df_uploaded = None
         st.markdown(
             "Scarica, Compila con i tuoi consumi energetici e Ricarica il File Excel. Il file deve contenere i consumi elettrici, caloriferi e frigoriferi orari riferiti ad un periodo di un anno."
         )
@@ -33,6 +36,13 @@ class UserInput(BaseModel):
         if uploaded_file is not None:
             df_uploaded = pd.read_excel(uploaded_file, engine="openpyxl")
 
-            st.write("Contenuto del file Excel caricato:")
-            st.dataframe(df_uploaded)
+            try:
+                df_uploaded = common.validate_consumption_dataframe(df_uploaded)
+                st.success("Contenuto del file Excel caricato con successo:")
+                st.dataframe(df_uploaded)
+            except ValueError as e:
+                st.error(f"Errore di validazione: {e}")
+                return None
             return df_uploaded
+
+        return None

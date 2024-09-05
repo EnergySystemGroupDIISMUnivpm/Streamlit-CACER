@@ -12,12 +12,12 @@ class MacroGroup(StrEnum):
 def show_macro_group_selector() -> MacroGroup | None:
     macro_groups = [macro_group.value for macro_group in MacroGroup]
     choice = st.selectbox(
-        "Seleziona una delle tre tipologie di CACER",
+        "Seleziona una delle tre possibili configurazioni di CACER",
         macro_groups,
         index=None,
         key="Type CACER selection",
     )
-    with st.expander("Hai bisogno di aiuto per svegliere una configurazione?"):
+    with st.expander("Hai bisogno di aiuto per scegliere una configurazione?"):
         st.markdown(
             """#### 1. Comunità Energetica (CER)
 Una **Comunità Energetica** è costituita da un gruppo di utenti, che possono essere sia consumatori che produttori di energia, i quali condividono l'energia generata da fonti rinnovabili.
@@ -56,13 +56,19 @@ class MacroSelection(StrEnum):
 
 def homepage() -> MacroSelection | None:
     st.set_page_config(page_icon=":sun_small_cloud:", layout="wide")
-    st.markdown(
-        "<h1 style='text-align: center;'>Benvenuto in ENEA Simulatore CACER e Multivettore Energetico</h1>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        " Questo servizio ti consente di simulare scenari di autoconsumo collettivo con energie rinnovabili o di esplorare l'integrazione di diverse fonti energetiche tramite modelli di multivettori energetici, aiutandoti a comprendere l'impatto ambientale ed economico delle tue scelte energetiche."
-    )
+    col1_title, col2_title, col3_title = st.columns([1, 5, 1])
+
+    with col1_title:
+        st.image("resources\logo_ENEA.png", use_column_width=True)
+
+    with col2_title:
+        st.markdown(
+            "<h1 style='text-align: center;'>Benvenuto in ENEA Simulatore CACER e Multivettore Energetico</h1>",
+            unsafe_allow_html=True,
+        )
+
+    with col3_title:
+        st.image("resources\logo_UNIVPM.png", use_column_width=True)
 
     col1, col2 = st.columns(2)
 
@@ -75,7 +81,7 @@ def homepage() -> MacroSelection | None:
         st.header("Sezione CACER")
         st.markdown(
             """
-
+Questo servizio ti consente di simulare scenari di autoconsumo collettivo con energie rinnovabili  autandoti a comprendere l'impatto ambientale ed economico delle tue scelte energetiche.
 
 Le **CACER** (Configurazioni di Autoconsumo Collettivo per l'Energia Rinnovabile) sono soluzioni che permettono la condivisione dell'energia elettrica generata da fonti rinnovabili tra più utenti, ottimizzando l'uso delle risorse e riducendo l'impatto ambientale. Utilizzano la rete elettrica esistente per distribuire l'energia prodotta in modo efficiente, con l'obiettivo di ridurre le emissioni di gas serra e offrire benefici economici agli utenti.
 
@@ -89,8 +95,11 @@ Esistono tre configurazioni principali per partecipare a un sistema di autoconsu
     # Sezione Multivettore energetico
     with col2:
         st.header("Sezione Multivettore energetico")
-        st.write(
-            "Un multivettore energetico è un sistema che integra diverse forme di energia, come elettricità, gas e idrogeno, per ottimizzare l'efficienza e ridurre le emissioni. Questa combinazione, propriamente gestita, consente di sfruttare meglio le risorse e migliorare la sostenibilità energetica."
+        st.markdown(
+            """
+            Questo servizio ti consente di esplorare l'integrazione di diverse fonti energetiche tramite modelli di multivettori energetici   autandoti a comprendere l'impatto ambientale ed economico delle tue scelte energetiche.
+            
+            Un **multivettore energetico** è un sistema che integra diverse forme di energia, come elettricità, gas e idrogeno, per ottimizzare l'efficienza e ridurre le emissioni. Questa combinazione, propriamente gestita, consente di sfruttare meglio le risorse e migliorare la sostenibilità energetica."""
         )
         if st.button("Avvia il Simulatore Multivettore"):
             st.session_state["selection"] = MacroSelection.Multivettore

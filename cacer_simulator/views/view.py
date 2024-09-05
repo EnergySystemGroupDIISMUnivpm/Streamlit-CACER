@@ -28,8 +28,6 @@ class UserInput(BaseModel):
         )
         return inhabitants
 
-    # Annual consumption  ----'label' da implemntare nel controller.py ??????
-
     def insert_annual_consumption(self, label_use_case: str) -> int:
         if label_use_case == "Group":
             title = "Inserisci i consumi annui totali del tuo condominio in kWh"

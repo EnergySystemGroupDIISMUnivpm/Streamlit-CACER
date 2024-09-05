@@ -17,11 +17,37 @@ def show_macro_group_selector() -> MacroGroup | None:
         index=None,
         key="Type CACER selection",
     )
-    
+    with st.expander("Hai bisogno di aiuto per svegliere una configurazione?"):
+        st.markdown(
+            """#### 1. Comunità Energetica (CER)
+Una **Comunità Energetica** è costituita da un gruppo di utenti, che possono essere sia consumatori che produttori di energia, i quali condividono l'energia generata da fonti rinnovabili.
+
+**Requisiti:**
+- Tutti i membri devono essere collegati alla stessa cabina primaria. Per verificare la cabina primaria, consulta la [mappa interattiva](https://www.gse.it/servizi-per-te/autoconsumo/mappa-interattiva-delle-cabine-primarie).
+- La comunità deve essere composta da almeno due membri, ciascuno con un punto di connessione alla rete elettrica distinto.
+- Almeno uno dei membri deve possedere o essere intenzionato a installare un impianto fotovoltaico.
+
+#### 2. Autoconsumatore a Distanza
+L'**Autoconsumatore a Distanza** è un singolo utente che utilizza l'energia rinnovabile prodotta in un luogo diverso da quello in cui la consuma.
+
+**Requisiti:**
+- Deve possedere o voler costruire un impianto fotovoltaico.
+- L'impianto deve avere un punto di connessione alla rete elettrica diverso dal punto di prelievo dell'energia.
+- Entrambi i punti di connessione (immissione e prelievo) devono essere sotto la stessa cabina primaria. Per verificare la cabina primaria, consulta la [mappa interattiva](https://www.gse.it/servizi-per-te/autoconsumo/mappa-interattiva-delle-cabine-primarie).
+
+#### 3. Gruppo di Autoconsumatori
+Un **Gruppo di Autoconsumatori** è composto da almeno due utenti che vivono nello stesso edificio e condividono l'energia prodotta da fonti rinnovabili.
+
+**Requisiti:**
+- I membri devono trovarsi nello stesso edificio e sotto la stessa cabina primaria. Per verificare la cabina primaria, consulta la [mappa interattiva](https://www.gse.it/servizi-per-te/autoconsumo/mappa-interattiva-delle-cabine-primarie).
+- L’edificio deve già avere un impianto fotovoltaico, o si deve prevederne l’installazione.
+"""
+        )
+
     if choice is None:
         return None
     return MacroGroup(choice)
-    
+
 
 class MacroSelection(StrEnum):
     CACER = "CACER"
@@ -29,26 +55,44 @@ class MacroSelection(StrEnum):
 
 
 def homepage() -> MacroSelection | None:
-    st.title("Benvenuto in ENEA Simulatore CACER e Multivettore Energetico")
+    st.set_page_config(page_icon=":sun_small_cloud:", layout="wide")
+    st.markdown(
+        "<h1 style='text-align: center;'>Benvenuto in ENEA Simulatore CACER e Multivettore Energetico</h1>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        " Questo servizio ti consente di simulare scenari di autoconsumo collettivo con energie rinnovabili o di esplorare l'integrazione di diverse fonti energetiche tramite modelli di multivettori energetici, aiutandoti a comprendere l'impatto ambientale ed economico delle tue scelte energetiche."
+    )
 
     col1, col2 = st.columns(2)
-    
+
     # Usare session_state per memorizzare la selezione
-    if 'selection' not in st.session_state:
-        st.session_state['selection'] = None
+    if "selection" not in st.session_state:
+        st.session_state["selection"] = None
 
     # Sezione CACER
     with col1:
-        st.header("CACER")
-        st.write("Questa sezione contiene una spiegazione dettagliata delle CACER.")
-        if st.button("CACER Simulatore"):
-            st.session_state['selection'] = MacroSelection.CACER
+        st.header("Sezione CACER")
+        st.markdown(
+            """
+
+
+Le **CACER** (Configurazioni di Autoconsumo Collettivo per l'Energia Rinnovabile) sono soluzioni che permettono la condivisione dell'energia elettrica generata da fonti rinnovabili tra più utenti, ottimizzando l'uso delle risorse e riducendo l'impatto ambientale. Utilizzano la rete elettrica esistente per distribuire l'energia prodotta in modo efficiente, con l'obiettivo di ridurre le emissioni di gas serra e offrire benefici economici agli utenti.
+
+Esistono tre configurazioni principali per partecipare a un sistema di autoconsumo collettivo: **Comunità Energetica Rinnovabile (CER)**, **Autoconsumatore a distanza**, **Gruppo di autoconsumatori**.
+
+"""
+        )
+        if st.button("Avvia il Simulatore CACER"):
+            st.session_state["selection"] = MacroSelection.CACER
 
     # Sezione Multivettore energetico
     with col2:
-        st.header("Multivettore energetico")
-        st.write("Simulatore per i sistemi multivettore energetici.")
-        if st.button("Multivettore Simulatore"):
-            st.session_state['selection'] = MacroSelection.Multivettore
+        st.header("Sezione Multivettore energetico")
+        st.write(
+            "Un multivettore energetico è un sistema che integra diverse forme di energia, come elettricità, gas e idrogeno, per ottimizzare l'efficienza e ridurre le emissioni. Questa combinazione, propriamente gestita, consente di sfruttare meglio le risorse e migliorare la sostenibilità energetica."
+        )
+        if st.button("Avvia il Simulatore Multivettore"):
+            st.session_state["selection"] = MacroSelection.Multivettore
 
-    return st.session_state['selection']
+    return st.session_state["selection"]

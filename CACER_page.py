@@ -12,6 +12,8 @@ from cacer_simulator.models import model
 
 
 def Simulator_CACER():
+    st.markdown(" ")
+    st.markdown("## Simulatore CACER")
     choice = show_macro_group_selector()
 
     match choice:

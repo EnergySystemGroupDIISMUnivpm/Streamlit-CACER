@@ -85,7 +85,7 @@ class UserInput(BaseModel):
             step=0.1,
             format="%.1f",
             key="PV_power",
-            min_value=common.POWER_PEAK / 1000,
+            min_value=1.1,
         )
 
         return year_PV, int(power_PV)  # type: ignore
@@ -94,9 +94,9 @@ class UserInput(BaseModel):
         area_PV: int | float = st.number_input(
             "Inserisci le dimensioni dell'area in m² in cui costruire l'impianto",
             key="PV_area_dim",
-            step=0.1,
-            format="%.1d",
-            min_value=round(common.AREA_ONE_PV, 1),
+            step=1,
+            format="%d",
+            min_value=round(common.AREA_ONE_PV) * 3,
         )
         return int(area_PV)
 

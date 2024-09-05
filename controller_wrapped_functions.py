@@ -50,32 +50,48 @@ def results_from_PV_power(
             energy_difference_produc_consum, region
         )
     )
-
     result_view = results.see_results()
     if result_view:
-        benefit_results(
-            energy_self_consump,
-            production,
-            label_use_case,
-            label_pv_or_area,
-            power_pv,
-            consumption,
-            percentage_daily_consumption,
-            region,
-            year_pv,
-            results,
-            inhabitants,
-            add_power,
-        )
-        presence_overproduction_or_undeproduction(
-            label_use_case,
-            overproduction_or_undeproduction,
-            results,
-            consumption,
-            region,
-            percentage_daily_consumption,
-            power_pv,
-        )
+        if label_use_case == "CER":
+            results_CER(
+                energy_self_consump,
+                production,
+                label_pv_or_area,
+                power_pv,
+                consumption,
+                percentage_daily_consumption,
+                region,
+                year_pv,
+                results,
+                overproduction_or_undeproduction,
+                energy_difference_produc_consum,
+                inhabitants,
+                add_power,
+            )
+        else:
+            benefit_results(
+                energy_self_consump,
+                production,
+                label_use_case,
+                label_pv_or_area,
+                power_pv,
+                consumption,
+                percentage_daily_consumption,
+                region,
+                year_pv,
+                results,
+                inhabitants,
+                add_power,
+            )
+            presence_overproduction_or_undeproduction(
+                label_use_case,
+                overproduction_or_undeproduction,
+                results,
+                consumption,
+                region,
+                percentage_daily_consumption,
+                power_pv,
+            )
 
 
 @validate_call
@@ -149,3 +165,133 @@ def benefit_results(
             elif label_pv_or_area == "area":
                 benefit_a = model.economical_benefit_a(power_pv)
                 results.see_economical_benefit_a(benefit_a)  # type: ignore
+
+
+@validate_call
+def results_CER(
+    energy_self_consump: PositiveFloat,
+    production: PositiveFloat,
+    label_pv_or_area: common.LabelPVAreaType,
+    power_pv: PositiveFloat,
+    consumption: PositiveFloat,
+    percentage_daily_consumption: common.PercentageType,
+    region: common.RegionType,
+    year_pv: datetime.date,
+    results: Results,
+    overproduction_or_undeproduction: common.LabelOverproUnderprodType,
+    energy_difference_produc_consum: float,
+    inhabitants="No",
+    add_power=0,
+):
+    results.visualize_useful_information()
+    results.see_production(production, label_pv_or_area)
+    if label_pv_or_area == "area":
+        results.see_installable_power(power_pv)
+        cost_plant = model.compute_cost_plant(power_pv)
+        results.see_computed_costs_plant(cost_plant, "Costruzione")
+
+    if overproduction_or_undeproduction == "Overproduction":
+        optimal_members = model.optimal_members(energy_difference_produc_consum)
+        results.visualize_advices()
+        results.see_optimal_members(optimal_members, "membri già presenti")
+
+        benefit_b_present_members = model.economical_benefit_b(
+            power_pv,
+            year_pv,
+            add_power,
+            region,
+            energy_self_consump,
+        )
+        benefit_b_added_members = model.economical_benefit_b(
+            power_pv,
+            year_pv,
+            add_power,
+            region,
+            production,
+        )
+
+        environmental_benefit_present_members = model.environmental_benefits(
+            energy_self_consump
+        )
+        environmental_benefit_added_members = model.environmental_benefits(production)
+
+        results.visualize_economical_environmental_benefits()
+        if inhabitants == "Si" and add_power > 0:
+            if label_pv_or_area == "PV":
+                benefit_a = model.economical_benefit_a(add_power)
+            elif label_pv_or_area == "area":
+                benefit_a = model.economical_benefit_a(power_pv + add_power)
+
+            results.see_economical_benefit_a(
+                benefit_a,  # type: ignore
+            )
+        results.see_economical_benefit_b(
+            benefit_b_present_members,
+            benefit_b_added_members,
+        )
+
+        results.see_environmental_benefit(
+            environmental_benefit_present_members,
+            environmental_benefit_added_members,
+        )
+
+    elif overproduction_or_undeproduction == "Underproduction":
+        optimal_PV_size = model.optimal_sizing(
+            consumption,
+            region,
+            percentage_daily_consumption,
+        )
+
+        results.visualize_advices()
+
+        results.see_optimal_size(optimal_PV_size)
+        cost_plant = model.compute_cost_plant(optimal_PV_size - power_pv)
+        results.see_computed_costs_plant(cost_plant, "Potenziamento")
+
+        benefit_b_present_members = model.economical_benefit_b(
+            power_pv,
+            year_pv,
+            add_power,
+            region,
+            energy_self_consump,
+        )
+
+        environmental_benefit_present_members = model.environmental_benefits(
+            energy_self_consump
+        )
+
+        results.visualize_economical_environmental_benefits()
+        if inhabitants == "Si" and add_power > 0:
+            benefit_a = model.economical_benefit_a(add_power)
+
+            results.see_economical_benefit_a(benefit_a)
+
+        results.see_economical_benefit_b(benefit_b_present_members)
+
+        results.see_environmental_benefit(environmental_benefit_present_members)
+
+    elif overproduction_or_undeproduction == "Optimal":
+
+        benefit_b_present_members = model.economical_benefit_b(
+            power_pv,
+            year_pv,
+            add_power,
+            region,
+            energy_self_consump,
+        )
+
+        environmental_benefit_present_members = model.environmental_benefits(
+            energy_self_consump
+        )
+        results.visualize_economical_environmental_benefits()
+        if inhabitants == "Si" and add_power > 0:
+            if label_pv_or_area == "PV":
+                benefit_a = model.economical_benefit_a(add_power)
+            elif label_pv_or_area == "area":
+                benefit_a = model.economical_benefit_a(power_pv + add_power)
+
+            results.see_economical_benefit_a(benefit_a)  # type: ignore
+
+        results.see_economical_benefit_b(benefit_b_present_members)
+
+        results.see_environmental_benefit(environmental_benefit_present_members)

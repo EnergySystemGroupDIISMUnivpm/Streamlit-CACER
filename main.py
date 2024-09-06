@@ -4,9 +4,8 @@ from Multivettore_page_controller import Simulator_Multivettore
 from cacer_simulator.views.macro_selection import (
     MacroGroup,
     show_macro_group_selector,
-    homepage,
-    MacroSelection,
 )
+from views.view_homepage import homepage, MacroSelection
 from CACER_page_controller import Simulator_CACER
 
 

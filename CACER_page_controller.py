@@ -4,8 +4,6 @@ import datetime
 from cacer_simulator.views.macro_selection import (
     MacroGroup,
     show_macro_group_selector,
-    homepage,
-    MacroSelection,
 )
 from cacer_simulator.views.view import UserInput, Results, title_CACER
 import controller_wrapped_functions

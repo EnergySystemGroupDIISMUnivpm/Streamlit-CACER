@@ -25,7 +25,7 @@ class UserInput(BaseModel):
     # Municipality
     def municipality(self) -> str | None:
         inhabitants: str | None = st.radio(
-            "Il comune dove hai l'impianto o dove vuoi costruirlo, ha meno di 5000 abitanti?",
+            "Il comune dove hai l'impianto fotovoltaico o dove vuoi costruirlo, ha meno di 5000 abitanti?",
             options=["Si", "No"],
             index=None,
             horizontal=True,
@@ -76,12 +76,12 @@ class UserInput(BaseModel):
     ) -> tuple[datetime.date, int]:
 
         year_PV = st.date_input(
-            "Inserisci la data di entrata in esercizio dell'impianto PV",
+            "Inserisci la data di entrata in esercizio dell'impianto fotovoltaico",
             format="DD/MM/YYYY",
             key="PV_year",
         )
         power_PV = st.number_input(
-            "Inserisci la potenza dell'impianto PV in kW",
+            "Inserisci la potenza dell'impianto fotovoltaico in kW",
             step=0.1,
             format="%.1f",
             key="PV_power",
@@ -92,7 +92,7 @@ class UserInput(BaseModel):
 
     def insert_area(self) -> int:
         area_PV: int | float = st.number_input(
-            "Inserisci le dimensioni dell'area in m² in cui costruire l'impianto",
+            "Inserisci le dimensioni dell'area in m² in cui costruire l'impianto fotovoltaico",
             key="PV_area_dim",
             step=1,
             format="%d",
@@ -102,7 +102,7 @@ class UserInput(BaseModel):
 
     def pv_or_area(self) -> str | None:
         has_pv_or_area: str | None = st.radio(
-            "Hai già un impianto PV o hai un area a disposizione in cui costruirlo?",
+            "Hai già un impianto fotovoltaico o hai un area a disposizione in cui costruirlo?",
             options=["Ho già un impianto", "Ho un'area in cui costruirlo"],
             index=None,
             horizontal=True,
@@ -112,12 +112,12 @@ class UserInput(BaseModel):
 
     def boosting_power(self) -> int:
         added_power = st.number_input(
-            "Di quanto vuoi potenziare il tuo impianto in kW?",
+            "Di quanto vuoi potenziare il tuo impianto fotovoltaico in kW?",
             key="boosted_power",
             min_value=0,
             step=1,
             format="%d",
-            help="Se non vuoi potenziare l'impianto inserisci 0",
+            help="Se non vuoi potenziare l'impianto fotovoltaico inserisci 0",
         )
         return int(added_power)
 
@@ -192,7 +192,7 @@ class Results(BaseModel):
             )
         elif label == "area":
             st.write(
-                f"""Abbiamo stimato che con l'area che hai inserito l'impianto che potresti costruirci produrrebbe circa {production} kWh in un anno"""
+                f"""Abbiamo stimato che nell'area che hai inserito, l'impianto fotovoltaico che potresti costruirci produrrebbe circa {production} kWh in un anno"""
             )
 
     def see_optimal_members(
@@ -215,20 +215,20 @@ class Results(BaseModel):
     def see_economical_benefit_b(self, benefit_b_pres, benefit_b_new=None):
         benefit_b_pres = round(benefit_b_pres)
         st.write(
-            f"Abbiamo calcolato che i tuoi incentivi economici di tipo B corrispondono a {benefit_b_pres}€ all'anno."
+            f"Potresti ottenere fino a {benefit_b_pres}€ all'anno di incetivi economici."
         )
 
         if benefit_b_new is not None:
             benefit_b_new = round(benefit_b_new)
             st.write(
-                f"Abbiamo calcolato che i tuoi incentivi economici di tipo B considerando anche i nuovi membri corrispondono a {benefit_b_new}€ all'anno."
+                f"Considerando anche i nuovi membri, potresti ricevere fino a {benefit_b_new}€ all'anno di incetivi economici."
             )
 
     def see_economical_benefit_a(self, benefit_a):
         benefit_a = round(benefit_a)
 
         st.write(
-            f"Abbiamo calcolato che i tuoi incentivi economici di tipo A corrispondono a {benefit_a}€."
+            f"Potresti ricevere fino a {benefit_a}€ a fondo perduto per la costruzione del tuo impianto fotovoltaico."
         )
 
     def see_environmental_benefit(
@@ -236,27 +236,27 @@ class Results(BaseModel):
     ):
         environmental_benefit_pres = round(environmental_benefit_pres)
         st.write(
-            f"Abbiamo calcolato che ridurresti le emissioni di {environmental_benefit_pres} kg CO2 ogni anno."
+            f"Abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_pres} kg CO2 ogni anno."
         )
 
         if environmental_benefit_added is not None:
             environmental_benefit_added = round(environmental_benefit_added)
             st.write(
-                f"Abbiamo calcolato che ridurresti le emissioni, considerando i nuovi membri, di {environmental_benefit_added} kg CO2 ogni anno."
+                f"Considerando anche i nuovi membri, abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_added} kg CO2 ogni anno."
             )
 
     def see_optimal_size(self, optim_size):
         optim_size = round(optim_size)
 
         st.write(
-            f"Abbiamo calcolato che il dimensionamento ottimo del tuo impianto in base a i tuoi consumi corrisponde a {optim_size} Kw."
+            f"In base ai tuoi consumi, la dimensione ottima del tuo impianto fotovoltaico sarebbe di {optim_size} Kw. Valuta la possibilità di costruirlo."
         )
 
     def see_installable_power(self, power_pv):
         power_pv = round(power_pv)
 
         st.write(
-            f"Abbiamo calcolato che con l'area che hai fornito potresti costruire un impianto fino a {power_pv} Kw."
+            f"Nell'area che ai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} Kw."
         )
 
     def see_CER_info(self, label: str) -> None:
@@ -292,7 +292,7 @@ class Results(BaseModel):
             )
 
     def visualize_useful_information(self):
-        st.markdown("##### **Informazioni sull'impianto**")
+        st.markdown("##### **Informazioni sull'impianto fotovoltaico**")
 
     def visualize_economical_environmental_benefits(self):
         st.markdown("##### **Benefici economici e ambientali**")

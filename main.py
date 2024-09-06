@@ -10,6 +10,7 @@ from CACER_page_controller import Simulator_CACER
 
 
 def main():
+    """opening of homepage and selection of CACER simulator or Multivector simulator"""
     macro_selection = homepage()
 
     match macro_selection:

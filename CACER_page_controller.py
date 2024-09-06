@@ -12,6 +12,7 @@ from cacer_simulator.models import model
 
 def Simulator_CACER():
     title_CACER()
+    """selection of the type of CACER (CER, Self_consumer, Group)"""
     choice = show_macro_group_selector()
 
     match choice:
@@ -28,6 +29,7 @@ def Simulator_CACER():
                 controller_wrapped_functions.info_pv_or_area(user_input)
             )
             if region and percentage_daily_consumption and consumption:
+                # case in which user already has PV plant
                 if power_pv and year_pv:
                     if add_power is not None:  # va bene anche se è 0
                         production = model.production_estimate(
@@ -44,7 +46,7 @@ def Simulator_CACER():
                             results,
                             add_power=add_power,
                         )
-
+                # case in which user has an area in which construct PV plant
                 elif area:
                     add_power = 0
                     year_pv = datetime.date.today()
@@ -68,8 +70,10 @@ def Simulator_CACER():
             region = user_input.insert_region()
             inhabitants = user_input.municipality()
             know_cer_members = user_input.cer_with()
+            # case in which user knows CER MEMBERS
             if know_cer_members == "Si":
                 knowledge_cer_consumption = user_input.know_members_consumption("CER")
+                # case in which user does not know the consumption of the members
                 if knowledge_cer_consumption == "No" and region:
                     members = user_input.insert_members("CER")
                     percentage_daily_consumption = (
@@ -79,6 +83,7 @@ def Simulator_CACER():
                         controller_wrapped_functions.info_pv_or_area(user_input)
                     )
                     consumption = model.consumption_estimation(members)
+                    # case in which user has the PV plant
                     if power_pv and year_pv:
                         if add_power is not None:  # va bene anche se è 0
                             controller_wrapped_functions.results_from_PV_power(
@@ -93,6 +98,7 @@ def Simulator_CACER():
                                 inhabitants,  # type: ignore
                                 add_power,
                             )
+                    # case in which user has the area
                     elif area:
                         add_power = 0
                         year_pv = datetime.date.today()
@@ -113,7 +119,7 @@ def Simulator_CACER():
                             inhabitants,  # type: ignore
                             add_power,
                         )
-
+                # case in which user knows the consumption of the members
                 elif knowledge_cer_consumption == "Si" and region:
                     consumption = user_input.insert_annual_consumption("CER")
                     percentage_daily_consumption = (
@@ -122,6 +128,7 @@ def Simulator_CACER():
                     area, year_pv, power_pv, add_power = (
                         controller_wrapped_functions.info_pv_or_area(user_input)
                     )
+                    # user has the PV plant
                     if power_pv and year_pv and percentage_daily_consumption:
                         if add_power is not None:  # va bene anche se è 0
                             production = model.production_estimate(
@@ -284,6 +291,7 @@ def Simulator_CACER():
                                     results.see_environmental_benefit(
                                         environmental_benefit_present_members
                                     )
+                    # user has an area
                     elif area and percentage_daily_consumption:
                         add_power = 0
                         year_pv = datetime.date.today()
@@ -433,11 +441,12 @@ def Simulator_CACER():
                                 results.see_environmental_benefit(
                                     environmental_benefit_present_members
                                 )
-
+            # case in which user dosn't know CER members
             elif know_cer_members == "No":
                 area, year_pv, power_pv, add_power = (
                     controller_wrapped_functions.info_pv_or_area(user_input)
                 )
+                # user has PV plant
                 if power_pv and year_pv and region:
                     if add_power is not None:  # va bene anche se è 0
                         production = model.production_estimate(
@@ -476,6 +485,7 @@ def Simulator_CACER():
                             results.see_environmental_benefit(
                                 environmental_benefit_present_members,
                             )
+                # user has area
                 if area and region:
                     add_power = 0
                     year_pv = datetime.date.today()
@@ -529,6 +539,7 @@ def Simulator_CACER():
             region = user_input.insert_region()
             inhabitants = user_input.municipality()
             knowledge_group_consumption = user_input.know_members_consumption("Group")
+            # user doesn't know members consumption
             if knowledge_group_consumption == "No" and region:
                 members = user_input.insert_members("Group")
                 area, year_pv, power_pv, add_power = (
@@ -538,6 +549,7 @@ def Simulator_CACER():
                 percentage_daily_consumption = (
                     model.percentage_daytime_consumption_estimation(members)
                 )
+                # user has PV plant
                 if power_pv and year_pv and inhabitants:
                     if add_power is not None:  # va bene anche se è 0
                         controller_wrapped_functions.results_from_PV_power(
@@ -552,7 +564,7 @@ def Simulator_CACER():
                             inhabitants,
                             add_power,
                         )
-
+                # user has area
                 elif area and inhabitants:
                     add_power = 0
                     year_pv = datetime.date.today()
@@ -569,6 +581,7 @@ def Simulator_CACER():
                         inhabitants,
                         add_power,
                     )
+            # user knows members consumption
             if knowledge_group_consumption == "Si" and region:
                 consumption = user_input.insert_annual_consumption("Group")
                 percentage_daily_consumption = (
@@ -577,6 +590,7 @@ def Simulator_CACER():
                 area, year_pv, power_pv, add_power = (
                     controller_wrapped_functions.info_pv_or_area(user_input)
                 )
+                # user has PV plant
                 if (
                     power_pv
                     and year_pv
@@ -596,7 +610,7 @@ def Simulator_CACER():
                             inhabitants,
                             add_power,
                         )
-
+                # user has area
                 elif area and inhabitants and percentage_daily_consumption:
                     add_power = 0
                     year_pv = datetime.date.today()

@@ -9,13 +9,14 @@ import cacer_simulator.common as common
 def info_pv_or_area(
     user_input,
 ) -> tuple[int | None, datetime.date | None, int | None, int | None]:
+    """
+    ask to user if has an area or PV plant. if has area ask dimenstion. if has PV plant, ask year, power and boosting power.
+    """
     area = None
     year_pv = None
     power_pv = None
     add_power = None
-    has_pv_or_area = (
-        user_input.pv_or_area()
-    )  ##si potrebbe evitare di ripeterlo. Da rivedere.
+    has_pv_or_area = user_input.pv_or_area()
     if has_pv_or_area == "Ho un'area in cui costruirlo":
         area = user_input.insert_area()
     elif has_pv_or_area == "Ho già un impianto":
@@ -37,6 +38,9 @@ def results_from_PV_power(
     inhabitants="No",
     add_power=0,
 ):
+    """
+    calculation and visualization of the CACER simulation results.
+    """
     production = model.production_estimate(power_pv + add_power, region)
     energy_self_consump = model.estimate_self_consumed_energy(
         consumption, percentage_daily_consumption, production
@@ -52,6 +56,7 @@ def results_from_PV_power(
     )
     result_view = results.see_results()
     if result_view:
+        # case of CER
         if label_use_case == "CER":
             results_CER(
                 energy_self_consump,
@@ -68,6 +73,7 @@ def results_from_PV_power(
                 inhabitants,
                 add_power,
             )
+        # case of Self_consumer and Group
         else:
             benefit_results(
                 energy_self_consump,
@@ -104,10 +110,14 @@ def presence_overproduction_or_undeproduction(
     percentage_daily_consumption: common.PercentageType,
     power_pv: PositiveFloat,
 ):
+    """
+    determitaion of overproduction or undeproduction and visualization of relative results. For Self_consumer and Group.
+    """
+    # case of overproduction, so there is visualization of advice for creating a CER
     if overproduction_or_undeproduction == "Overproduction":
         results.visualize_advices()
         results.see_CER_info(label_use_case)
-
+    # case of underproduction, so there is visualization of advice for boosting PV plant.
     elif overproduction_or_undeproduction == "Underproduction":
         results.visualize_advices()
         optimal_PV_size = model.optimal_sizing(
@@ -135,11 +145,16 @@ def benefit_results(
     inhabitants="No",
     add_power=0,
 ):
+    """
+    computation and visualization of economical and environmental benefits. For Self_consumer and Group.
+    """
     results.visualize_useful_information()
+    # only when user has area
     if label_pv_or_area == "area":
         results.see_installable_power(power_pv)
         cost_plant = model.compute_cost_plant(power_pv)
         results.see_computed_costs_plant(cost_plant, "Costruzione")
+    # both for area and PV plant already present
     results.see_production(production, label_pv_or_area)
     results.visualize_economical_environmental_benefits()
     benefit_b = model.economical_benefit_b(
@@ -157,11 +172,14 @@ def benefit_results(
     results.see_environmental_benefit(
         environmental_benefit,
     )
-    if label_use_case == "CER" or label_use_case == "Group":
+    # benefit a only for Group (benefit a is not obternable for Self_consumer. Benefit a is on construction of PV (boosting part or new PV)
+    if label_use_case == "Group":
         if inhabitants == "Si":
+            # case of PV already present. benefit a is calculated only on the boosting power.
             if label_pv_or_area == "PV" and add_power > 0:
                 benefit_a = model.economical_benefit_a(add_power)
                 results.see_economical_benefit_a(benefit_a)  # type: ignore
+            # case of area. benefit a is calculated on the entire new possible installable PV plant.
             elif label_pv_or_area == "area":
                 benefit_a = model.economical_benefit_a(power_pv)
                 results.see_economical_benefit_a(benefit_a)  # type: ignore
@@ -183,13 +201,18 @@ def results_CER(
     inhabitants="No",
     add_power=0,
 ):
+    """
+    computation and visualization of results only for CER.
+    """
+    # for both area and PV
     results.visualize_useful_information()
     results.see_production(production, label_pv_or_area)
+    # only for case in which user has area
     if label_pv_or_area == "area":
         results.see_installable_power(power_pv)
         cost_plant = model.compute_cost_plant(power_pv)
         results.see_computed_costs_plant(cost_plant, "Costruzione")
-
+    # case of Overproduction. So new possible members of CER are proposed with relative economical and environmental benefits.
     if overproduction_or_undeproduction == "Overproduction":
         optimal_members = model.optimal_members(energy_difference_produc_consum)
         results.visualize_advices()
@@ -216,9 +239,12 @@ def results_CER(
         environmental_benefit_added_members = model.environmental_benefits(production)
 
         results.visualize_economical_environmental_benefits()
+        # benefit a (only of inhabitants < 5000)
         if inhabitants == "Si" and add_power > 0:
+            # case of PV already present. benefit a is calculated only on the boosting power.
             if label_pv_or_area == "PV":
                 benefit_a = model.economical_benefit_a(add_power)
+                # case of area. benefit a is calculated on entrire possible installable PV plant.
             elif label_pv_or_area == "area":
                 benefit_a = model.economical_benefit_a(power_pv + add_power)
 
@@ -234,7 +260,7 @@ def results_CER(
             environmental_benefit_present_members,
             environmental_benefit_added_members,
         )
-
+    # case of unserproduction so the optimal dimension of PV plant is proosed.
     elif overproduction_or_undeproduction == "Underproduction":
         optimal_PV_size = model.optimal_sizing(
             consumption,
@@ -261,6 +287,7 @@ def results_CER(
         )
 
         results.visualize_economical_environmental_benefits()
+        # benefit a (only for inhabitants < 5000)
         if inhabitants == "Si" and add_power > 0:
             benefit_a = model.economical_benefit_a(add_power)
 
@@ -270,6 +297,7 @@ def results_CER(
 
         results.see_environmental_benefit(environmental_benefit_present_members)
 
+    # case of optimal dimension of PV plant. Results are simply visualized.
     elif overproduction_or_undeproduction == "Optimal":
 
         benefit_b_present_members = model.economical_benefit_b(
@@ -284,9 +312,12 @@ def results_CER(
             energy_self_consump
         )
         results.visualize_economical_environmental_benefits()
+        # benefit a (only for inhabitants < 5000)
         if inhabitants == "Si" and add_power > 0:
+            # case of PV already present. benefit a is calculated only on the boosting power.
             if label_pv_or_area == "PV":
                 benefit_a = model.economical_benefit_a(add_power)
+            # case of area. benefit a is calculated on entrire possible installable PV plant.
             elif label_pv_or_area == "area":
                 benefit_a = model.economical_benefit_a(power_pv + add_power)
 

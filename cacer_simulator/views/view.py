@@ -8,6 +8,9 @@ import cacer_simulator.common as common
 
 
 def title_CACER():
+    """
+    title for the CACER simulator section.
+    """
     st.markdown(" ")
     st.markdown("## Simulatore CACER")
 
@@ -133,6 +136,7 @@ class UserInput(BaseModel):
         )
         return members_info
 
+    # both for CER and Group
     def insert_members(self, label: str) -> common.MembersWithValues:
         if label == "CER":
             st.markdown(

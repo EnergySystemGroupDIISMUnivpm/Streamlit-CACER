@@ -88,7 +88,7 @@ class UserInput(BaseModel):
             step=0.1,
             format="%.1f",
             key="PV_power",
-            min_value=1.1,
+            min_value=round(common.POWER_PEAK / 1000, 1),
         )
 
         return year_PV, int(power_PV)  # type: ignore
@@ -99,7 +99,7 @@ class UserInput(BaseModel):
             key="PV_area_dim",
             step=1,
             format="%d",
-            min_value=round(common.AREA_ONE_PV) * 3,
+            min_value=round(common.AREA_ONE_PV),
         )
         return int(area_PV)
 
@@ -281,8 +281,11 @@ class Results(BaseModel):
     """
             )
 
+    @validate_call
     def see_computed_costs_plant(
-        self, cost_plant: PositiveFloat, label_potenziamento_creazione: str
+        self,
+        cost_plant: PositiveFloat,
+        label_potenziamento_creazione: common.LabelCreationBoostingType,
     ):
         cost_plant = round(cost_plant)
         if label_potenziamento_creazione == "Potenziamento":

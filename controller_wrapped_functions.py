@@ -30,7 +30,7 @@ def results_from_PV_power(
     label_use_case: common.LabelUseCaseType,
     label_pv_or_area: common.LabelPVAreaType,
     power_pv: PositiveFloat,
-    consumption: PositiveFloat,
+    consumption: common.PositiveOrZeroFloat,
     percentage_daily_consumption: common.PercentageType,
     region: common.RegionType,
     year_pv: datetime.date,
@@ -41,21 +41,23 @@ def results_from_PV_power(
     """
     calculation and visualization of the CACER simulation results.
     """
-    production = model.production_estimate(power_pv + add_power, region)
-    energy_self_consump = model.estimate_self_consumed_energy(
-        consumption, percentage_daily_consumption, production
-    )
-    diurnal_consum = percentage_daily_consumption * consumption
-    energy_difference_produc_consum = model.energy_difference(
-        diurnal_consum, production
-    )
-    overproduction_or_undeproduction = (
-        model.presence_of_overproduction_or_underproduction(
-            energy_difference_produc_consum, region
-        )
-    )
+
     result_view = results.see_results()
     if result_view:
+
+        production = model.production_estimate(power_pv + add_power, region)
+        energy_self_consump = model.estimate_self_consumed_energy(
+            consumption, percentage_daily_consumption, production
+        )
+        diurnal_consum = percentage_daily_consumption * consumption
+        energy_difference_produc_consum = model.energy_difference(
+            diurnal_consum, production
+        )
+        overproduction_or_undeproduction = (
+            model.presence_of_overproduction_or_underproduction(
+                energy_difference_produc_consum, region
+            )
+        )
         # case of CER
         if label_use_case == "CER":
             results_CER(
@@ -153,7 +155,7 @@ def benefit_results(
     if label_pv_or_area == "area":
         results.see_installable_power(power_pv)
         cost_plant = model.compute_cost_plant(power_pv)
-        results.see_computed_costs_plant(cost_plant, "Costruzione")
+        results.see_computed_costs_plant(cost_plant, "Creazione")
     # both for area and PV plant already present
     results.see_production(production, label_pv_or_area)
     results.visualize_economical_environmental_benefits()
@@ -211,7 +213,7 @@ def results_CER(
     if label_pv_or_area == "area":
         results.see_installable_power(power_pv)
         cost_plant = model.compute_cost_plant(power_pv)
-        results.see_computed_costs_plant(cost_plant, "Costruzione")
+        results.see_computed_costs_plant(cost_plant, "Creazione")
     # case of Overproduction. So new possible members of CER are proposed with relative economical and environmental benefits.
     if overproduction_or_undeproduction == "Overproduction":
         optimal_members = model.optimal_members(energy_difference_produc_consum)

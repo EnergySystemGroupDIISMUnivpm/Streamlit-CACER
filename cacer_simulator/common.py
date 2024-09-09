@@ -72,6 +72,23 @@ LabelPVAreaType = Annotated[
     Field(description=f"Label use case among {LABEL_PV_AREA}"),
 ]
 
+LABEL_CREATION_BOOSTING = ["Creazione", "Potenziamento"]
+
+
+def is_valid_creation_boosting_label(x: str) -> str:
+    if x not in LABEL_CREATION_BOOSTING:
+        raise ValueError(
+            f"Invalid Lable for creation or boosting {x}, must be in {LABEL_CREATION_BOOSTING}"
+        )
+    return x
+
+
+LabelCreationBoostingType = Annotated[
+    str,
+    AfterValidator(is_valid_creation_boosting_label),
+    Field(description=f"Label use case among {LABEL_CREATION_BOOSTING}"),
+]
+
 LABEL_OVER_UNDER = ["Overproduction", "Underproduction", "Optimal"]
 
 

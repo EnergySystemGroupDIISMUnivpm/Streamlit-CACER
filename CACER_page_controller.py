@@ -131,316 +131,38 @@ def Simulator_CACER():
                     # user has the PV plant
                     if power_pv and year_pv and percentage_daily_consumption:
                         if add_power is not None:  # va bene anche se è 0
-                            production = model.production_estimate(
-                                power_pv + add_power, region
-                            )
-
-                            energy_self_consump = model.estimate_self_consumed_energy(
+                            controller_wrapped_functions.results_from_PV_power(
+                                "CER",
+                                "PV",
+                                power_pv,
                                 consumption,
                                 percentage_daily_consumption,
-                                production,
-                            )
-                            diurnal_consum = percentage_daily_consumption * consumption
-                            energy_difference_produc_consum = model.energy_difference(
-                                diurnal_consum, production
-                            )
-                            overproduction_or_undeproduction = (
-                                model.presence_of_overproduction_or_underproduction(
-                                    energy_difference_produc_consum, region
-                                )
+                                region,
+                                year_pv,
+                                results,
+                                inhabitants,  # type: ignore
+                                add_power,
                             )
 
-                            result_view = results.see_results()
-
-                            if result_view:
-                                results.visualize_useful_information()
-                                results.see_production(production, "PV")
-                                if overproduction_or_undeproduction == "Overproduction":
-                                    optimal_members = model.optimal_members(
-                                        energy_difference_produc_consum
-                                    )
-
-                                    benefit_b_present_members = (
-                                        model.economical_benefit_b(
-                                            power_pv,
-                                            year_pv,
-                                            add_power,
-                                            region,
-                                            energy_self_consump,
-                                        )
-                                    )
-                                    benefit_b_added_members = (
-                                        model.economical_benefit_b(
-                                            power_pv,
-                                            year_pv,
-                                            add_power,
-                                            region,
-                                            production,
-                                        )
-                                    )
-
-                                    environmental_benefit_present_members = (
-                                        model.environmental_benefits(
-                                            energy_self_consump
-                                        )
-                                    )
-                                    environmental_benefit_added_members = (
-                                        model.environmental_benefits(production)
-                                    )
-                                    results.visualize_advices()
-                                    results.see_optimal_members(
-                                        optimal_members, "membri già presenti"
-                                    )
-                                    results.visualize_economical_environmental_benefits()
-                                    if inhabitants == "Si" and add_power > 0:
-                                        benefit_a = model.economical_benefit_a(
-                                            add_power
-                                        )
-
-                                        results.see_economical_benefit_a(
-                                            benefit_a,
-                                        )
-                                    results.see_economical_benefit_b(
-                                        benefit_b_present_members,
-                                        benefit_b_added_members,
-                                    )
-
-                                    results.see_environmental_benefit(
-                                        environmental_benefit_present_members,
-                                        environmental_benefit_added_members,
-                                    )
-
-                                elif (
-                                    overproduction_or_undeproduction
-                                    == "Underproduction"
-                                ):
-                                    optimal_PV_size = model.optimal_sizing(
-                                        consumption,
-                                        region,
-                                        percentage_daily_consumption,
-                                    )
-
-                                    benefit_b_present_members = (
-                                        model.economical_benefit_b(
-                                            power_pv,
-                                            year_pv,
-                                            add_power,
-                                            region,
-                                            energy_self_consump,
-                                        )
-                                    )
-
-                                    environmental_benefit_present_members = (
-                                        model.environmental_benefits(
-                                            energy_self_consump
-                                        )
-                                    )
-                                    results.visualize_economical_environmental_benefits()
-
-                                    if inhabitants == "Si" and add_power > 0:
-                                        benefit_a = model.economical_benefit_a(
-                                            add_power
-                                        )
-
-                                        results.see_economical_benefit_a(benefit_a)
-
-                                    results.see_economical_benefit_b(
-                                        benefit_b_present_members
-                                    )
-
-                                    results.see_environmental_benefit(
-                                        environmental_benefit_present_members
-                                    )
-                                    results.visualize_advices()
-                                    results.see_optimal_size(optimal_PV_size)
-                                    cost_plant = model.compute_cost_plant(
-                                        optimal_PV_size - power_pv
-                                    )
-                                    results.see_computed_costs_plant(
-                                        cost_plant, "Potenziamento"
-                                    )
-                                elif overproduction_or_undeproduction == "Optimal":
-
-                                    benefit_b_present_members = (
-                                        model.economical_benefit_b(
-                                            power_pv,
-                                            year_pv,
-                                            add_power,
-                                            region,
-                                            energy_self_consump,
-                                        )
-                                    )
-
-                                    environmental_benefit_present_members = (
-                                        model.environmental_benefits(
-                                            energy_self_consump
-                                        )
-                                    )
-                                    results.visualize_economical_environmental_benefits()
-                                    if inhabitants == "Si" and add_power > 0:
-                                        benefit_a = model.economical_benefit_a(
-                                            add_power
-                                        )
-
-                                        results.see_economical_benefit_a(benefit_a)
-
-                                    results.see_economical_benefit_b(
-                                        benefit_b_present_members
-                                    )
-
-                                    results.see_environmental_benefit(
-                                        environmental_benefit_present_members
-                                    )
                     # user has an area
                     elif area and percentage_daily_consumption:
                         add_power = 0
                         year_pv = datetime.date.today()
 
-                        installable_power = model.computation_installable_power(area)
-                        production = model.production_estimate(
-                            installable_power + add_power, region
-                        )
-                        energy_self_consump = model.estimate_self_consumed_energy(
+                        power_pv = model.computation_installable_power(area)
+                        controller_wrapped_functions.results_from_PV_power(
+                            "CER",
+                            "PV",
+                            power_pv,
                             consumption,
                             percentage_daily_consumption,
-                            production,
-                        )
-                        diurnal_consum = percentage_daily_consumption * consumption
-                        energy_difference_produc_consum = model.energy_difference(
-                            diurnal_consum, production
-                        )
-                        overproduction_or_undeproduction = (
-                            model.presence_of_overproduction_or_underproduction(
-                                energy_difference_produc_consum, region
-                            )
+                            region,
+                            year_pv,
+                            results,
+                            inhabitants,  # type: ignore
+                            add_power,
                         )
 
-                        result_view = results.see_results()
-
-                        if result_view:
-                            results.visualize_useful_information()
-                            results.see_installable_power(installable_power)
-                            cost_plant = model.compute_cost_plant(installable_power)
-                            results.see_computed_costs_plant(cost_plant, "Creazione")
-                            results.see_production(production, "area")
-                            if overproduction_or_undeproduction == "Overproduction":
-                                optimal_members = model.optimal_members(
-                                    energy_difference_produc_consum
-                                )
-
-                                benefit_b_present_members = model.economical_benefit_b(
-                                    installable_power,
-                                    year_pv,
-                                    add_power,
-                                    region,
-                                    energy_self_consump,
-                                )
-                                benefit_b_added_members = model.economical_benefit_b(
-                                    installable_power,
-                                    year_pv,
-                                    add_power,
-                                    region,
-                                    production,
-                                )
-
-                                environmental_benefit_present_members = (
-                                    model.environmental_benefits(energy_self_consump)
-                                )
-                                environmental_benefit_added_members = (
-                                    model.environmental_benefits(production)
-                                )
-                                results.visualize_advices()
-                                results.see_optimal_members(
-                                    optimal_members, "membri già presenti"
-                                )
-                                results.visualize_economical_environmental_benefits()
-                                if inhabitants == "Si":
-                                    benefit_a = model.economical_benefit_a(
-                                        installable_power + add_power
-                                    )
-
-                                    results.see_economical_benefit_a(
-                                        benefit_a,
-                                    )
-                                results.see_economical_benefit_b(
-                                    benefit_b_present_members,
-                                    benefit_b_added_members,
-                                )
-
-                                results.see_environmental_benefit(
-                                    environmental_benefit_present_members,
-                                    environmental_benefit_added_members,
-                                )
-
-                            elif overproduction_or_undeproduction == "Underproduction":
-                                optimal_PV_size = model.optimal_sizing(
-                                    consumption,
-                                    region,
-                                    percentage_daily_consumption,
-                                )
-
-                                benefit_b_present_members = model.economical_benefit_b(
-                                    installable_power,
-                                    year_pv,
-                                    add_power,
-                                    region,
-                                    energy_self_consump,
-                                )
-
-                                environmental_benefit_present_members = (
-                                    model.environmental_benefits(energy_self_consump)
-                                )
-                                results.visualize_economical_environmental_benefits()
-                                if inhabitants == "Si":
-                                    benefit_a = model.economical_benefit_a(
-                                        installable_power + add_power
-                                    )
-
-                                    results.see_economical_benefit_a(benefit_a)
-
-                                results.see_economical_benefit_b(
-                                    benefit_b_present_members
-                                )
-
-                                results.see_environmental_benefit(
-                                    environmental_benefit_present_members
-                                )
-                                results.visualize_advices()
-                                results.see_optimal_size(optimal_PV_size)
-                                cost_plant = model.compute_cost_plant(
-                                    optimal_PV_size - installable_power
-                                )
-                                results.see_computed_costs_plant(
-                                    cost_plant, "Potenziamento"
-                                )
-                            elif overproduction_or_undeproduction == "Optimal":
-
-                                benefit_b_present_members = model.economical_benefit_b(
-                                    installable_power,
-                                    year_pv,
-                                    add_power,
-                                    region,
-                                    energy_self_consump,
-                                )
-
-                                environmental_benefit_present_members = (
-                                    model.environmental_benefits(energy_self_consump)
-                                )
-                                results.visualize_economical_environmental_benefits()
-                                if inhabitants == "Si":
-                                    benefit_a = model.economical_benefit_a(
-                                        installable_power + add_power
-                                    )
-
-                                    results.see_economical_benefit_a(benefit_a)
-
-                                results.see_economical_benefit_b(
-                                    benefit_b_present_members
-                                )
-
-                                results.see_environmental_benefit(
-                                    environmental_benefit_present_members
-                                )
             # case in which user dosn't know CER members
             elif know_cer_members == "No":
                 area, year_pv, power_pv, add_power = (

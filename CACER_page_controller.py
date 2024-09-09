@@ -76,19 +76,41 @@ def Simulator_CACER():
                 # case in which user does not know the consumption of the members
                 if knowledge_cer_consumption == "No" and region:
                     members = user_input.insert_members("CER")
-                    percentage_daily_consumption = (
-                        model.percentage_daytime_consumption_estimation(members)
-                    )
-                    area, year_pv, power_pv, add_power = (
-                        controller_wrapped_functions.info_pv_or_area(user_input)
-                    )
-                    consumption = model.consumption_estimation(members)
-                    # case in which user has the PV plant
-                    if power_pv and year_pv:
-                        if add_power is not None:  # va bene anche se è 0
+                    if any(value != 0 for value in members.values()):
+                        percentage_daily_consumption = (
+                            model.percentage_daytime_consumption_estimation(members)
+                        )
+                        area, year_pv, power_pv, add_power = (
+                            controller_wrapped_functions.info_pv_or_area(user_input)
+                        )
+                        consumption = model.consumption_estimation(members)
+                        # case in which user has the PV plant
+                        if power_pv and year_pv:
+                            if add_power is not None:  # va bene anche se è 0
+                                controller_wrapped_functions.results_from_PV_power(
+                                    "CER",
+                                    "PV",
+                                    power_pv,
+                                    consumption,
+                                    percentage_daily_consumption,
+                                    region,
+                                    year_pv,
+                                    results,
+                                    inhabitants,  # type: ignore
+                                    add_power,
+                                )
+                        # case in which user has the area
+                        elif area:
+                            add_power = 0
+                            year_pv = datetime.date.today()
+
+                            power_pv = model.computation_installable_power(area)
+                            percentage_daily_consumption = (
+                                model.percentage_daytime_consumption_estimation(members)
+                            )
                             controller_wrapped_functions.results_from_PV_power(
                                 "CER",
-                                "PV",
+                                "area",
                                 power_pv,
                                 consumption,
                                 percentage_daily_consumption,
@@ -98,27 +120,6 @@ def Simulator_CACER():
                                 inhabitants,  # type: ignore
                                 add_power,
                             )
-                    # case in which user has the area
-                    elif area:
-                        add_power = 0
-                        year_pv = datetime.date.today()
-
-                        power_pv = model.computation_installable_power(area)
-                        percentage_daily_consumption = (
-                            model.percentage_daytime_consumption_estimation(members)
-                        )
-                        controller_wrapped_functions.results_from_PV_power(
-                            "CER",
-                            "area",
-                            power_pv,
-                            consumption,
-                            percentage_daily_consumption,
-                            region,
-                            year_pv,
-                            results,
-                            inhabitants,  # type: ignore
-                            add_power,
-                        )
                 # case in which user knows the consumption of the members
                 elif knowledge_cer_consumption == "Si" and region:
                     consumption = user_input.insert_annual_consumption("CER")
@@ -152,7 +153,7 @@ def Simulator_CACER():
                         power_pv = model.computation_installable_power(area)
                         controller_wrapped_functions.results_from_PV_power(
                             "CER",
-                            "PV",
+                            "area",
                             power_pv,
                             consumption,
                             percentage_daily_consumption,
@@ -264,19 +265,37 @@ def Simulator_CACER():
             # user doesn't know members consumption
             if knowledge_group_consumption == "No" and region:
                 members = user_input.insert_members("Group")
-                area, year_pv, power_pv, add_power = (
-                    controller_wrapped_functions.info_pv_or_area(user_input)
-                )
-                consumption = model.consumption_estimation(members)
-                percentage_daily_consumption = (
-                    model.percentage_daytime_consumption_estimation(members)
-                )
-                # user has PV plant
-                if power_pv and year_pv and inhabitants:
-                    if add_power is not None:  # va bene anche se è 0
+                if any(members[chiave] != 0 for chiave in ["appartamenti"]):
+                    area, year_pv, power_pv, add_power = (
+                        controller_wrapped_functions.info_pv_or_area(user_input)
+                    )
+                    consumption = model.consumption_estimation(members)
+                    percentage_daily_consumption = (
+                        model.percentage_daytime_consumption_estimation(members)
+                    )
+                    # user has PV plant
+                    if power_pv and year_pv and inhabitants:
+                        if add_power is not None:  # va bene anche se è 0
+                            controller_wrapped_functions.results_from_PV_power(
+                                "Group",
+                                "PV",
+                                power_pv,
+                                consumption,
+                                percentage_daily_consumption,
+                                region,
+                                year_pv,
+                                results,
+                                inhabitants,
+                                add_power,
+                            )
+                    # user has area
+                    elif area and inhabitants:
+                        add_power = 0
+                        year_pv = datetime.date.today()
+                        power_pv = model.computation_installable_power(area)
                         controller_wrapped_functions.results_from_PV_power(
                             "Group",
-                            "PV",
+                            "area",
                             power_pv,
                             consumption,
                             percentage_daily_consumption,
@@ -286,23 +305,6 @@ def Simulator_CACER():
                             inhabitants,
                             add_power,
                         )
-                # user has area
-                elif area and inhabitants:
-                    add_power = 0
-                    year_pv = datetime.date.today()
-                    power_pv = model.computation_installable_power(area)
-                    controller_wrapped_functions.results_from_PV_power(
-                        "Group",
-                        "area",
-                        power_pv,
-                        consumption,
-                        percentage_daily_consumption,
-                        region,
-                        year_pv,
-                        results,
-                        inhabitants,
-                        add_power,
-                    )
             # user knows members consumption
             if knowledge_group_consumption == "Si" and region:
                 consumption = user_input.insert_annual_consumption("Group")

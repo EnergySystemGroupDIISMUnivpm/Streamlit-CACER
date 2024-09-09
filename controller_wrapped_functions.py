@@ -208,12 +208,14 @@ def results_CER(
     """
     # for both area and PV
     results.visualize_useful_information()
-    results.see_production(production, label_pv_or_area)
     # only for case in which user has area
     if label_pv_or_area == "area":
         results.see_installable_power(power_pv)
         cost_plant = model.compute_cost_plant(power_pv)
         results.see_computed_costs_plant(cost_plant, "Creazione")
+
+    results.see_production(production, label_pv_or_area)
+
     # case of Overproduction. So new possible members of CER are proposed with relative economical and environmental benefits.
     if overproduction_or_undeproduction == "Overproduction":
         optimal_members = model.optimal_members(energy_difference_produc_consum)

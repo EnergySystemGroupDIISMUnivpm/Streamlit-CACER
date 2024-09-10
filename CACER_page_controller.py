@@ -84,6 +84,7 @@ def Simulator_CACER():
                             controller_wrapped_functions.info_pv_or_area(user_input)
                         )
                         consumption = model.consumption_estimation(members)
+
                         # case in which user has the PV plant
                         if power_pv and year_pv:
                             if add_power is not None:  # va bene anche se è 0
@@ -196,7 +197,9 @@ def Simulator_CACER():
                             )
                             results.visualize_economical_environmental_benefits()
                             if inhabitants == "Si" and add_power > 0:
-                                benefit_a = model.economical_benefit_a(add_power)
+                                benefit_a = model.economical_benefit_a(
+                                    add_power + power_pv, add_power
+                                )
 
                                 results.see_economical_benefit_a(
                                     benefit_a,
@@ -241,7 +244,7 @@ def Simulator_CACER():
                         results.visualize_economical_environmental_benefits()
                         if inhabitants == "Si":
                             benefit_a = model.economical_benefit_a(
-                                installable_power + add_power
+                                installable_power + add_power, add_power
                             )
 
                             results.see_economical_benefit_a(

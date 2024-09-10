@@ -225,18 +225,28 @@ def presence_of_overproduction_or_underproduction(
 
 @validate_call
 def economical_benefit_a(
-    plant_power: PositiveFloat,
+    total_plant_power: PositiveFloat,
+    build_plant_power: PositiveFloat = 0,
 ) -> float:
     """
     Computation of benefit A (only for municipalities with less than 5000 inhabitants).
 
     Attrs:
-        plant_power: PositiveFloat - power of PV plant in kW
+    total_plant_power: PositiveFloat - total power of PV plant in kW
+        build_plant_power: PositiveFloat - power of the PV plant to be build in kW. To be added only if different from total_plant_power.
         inhabitants: bool - True if the municipality has less than 5000 inhabitants.
     """
-
-    # Determine the benefit based on the power range
-    benefit = common.Tariff().get_tariff_municipality(plant_power) * plant_power
+    if build_plant_power == 0:
+        # Determine the benefit based on the power range
+        benefit = (
+            common.Tariff().get_tariff_municipality(total_plant_power)
+            * total_plant_power
+        )
+    else:
+        benefit = (
+            common.Tariff().get_tariff_municipality(total_plant_power)
+            * build_plant_power
+        )
     return benefit
 
 
@@ -270,14 +280,15 @@ def consumption_estimation(members: common.MembersWithValues) -> int:
         )
     return total_consumption
 
-def compute_cost_plant(power_pv: PositiveFloat)-> PositiveFloat:
+
+def compute_cost_plant(power_pv: PositiveFloat) -> PositiveFloat:
     """
     Computation of costs pv_plant
 
     Attrs:
-        power_pv: PositiveFloat - power of PV plant in kW        
+        power_pv: PositiveFloat - power of PV plant in kW
     """
-    cost_plant = power_pv*common.KW_COST
+    cost_plant = power_pv * common.KW_COST
 
     return cost_plant
 

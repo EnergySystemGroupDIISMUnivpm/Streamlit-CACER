@@ -1,5 +1,6 @@
 import datetime
 
+from numpy import power
 from pydantic import PositiveFloat, validate_call
 from cacer_simulator.views.view import UserInput, Results
 from cacer_simulator.models import model
@@ -179,7 +180,7 @@ def benefit_results(
         if inhabitants == "Si":
             # case of PV already present. benefit a is calculated only on the boosting power.
             if label_pv_or_area == "PV" and add_power > 0:
-                benefit_a = model.economical_benefit_a(add_power)
+                benefit_a = model.economical_benefit_a(power_pv + add_power, add_power)
                 results.see_economical_benefit_a(benefit_a)  # type: ignore
             # case of area. benefit a is calculated on the entire new possible installable PV plant.
             elif label_pv_or_area == "area":
@@ -247,10 +248,10 @@ def results_CER(
         if inhabitants == "Si" and add_power > 0:
             # case of PV already present. benefit a is calculated only on the boosting power.
             if label_pv_or_area == "PV":
-                benefit_a = model.economical_benefit_a(add_power)
+                benefit_a = model.economical_benefit_a(power_pv + add_power, add_power)
                 # case of area. benefit a is calculated on entrire possible installable PV plant.
             elif label_pv_or_area == "area":
-                benefit_a = model.economical_benefit_a(power_pv + add_power)
+                benefit_a = model.economical_benefit_a(power_pv + add_power, add_power)
 
             results.see_economical_benefit_a(
                 benefit_a,  # type: ignore
@@ -293,7 +294,7 @@ def results_CER(
         results.visualize_economical_environmental_benefits()
         # benefit a (only for inhabitants < 5000)
         if inhabitants == "Si" and add_power > 0:
-            benefit_a = model.economical_benefit_a(add_power)
+            benefit_a = model.economical_benefit_a(power_pv + add_power, add_power)
 
             results.see_economical_benefit_a(benefit_a)
 
@@ -320,10 +321,10 @@ def results_CER(
         if inhabitants == "Si" and add_power > 0:
             # case of PV already present. benefit a is calculated only on the boosting power.
             if label_pv_or_area == "PV":
-                benefit_a = model.economical_benefit_a(add_power)
+                benefit_a = model.economical_benefit_a(power_pv + add_power, add_power)
             # case of area. benefit a is calculated on entrire possible installable PV plant.
             elif label_pv_or_area == "area":
-                benefit_a = model.economical_benefit_a(power_pv + add_power)
+                benefit_a = model.economical_benefit_a(power_pv + add_power, add_power)
 
             results.see_economical_benefit_a(benefit_a)  # type: ignore
 

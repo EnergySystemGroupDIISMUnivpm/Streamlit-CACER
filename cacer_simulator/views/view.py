@@ -253,7 +253,7 @@ class Results(BaseModel):
         optim_size = round(optim_size)
 
         st.write(
-            f"In base ai tuoi consumi, la dimensione ottima del tuo impianto fotovoltaico sarebbe di {optim_size} kW. Valuta la possibilità di costruirlo."
+            f"In base ai tuoi consumi, la dimensione ottima del tuo impianto fotovoltaico sarebbe di circa {optim_size} kW. Valuta la possibilità di costruirlo."
         )
 
     def see_installable_power(self, power_pv):

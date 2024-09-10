@@ -253,14 +253,14 @@ class Results(BaseModel):
         optim_size = round(optim_size)
 
         st.write(
-            f"In base ai tuoi consumi, la dimensione ottima del tuo impianto fotovoltaico sarebbe di {optim_size} Kw. Valuta la possibilità di costruirlo."
+            f"In base ai tuoi consumi, la dimensione ottima del tuo impianto fotovoltaico sarebbe di {optim_size} KW. Valuta la possibilità di costruirlo."
         )
 
     def see_installable_power(self, power_pv):
         power_pv = round(power_pv)
 
         st.write(
-            f"Nell'area che ai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} Kw."
+            f"Nell'area che ai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} KW."
         )
 
     def see_CER_info(self, label: str) -> None:

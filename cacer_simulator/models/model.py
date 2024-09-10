@@ -226,7 +226,7 @@ def presence_of_overproduction_or_underproduction(
 @validate_call
 def economical_benefit_a(
     total_plant_power: PositiveFloat,
-    build_plant_power: PositiveFloat = 0,
+    build_plant_power: common.PositiveOrZeroFloat = 0,
 ) -> float:
     """
     Computation of benefit A (only for municipalities with less than 5000 inhabitants).
@@ -328,44 +328,33 @@ def percentage_daytime_consumption_estimation(
 @validate_call(validate_return=True)
 def optimal_members(energy_year: PositiveFloat) -> common.MembersWithValues:
     """
-    estimation of the optimal members of a CER based on the annual production of energy in kWh.
+    Estimation of the optimal members of a CER based on the annual production of energy in kWh.
 
     Attrs:
         energy_year: PositiveFloat - annual production in kWh.
 
-    Usage:
-
-    ```
-    result = optimal_members(1000)
-    assert result == {
-        "bar": 0,
-        "appartamenti": 10,
-        "pmi": 0,
-        "hotel": 0,
-        "ristoranti": 0,
-    }
-    ```
+    This function starts by assigning members with the highest consumption and proceeds to the lower-consuming ones
+    until the energy is exhausted. If there's leftover energy that doesn't cover a full member's consumption,
+    it adds the member with the lowest consumption.
     """
     members = {key: 0 for key in common.ConsumptionByMember().members}
-    remaining_overproduction = energy_year
+    remaining_energy = energy_year
 
-    # Get sorted consumption rates by member type
+    # Get sorted consumption rates by member type (from highest to lowest)
     sorted_consumption = common.ConsumptionByMember().get_sorted_diurnal(reverse=True)
 
     # Find the member with the minimum consumption rate
     min_consumption_member = min(sorted_consumption, key=lambda x: x[1])
     min_member_type = min_consumption_member[0]
 
-    for member_type, consumption_rates_diurnal_hours in sorted_consumption:
-        if remaining_overproduction <= 0:
-            break
-
-        num_members = int(remaining_overproduction // consumption_rates_diurnal_hours)
-        members[member_type] = num_members
-        remaining_overproduction -= num_members * consumption_rates_diurnal_hours
+    for member_type, consumption_rate in sorted_consumption:
+        while remaining_energy >= consumption_rate:
+            # Assign one member of this type
+            members[member_type] += 1
+            remaining_energy -= consumption_rate
 
     # If remaining energy is still greater than zero but not enough for a full member, assign it to the min consumption member
-    if remaining_overproduction > 0:
+    if remaining_energy > 0:
         members[min_member_type] += 1
 
     return members  # type: ignore

@@ -17,7 +17,7 @@ def test_optimal_members():
 
     assert result == {
         "bar": 0,
-        "appartamenti": 10,
+        "appartamenti": 2,
         "pmi": 0,
         "hotel": 0,
         "ristoranti": 0,

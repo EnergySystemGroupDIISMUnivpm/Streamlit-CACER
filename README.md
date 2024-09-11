@@ -4,6 +4,7 @@
   - [Extensions](#extensions)
   - [Project Structure](#project-structure)
   - [Come generare .exe da streamlit](#come-generare-exe-da-streamlit)
+  - [Excel dei consumi in Resources](#excel-dei-consumi-in-resources)
 
 
 # ENEA Simulatore CER
@@ -75,3 +76,7 @@ streamlit run main.py
 
 6. Convertire l'applicazione streamlit in .exe con il seguente comando (streamlit sharing website url va copiato da https://share.streamlit.io/):
  `nativefier --name '<app.exe name>' '<streamlit sharing website url>' --platform <'windows' or 'mac' or 'linux'>`
+
+
+## Excel dei consumi in Resources
+password protezione foglio: enea

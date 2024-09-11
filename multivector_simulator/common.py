@@ -30,9 +30,9 @@ def validate_consumption_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 f"La colonna '{col}' contiene valori negativi nelle righe: {invalid_values.index.tolist()}"
             )
     # Verifica che il numero di righe sia corretto
-    if df.shape[0] != 8775:
+    if df.shape[0] != 8760:
         raise ValueError(
-            "Il numero di righe inserite non è corretto. Devono essere presenti 8776 righe, una per ogni ora dell'anno."
+            "Il numero di righe inserite non è corretto. Devono essere presenti 8760 righe, una per ogni ora dell'anno."
         )
     return df
 

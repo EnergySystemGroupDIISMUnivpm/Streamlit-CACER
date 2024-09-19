@@ -158,7 +158,23 @@ POWER_PEAK = 300
 AREA_ONE_PV = 1.7 * 1.1
 
 # cost of 1kW of PV in euro
-KW_COST = 2000
+kw_cost: dict[tuple[float, float], int] = {
+    (0, 5): 1500,  # implant power < 200, incetive is maximum 120 euro/MWh
+    (5, 10): 1300,
+    (10, 50): 1200,
+    (50, float("inf")): 1000,
+}
+
+
+def get_kw_cost(plant_power: int | float) -> int:
+
+    assert plant_power >= 0, "plant power must be positive to compute tariff!"
+
+    for power_range, cost in kw_cost.items():
+        if power_range[0] <= plant_power < power_range[1]:
+            return cost
+    return 0
+
 
 # how much CO2 is emitted for each kWh produced by the italian traditional electricity grid (kg CO2/kWh)
 AVG_EMISSIONS_FACTOR = 0.309
@@ -249,20 +265,20 @@ class MembersWithValues(TypedDict):
 class ConsumptionByMember(BaseModel):
 
     CONSUMPTION_RATES_DIURNAL_HOURS: MembersWithValues = {
-        "bar": 18000,
+        "bar": 15400,
         "appartamenti": 600,
         "pmi": 20000,
         "hotel": 280000,
-        "ristoranti": 13000,
+        "ristoranti": 15000,
     }
 
     # avg annual consumptions in kWh
     CONSUMPTION_RATES: MembersWithValues = {
-        "bar": 26000,
+        "bar": 22000,
         "appartamenti": 2000,
         "pmi": 25000,
         "hotel": 700000,
-        "ristoranti": 26000,
+        "ristoranti": 30000,
     }
 
     CONSUMPTION_PERCENTAGE: MembersWithValues = {

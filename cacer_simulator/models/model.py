@@ -82,7 +82,7 @@ def cost_estimate(plant_power: PositiveFloat) -> float:
     Attrs:
         installable_power: float - installable power in kW
     """
-    installation_cost = common.KW_COST * plant_power
+    installation_cost = common.get_kw_cost(plant_power) * plant_power
     return installation_cost
 
 
@@ -288,7 +288,7 @@ def compute_cost_plant(power_pv: PositiveFloat) -> PositiveFloat:
     Attrs:
         power_pv: PositiveFloat - power of PV plant in kW
     """
-    cost_plant = power_pv * common.KW_COST
+    cost_plant = power_pv * common.get_kw_cost(power_pv)
 
     return cost_plant
 
@@ -339,22 +339,26 @@ def optimal_members(energy_year: PositiveFloat) -> common.MembersWithValues:
     """
     members = {key: 0 for key in common.ConsumptionByMember().members}
     remaining_energy = energy_year
-
+    energy_55percent = remaining_energy*0.55
     # Get sorted consumption rates by member type (from highest to lowest)
     sorted_consumption = common.ConsumptionByMember().get_sorted_diurnal(reverse=True)
-
+    members_legal: dict[str, float] = {
+    key: value for key, value in sorted_consumption if key != "appartamenti"
+}
     # Find the member with the minimum consumption rate
     min_consumption_member = min(sorted_consumption, key=lambda x: x[1])
     min_member_type = min_consumption_member[0]
 
-    for member_type, consumption_rate in sorted_consumption:
-        while remaining_energy >= consumption_rate:
+    for member_type, consumption_rate in members_legal:
+        consumption_rate = float(consumption_rate)
+        while energy_55percent >= consumption_rate:
             # Assign one member of this type
             members[member_type] += 1
-            remaining_energy -= consumption_rate
-
+            energy_55percent -= consumption_rate
+    remaining_energy = remaining_energy - energy_55percent
     # If remaining energy is still greater than zero but not enough for a full member, assign it to the min consumption member
-    if remaining_energy > 0:
-        members[min_member_type] += 1
-
-    return members  # type: ignore
+    while remaining_energy > 0:
+        
+        members["appartamenti"] += 1
+        remaining_energy -= common.ConsumptionByMember().get_consumption_value("appartamenti")
+    return members  # type: ignore  

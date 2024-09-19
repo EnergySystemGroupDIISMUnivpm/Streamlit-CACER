@@ -239,8 +239,9 @@ class Results(BaseModel):
         self, environmental_benefit_pres, environmental_benefit_added=None
     ):
         environmental_benefit_pres = round(environmental_benefit_pres)
-        st.write(
-            f"Abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_pres} kg CO2 ogni anno."
+        st.markdown(
+            f"""Abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_pres} kg CO2 ogni anno.""",
+            help = "Questi dati sono stati calcolati utilizzando un fattore di emissione medio del 2022 riportato da Ispra"
         )
 
         if environmental_benefit_added is not None:
@@ -259,8 +260,9 @@ class Results(BaseModel):
     def see_installable_power(self, power_pv):
         power_pv = round(power_pv)
 
-        st.write(
-            f"Nell'area che ai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} kW."
+        st.markdown(
+            f"""Nell'area che ai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} kW.""",
+            help="Questi dati sono stati calcolati usando come riferimento le caratteristiche medie di un pannello fotovoltaico in silicio monocristallino.",
         )
 
     def see_CER_info(self, label: str) -> None:

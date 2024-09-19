@@ -1,4 +1,5 @@
 import datetime
+from unittest import result
 
 from numpy import power
 from pydantic import PositiveFloat, validate_call
@@ -128,7 +129,9 @@ def presence_overproduction_or_undeproduction(
             region,
             percentage_daily_consumption,
         )
+        optimal_area = model.computation_optimal_area(optimal_PV_size)
         results.see_optimal_size(optimal_PV_size)
+        results.see_optimal_area(optimal_area)
         cost_plants = model.compute_cost_plant(optimal_PV_size - power_pv)
         results.see_computed_costs_plant(cost_plants, "Potenziamento")
 
@@ -272,10 +275,12 @@ def results_CER(
             region,
             percentage_daily_consumption,
         )
+        optimal_area = model.computation_optimal_area(optimal_PV_size)
 
         results.visualize_advices()
 
         results.see_optimal_size(optimal_PV_size)
+        results.see_optimal_area(optimal_area)
         cost_plant = model.compute_cost_plant(optimal_PV_size - power_pv)
         results.see_computed_costs_plant(cost_plant, "Potenziamento")
 

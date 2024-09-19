@@ -300,6 +300,13 @@ class Results(BaseModel):
                 f"Il costo dell'installazione dell'impianto corrisponde circa a {cost_plant} €."
             )
 
+    def see_optimal_area(self, optimal_area):
+        optimal_area = round(optimal_area)
+        st.markdown(
+            f"""Per costruire l'impianto dalla potenza ottimale, avresti bisogno di {optimal_area} m².""",
+            help="Questi dati sono stati calcolati usando come riferimento le caratteristiche medie di un pannello fotovoltaico in silicio monocristallino.",
+        )
+
     def visualize_useful_information(self):
         st.markdown("##### **Informazioni sull'impianto fotovoltaico**")
 

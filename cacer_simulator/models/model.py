@@ -36,9 +36,8 @@ def optimal_sizing(
     """
     required_PV_energy = annual_consumption * percentage_daytime_consum
     regional_irradiance = computation_regional_irradiance(region)
-    optimal_PV_size = required_PV_energy / (
-        regional_irradiance * common.EFFICIENCY * common.LOSS_FACTOR
-    )
+    optimal_PV_size = required_PV_energy / common.PRODUCTION[region]
+
     return optimal_PV_size
 
 
@@ -57,7 +56,7 @@ def production_estimate(
     """
     regional_irradiance = computation_regional_irradiance(region)
     energy_year = (
-        plant_power * regional_irradiance * common.LOSS_FACTOR * common.EFFICIENCY
+        plant_power * common.PRODUCTION[region]
     )
     return energy_year
 
@@ -339,26 +338,28 @@ def optimal_members(energy_year: PositiveFloat) -> common.MembersWithValues:
     """
     members = {key: 0 for key in common.ConsumptionByMember().members}
     remaining_energy = energy_year
-    energy_55percent = remaining_energy*0.55
+    energy_55percent = remaining_energy * 0.55
     # Get sorted consumption rates by member type (from highest to lowest)
     sorted_consumption = common.ConsumptionByMember().get_sorted_diurnal(reverse=True)
     members_legal: dict[str, float] = {
-    key: value for key, value in sorted_consumption if key != "appartamenti"
-}
-    # Find the member with the minimum consumption rate
-    min_consumption_member = min(sorted_consumption, key=lambda x: x[1])
-    min_member_type = min_consumption_member[0]
-
-    for member_type, consumption_rate in members_legal:
+        key: value for key, value in sorted_consumption if key != "appartamenti"
+    }
+    consumption = 0
+    for member_type, consumption_rate in members_legal.items():
         consumption_rate = float(consumption_rate)
+
         while energy_55percent >= consumption_rate:
             # Assign one member of this type
             members[member_type] += 1
             energy_55percent -= consumption_rate
-    remaining_energy = remaining_energy - energy_55percent
+            consumption += consumption_rate
+    remaining_energy = remaining_energy - consumption
     # If remaining energy is still greater than zero but not enough for a full member, assign it to the min consumption member
+
     while remaining_energy > 0:
-        
         members["appartamenti"] += 1
-        remaining_energy -= common.ConsumptionByMember().get_consumption_value("appartamenti")
-    return members  # type: ignore  
+        remaining_energy -= common.ConsumptionByMember().get_consumption_value(
+            "appartamenti", diurnal=True
+        )
+    # __import__('ipdb').set_trace()
+    return members  # type: ignore

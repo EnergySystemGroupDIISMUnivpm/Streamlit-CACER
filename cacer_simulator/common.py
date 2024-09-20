@@ -142,8 +142,35 @@ _irradiance_values = [
     1502,  # Valle d'Aosta
     1424,  # Veneto
 ]
+
+# mean values of production for Kw for each region based on Nord, South, Centre 
+regional_production = [
+    1400,  # Abruzzo
+    1400,  # Basilicata
+    1400,  # Calabria
+    1400,  # Campania
+    1100,  # Emilia-Romagna
+    1100,  # Friuli-Venezia Giulia
+    1250,  # Lazio
+    1100,  # Liguria
+    1100,  # Lombardia
+    1250,  # Marche
+    1400  # Molise
+    1100,  # Piemonte
+    1400,  # Puglia
+    1400,  # Sardegna
+    1400,  # Sicilia
+    1100,  # Trentino-Alto Adige
+    1250,  # Toscana
+    1250,  # Umbria
+    1100,  # Valle d'Aosta
+    1100,  # Veneto
+]
 # dictionary with the irradiance values
 IRRADIANCE: dict = dict(zip(REGIONS, _irradiance_values))
+
+# dictionary with the production values
+PRODUCTION: dict = dict(zip(REGIONS, regional_production))
 
 # average loss factor to take into account losses in the system, such as those due to the inverter, wiring, dust on the panels ecc.
 LOSS_FACTOR: float = 0.8

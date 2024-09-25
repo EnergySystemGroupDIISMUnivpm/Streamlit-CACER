@@ -90,7 +90,10 @@ class UserInput(BaseModel):
             key="PV_power",
             min_value=round(common.POWER_PEAK / 1000, 1),
         )
-
+        if power_PV >= 1:
+            power_PV = round(power_PV)
+        else:
+            power_PV = round(power_PV, 1)
         return year_PV, int(power_PV)  # type: ignore
 
     def insert_area(self) -> int:
@@ -192,7 +195,7 @@ class Results(BaseModel):
         production = round(production)
         if label == "PV":
             st.write(
-                f"""Abbiamo stimato che il tuo pannello produce circa {production} kWh in un anno"""
+                f"""Abbiamo stimato che il tuo pannello produce circa {production} kWh in un anno."""
             )
         elif label == "area":
             st.write(
@@ -241,7 +244,7 @@ class Results(BaseModel):
         environmental_benefit_pres = round(environmental_benefit_pres)
         st.markdown(
             f"""Abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_pres} kg CO2 ogni anno.""",
-            help = "Questi dati sono stati calcolati utilizzando un fattore di emissione medio del 2022 riportato da Ispra"
+            help="Questi dati sono stati calcolati utilizzando un fattore di emissione medio del 2022 riportato da Ispra",
         )
 
         if environmental_benefit_added is not None:
@@ -258,7 +261,10 @@ class Results(BaseModel):
         )
 
     def see_installable_power(self, power_pv):
-        power_pv = round(power_pv)
+        if power_pv >= 1:
+            power_pv = round(power_pv)
+        else:
+            power_pv = round(power_pv, 1)
 
         st.markdown(
             f"""Nell'area che ai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} kW.""",
@@ -303,7 +309,7 @@ class Results(BaseModel):
     def see_optimal_area(self, optimal_area):
         optimal_area = round(optimal_area)
         st.markdown(
-            f"""Per costruire l'impianto dalla potenza ottimale, avresti bisogno di {optimal_area} m².""",
+            f"""Per costruire l'impianto dalla potenza ottimale, avresti bisogno di circa {optimal_area} m².""",
             help="Questi dati sono stati calcolati usando come riferimento le caratteristiche medie di un pannello fotovoltaico in silicio monocristallino.",
         )
 

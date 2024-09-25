@@ -143,7 +143,7 @@ _irradiance_values = [
     1424,  # Veneto
 ]
 
-# mean values of production for Kw for each region based on Nord, South, Centre 
+# mean values of production for Kw for each region based on Nord, South, Centre
 regional_production = [
     1400,  # Abruzzo
     1400,  # Basilicata
@@ -155,7 +155,7 @@ regional_production = [
     1100,  # Liguria
     1100,  # Lombardia
     1250,  # Marche
-    1400  # Molise
+    1400,  # Molise
     1100,  # Piemonte
     1400,  # Puglia
     1400,  # Sardegna

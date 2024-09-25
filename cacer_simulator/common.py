@@ -341,3 +341,11 @@ class ConsumptionByMember(BaseModel):
 
     def get_consumption_percentage(self, member: str) -> int:
         return self.CONSUMPTION_PERCENTAGE.get(member, 0)
+
+
+def round_data(data: float | int):
+    if data >= 1:
+        data = round(data)
+    else:
+        data = round(data, 1)
+    return data

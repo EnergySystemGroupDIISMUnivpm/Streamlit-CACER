@@ -76,7 +76,7 @@ class UserInput(BaseModel):
     @validate_call(validate_return=True)
     def insert_year_power_PV(
         self,
-    ) -> tuple[datetime.date, int]:
+    ) -> tuple[datetime.date, PositiveFloat]:
 
         year_PV = st.date_input(
             "Inserisci la data di entrata in esercizio dell'impianto fotovoltaico",
@@ -90,11 +90,8 @@ class UserInput(BaseModel):
             key="PV_power",
             min_value=round(common.POWER_PEAK / 1000, 1),
         )
-        if power_PV >= 1:
-            power_PV = round(power_PV)
-        else:
-            power_PV = round(power_PV, 1)
-        return year_PV, int(power_PV)  # type: ignore
+        power_PV = common.round_data(power_PV)
+        return year_PV, power_PV  # type: ignore
 
     def insert_area(self) -> int:
         area_PV: int | float = st.number_input(
@@ -220,19 +217,19 @@ class Results(BaseModel):
             st.write("Label non riconosciuto.")
 
     def see_economical_benefit_b(self, benefit_b_pres, benefit_b_new=None):
-        benefit_b_pres = round(benefit_b_pres)
+        benefit_b_pres = common.round_data(benefit_b_pres)
         st.write(
             f"Potresti ottenere fino a {benefit_b_pres}€ all'anno di incetivi economici."
         )
 
         if benefit_b_new is not None:
-            benefit_b_new = round(benefit_b_new)
+            benefit_b_new = common.round_data(benefit_b_new)
             st.write(
                 f"Considerando anche i nuovi membri, potresti ricevere fino a {benefit_b_new}€ all'anno di incetivi economici."
             )
 
     def see_economical_benefit_a(self, benefit_a):
-        benefit_a = round(benefit_a)
+        benefit_a = common.round_data(benefit_a)
 
         st.write(
             f"Potresti ricevere fino a {benefit_a}€ a fondo perduto per la costruzione del tuo impianto fotovoltaico."
@@ -241,30 +238,27 @@ class Results(BaseModel):
     def see_environmental_benefit(
         self, environmental_benefit_pres, environmental_benefit_added=None
     ):
-        environmental_benefit_pres = round(environmental_benefit_pres)
+        environmental_benefit_pres = common.round_data(environmental_benefit_pres)
         st.markdown(
             f"""Abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_pres} kg CO2 ogni anno.""",
             help="Questi dati sono stati calcolati utilizzando un fattore di emissione medio del 2022 riportato da Ispra",
         )
 
         if environmental_benefit_added is not None:
-            environmental_benefit_added = round(environmental_benefit_added)
+            environmental_benefit_added = common.round_data(environmental_benefit_added)
             st.write(
                 f"Considerando anche i nuovi membri, abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_added} kg CO2 ogni anno."
             )
 
     def see_optimal_size(self, optim_size):
-        optim_size = round(optim_size)
+        optim_size = common.round_data(optim_size)
 
         st.write(
             f"In base ai tuoi consumi, la dimensione ottima del tuo impianto fotovoltaico sarebbe di circa {optim_size} kW. Valuta la possibilità di costruirlo."
         )
 
     def see_installable_power(self, power_pv):
-        if power_pv >= 1:
-            power_pv = round(power_pv)
-        else:
-            power_pv = round(power_pv, 1)
+        power_pv = common.round_data(power_pv)
 
         st.markdown(
             f"""Nell'area che ai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} kW.""",
@@ -295,7 +289,7 @@ class Results(BaseModel):
         cost_plant: PositiveFloat,
         label_potenziamento_creazione: common.LabelCreationBoostingType,
     ):
-        cost_plant = round(cost_plant)
+        cost_plant = common.round_data(cost_plant)
         if label_potenziamento_creazione == "Potenziamento":
             st.write(
                 f"Il costo del potenziamento del tuo impianto corrisponde circa a {cost_plant} €."
@@ -307,7 +301,7 @@ class Results(BaseModel):
             )
 
     def see_optimal_area(self, optimal_area):
-        optimal_area = round(optimal_area)
+        optimal_area = common.round_data(optimal_area)
         st.markdown(
             f"""Per costruire l'impianto dalla potenza ottimale, avresti bisogno di circa {optimal_area} m².""",
             help="Questi dati sono stati calcolati usando come riferimento le caratteristiche medie di un pannello fotovoltaico in silicio monocristallino.",

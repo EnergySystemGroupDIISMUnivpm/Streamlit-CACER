@@ -218,14 +218,16 @@ class Results(BaseModel):
 
     def see_economical_benefit_b(self, benefit_b_pres, benefit_b_new=None):
         benefit_b_pres = common.round_data(benefit_b_pres)
-        st.write(
-            f"Potresti ottenere fino a {benefit_b_pres}€ all'anno di incetivi economici."
+        st.markdown(
+            f"Potresti ottenere fino a {benefit_b_pres}€ all'anno di incetivi economici.",
+            help="Valori calcolati sulla base del decreto Decreto MASE n. 414 del 7 dicembre 2023 e del TIAD.",
         )
 
         if benefit_b_new is not None:
             benefit_b_new = common.round_data(benefit_b_new)
-            st.write(
-                f"Considerando anche i nuovi membri, potresti ricevere fino a {benefit_b_new}€ all'anno di incetivi economici."
+            st.markdown(
+                f"Considerando anche i nuovi membri, potresti ricevere fino a {benefit_b_new}€ all'anno di incetivi economici.",
+                help="Valori calcolati sulla base del decreto Decreto MASE n. 414 del 7 dicembre 2023 e del TIAD.",
             )
 
     def see_economical_benefit_a(self, benefit_a):
@@ -241,20 +243,22 @@ class Results(BaseModel):
         environmental_benefit_pres = common.round_data(environmental_benefit_pres)
         st.markdown(
             f"""Abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_pres} kg CO2 ogni anno.""",
-            help="Questi dati sono stati calcolati utilizzando un fattore di emissione medio del 2022 riportato da Ispra",
+            help="Questi dati sono stati calcolati utilizzando il fattore di emissione medio riportato dall'Ispra per il 2022.",
         )
 
         if environmental_benefit_added is not None:
             environmental_benefit_added = common.round_data(environmental_benefit_added)
-            st.write(
-                f"Considerando anche i nuovi membri, abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_added} kg CO2 ogni anno."
+            st.markdown(
+                f"Considerando anche i nuovi membri, abbiamo stimato che ridurresti le emissioni di circa {environmental_benefit_added} kg CO2 ogni anno.",
+                help="Questi dati sono stati calcolati utilizzando il fattore di emissione medio riportato dall'Ispra per il 2022.",
             )
 
     def see_optimal_size(self, optim_size):
         optim_size = common.round_data(optim_size)
 
-        st.write(
-            f"In base ai tuoi consumi, la dimensione ottima del tuo impianto fotovoltaico sarebbe di circa {optim_size} kW. Valuta la possibilità di costruirlo."
+        st.markdown(
+            f"In base ai tuoi consumi, la dimensione ottima del tuo impianto fotovoltaico sarebbe di circa {optim_size} kW. Valuta la possibilità di costruirlo.",
+            help="Questi dati sono stati calcolati usando come riferimento le caratteristiche medie di un pannello fotovoltaico in silicio monocristallino.",
         )
 
     def see_installable_power(self, power_pv):

@@ -186,7 +186,7 @@ AREA_ONE_PV = 1.7 * 1.1
 
 # cost of 1kW of PV in euro
 kw_cost: dict[tuple[float, float], int] = {
-    (0, 5): 1500,  # implant power < 200, incetive is maximum 120 euro/MWh
+    (0, 5): 1500,
     (5, 10): 1300,
     (10, 50): 1200,
     (50, float("inf")): 1000,

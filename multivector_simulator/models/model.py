@@ -7,42 +7,6 @@ import pandas as pd
 from scipy.optimize import minimize
 
 
-def calculate_cogen_size(
-    thermal_cunsumption: np.array,
-    threshold: PositiveFloat,
-    thermal_efficiency: PositiveFloat,
-) -> PositiveInt:
-    """
-    Calculation of the best size in kW of cogenerator based on the thermal consumption.
-    Formula refers to https://industriale.viessmann.it/blog/dimensionare-cogeneratore-massima-efficienza
-
-    Attrs:
-        termal_cunsumption: np.array - array of the termal consumption in kWh
-        threshold: float - percentage of the numeber of hours of the year in which the cogenerator works at full capacity without having excess of power.
-        termal_efficiency: float - efficiency of the cogenerator
-    """
-    # Sort the heat consumption in decreasing order
-    consumo_sorted = np.sort(thermal_cunsumption)[::-1]
-
-    # Power required to cover the threshold of the time (e.g. 6800 hours if it is 0.8)
-    threshold_hours = round(threshold * len(thermal_cunsumption))
-    size_cogen = consumo_sorted[threshold_hours] / thermal_efficiency
-    size_cogen = round(size_cogen)
-    return size_cogen
-
-
-def production_cogen(size_cogen: PositiveInt) -> Tuple[PositiveFloat, PositiveFloat]:
-    """
-    Calculation of electric and thermal hourly production based on the size of the cogenerator in kWh.
-
-    Attrs:
-        size_cogen: PositiveInt - size of the cogenerator in kW
-    """
-    electric_production = size_cogen * common.ELECTRIC_EFFICIENCY_COGEN
-    thermal_production = size_cogen * common.THERMAL_EFFICIENCY_COGEN
-    return electric_production, thermal_production
-
-
 def cost_PV_installation(PV_size: PositiveInt) -> float:
     """
     Calculation of the cost of the installation of the PV plant in euro.
@@ -54,102 +18,108 @@ def cost_PV_installation(PV_size: PositiveInt) -> float:
     return cost_PV
 
 
-def cost_function(x, electric_consumption, thermal_consumption):
-    PV_size, battery_size = x  # parameters to be estimated
+def calculate_cogen_size_optimized(
+    thermal_consumption: np.array, threshold: float, thermal_efficiency: float
+) -> int:
+    """
+    Calculation of the best size in kW of cogenerator based on the thermal consumption.
+    """
+    # Sort the heat consumption in decreasing order
+    sorted_consumption = np.sort(thermal_consumption)[::-1]
 
-    # BATTERY
-    # Energy stored in the battery
-    energy_battery = np.zeros_like(electric_consumption)
-    aviable_battery_energy = 0  # Available battery capacity at any given time
+    # Power required to cover the threshold of the time
+    threshold_hours = int(threshold * len(thermal_consumption))
+    size_cogen = sorted_consumption[threshold_hours] / thermal_efficiency
+    return round(size_cogen)
+
+
+def production_cogen_optimized(size_cogen: int) -> Tuple[float, float]:
+    """
+    Calculate the electric and thermal hourly production based on the size of the cogenerator.
+    """
+    electric_production = size_cogen * common.ELECTRIC_EFFICIENCY_COGEN
+    thermal_production = size_cogen * common.THERMAL_EFFICIENCY_COGEN
+    return electric_production, thermal_production
+
+
+def cost_function_optimized(
+    x, electric_consumption, thermal_consumption, pv_production_hourly
+):
+    PV_size, battery_size = x
+
+    # Precompute PV production scaled by size
+    pv_production = pv_production_hourly * PV_size
 
     # COGENERATOR
-    # energy produced by the cogenerator
-    thereshold = 0.8
-    size_cogen = calculate_cogen_size(
+    threshold = 0.8
+    size_cogen = calculate_cogen_size_optimized(
         thermal_consumption,
-        thereshold,
+        threshold,
         thermal_efficiency=common.THERMAL_EFFICIENCY_COGEN,
     )
-    [electric_energy_cogen_each_hour, thermal_energy_cogen_each_hour] = (
-        production_cogen(size_cogen)
+    electric_energy_cogen_hourly, thermal_energy_cogen_hourly = (
+        production_cogen_optimized(size_cogen)
     )
+
+    # Precompute the cogenerator production across the entire year
     electric_energy_cogen = np.full_like(
-        electric_consumption, electric_energy_cogen_each_hour
-    )  # production of electric energy given by the cogenerator during the year
+        electric_consumption, electric_energy_cogen_hourly
+    )
 
-    # GRID
-    energy_from_grid = 0
+    # Initialize arrays for tracking energy
+    energy_from_grid = np.zeros_like(electric_consumption)
+    energy_covered = np.zeros_like(electric_consumption)
+    aviable_battery_energy = np.zeros_like(electric_consumption)
 
-    energy_covered = 0
+    # Calculate available energy at each hour
+    excess_energy_pv = np.clip(pv_production - electric_consumption, 0, None)
+    excess_energy_cogen = np.clip(electric_energy_cogen - electric_consumption, 0, None)
 
-    # hourly electricity consumption coverage
-    for i in range(len(electric_consumption)):
-        requested_energy = electric_consumption[i]
-        initial_requested_energy = requested_energy
+    # Total available energy for battery charging
+    energy_excess_total = excess_energy_pv + excess_energy_cogen
+    aviable_battery_energy = np.minimum(np.cumsum(energy_excess_total), battery_size)
 
-        # from cogenerator
-        residual_energy_cogen = max(electric_energy_cogen[i] - requested_energy, 0)
-        requested_energy -= min(electric_energy_cogen[i], requested_energy)
+    # Energy that is covered by PV, cogenerator, and battery
+    energy_from_pv_cogen = np.minimum(
+        electric_consumption, pv_production + electric_energy_cogen
+    )
+    remaining_energy = np.clip(electric_consumption - energy_from_pv_cogen, 0, None)
+    energy_from_battery = np.minimum(remaining_energy, aviable_battery_energy)
 
-        # from PV
-        PV_hourly_production = pd.read_csv("././resources/PV_data.csv", header=None)
-        PV_hourly_production = PV_hourly_production[2]
-        residual_energy_pv = max(
-            PV_hourly_production[i] - requested_energy, 0
-        )  # Energia PV non consumata dall'utente
-        requested_energy -= min(PV_hourly_production[i], requested_energy)
+    # Energy from the grid is the energy still needed after PV, cogenerator, and battery
+    energy_from_grid = remaining_energy - energy_from_battery
 
-        # Charge the battery with excess energy (from PV or cogenerator)
-        aviable_battery_energy += residual_energy_pv + residual_energy_pv
-        aviable_battery_energy = min(
-            aviable_battery_energy, battery_size
-        )  # Limit capacity to battery size
-
-        # If there is still demand, try to satisfy it with the battery
-        if requested_energy > 0:
-            requested_energy_from_battery = min(
-                aviable_battery_energy, requested_energy
-            )
-            requested_energy -= requested_energy_from_battery
-            aviable_battery_energy -= requested_energy_from_battery
-
-        # If there is still demand, it draws energy from the grid
-        if requested_energy > 0:
-            energy_from_grid += requested_energy
-
-        energy_covered += initial_requested_energy - requested_energy
+    # Coverage of consumption
+    energy_covered = electric_consumption - energy_from_grid
 
     # COSTS
     years = 20
-    # Electricity form grid
-    cost_electricity_from_grid = energy_from_grid * common.ELECTRIC_ENERGY_PRICE
-    # Installation of PV
+    cost_electricity_from_grid = np.sum(energy_from_grid) * common.ELECTRIC_ENERGY_PRICE
     cost_installation_PV = cost_PV_installation(PV_size)
-    # Installation of battery
     cost_installation_battery = battery_size * common.COST_INSTALLATION_BATTERY
-    # total costs over time period
+
     total_cost = (
         cost_installation_PV
         + cost_installation_battery
-        + cost_electricity_from_grid * years
+        + (cost_electricity_from_grid * years)
     )
 
-    # Electricity consumption coverage percentage
-    percentage_electric_coverage = energy_covered / np.sum(electric_consumption)
+    # Percentage of electric consumption coverage
+    percentage_electric_coverage = np.sum(energy_covered) / np.sum(electric_consumption)
 
-    # Final function: alpha controls the relative importance of minimizing costs vs maximizing coverage
+    # Final objective function: balance between minimizing costs and maximizing coverage
     alpha = 0.8
     objective_function = (1 - alpha) * total_cost - alpha * percentage_electric_coverage
     return objective_function
 
 
-def optimizer(electric_consumption, thermal_consumption):
-    initial_guess = [10, 0]
+def optimizer(electric_consumption, thermal_consumption, pv_production_hourly):
+    initial_guess = [10, 0]  # Guess for PV size and battery size
     result = minimize(
-        cost_function,
+        cost_function_optimized,
         initial_guess,
-        args=(electric_consumption, thermal_consumption),
-        bounds=[(0, 1000), (0, 10)],
+        args=(electric_consumption, thermal_consumption, pv_production_hourly),
+        bounds=[(0, 1000), (0, 10)],  # Bounds for PV size and battery size
     )
     PV_size, battery_size = result.x
     return PV_size, battery_size
@@ -159,11 +129,20 @@ def test_optimizer():
     test_data = pd.read_csv(
         "././resources/Dati_Simulati_di_Consumi_Elettrici_e_Termici.csv"
     )
-    thermal_consumption = test_data["Consumo_Termico_kWh"]
-    electric_consumption = test_data["Consumo_Elettrico_kWh"]
-    PV_size, battery_size = optimizer(electric_consumption, thermal_consumption)
-    print(PV_size, battery_size)
-    __import__("ipdb").set_trace()
+    thermal_consumption = test_data["Consumo_Termico_kWh"].to_numpy()
+    electric_consumption = test_data["Consumo_Elettrico_kWh"].to_numpy()
+
+    # Simulated PV production per hour (you can replace it with real data if available)
+    pv_production_hourly = pd.read_csv("././resources/PV_data.csv", header=None)[
+        2
+    ].to_numpy()
+
+    PV_size, battery_size = optimizer(
+        electric_consumption, thermal_consumption, pv_production_hourly
+    )
+    print(f"Optimal PV size: {PV_size}, Optimal battery size: {battery_size}")
+
+    __import__("ipdb").set_trace()  # Breakpoint for debugging
 
 
 test_optimizer()

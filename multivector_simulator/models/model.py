@@ -20,11 +20,12 @@ def cost_PV_installation(PV_size: PositiveInt) -> float:
 
 
 def calculate_cogen_size_optimized(
-    thermal_consumption: np.ndarray, threshold: float, thermal_efficiency: float
+    thermal_consumption: np.ndarray, thermal_efficiency: float
 ) -> int:
     """
     Calculation of the best size in kW of cogenerator based on the thermal consumption.
     """
+    threshold = common.Optimizer().COGEN_COVERAGE
     # Sort the heat consumption in decreasing order
     sorted_consumption = np.sort(thermal_consumption)[::-1]
 
@@ -37,7 +38,7 @@ def calculate_cogen_size_optimized(
 
 def production_cogen_optimized(size_cogen: int) -> Tuple[float, float]:
     """
-    Calculate the electric and thermal hourly production based on the size of the cogenerator.
+    Calculate the electric and thermal production based on the size of the cogenerator.Production for hour.
     """
     electric_production = size_cogen * common.ELECTRIC_EFFICIENCY_COGEN
     thermal_production = size_cogen * common.THERMAL_EFFICIENCY_COGEN
@@ -48,7 +49,6 @@ def total_economic_cost(
     annual_energy_from_grid: PositiveFloat,
     PV_size: PositiveInt,
     battery_size: PositiveInt,
-    years=20,
 ):
     """
     Calculation of the total economical cost of the installation and use of PV, installation and use of battery and usage of energy from the grid over the years.
@@ -60,6 +60,7 @@ def total_economic_cost(
         years: PositiveInt - number of years over wich calculate the economical cost. If not setted is equal to 20.
 
     """
+    years = common.Optimizer().YEARS
     cost_electricity_from_grid = (
         np.sum(annual_energy_from_grid) * common.ELECTRIC_ENERGY_PRICE
     )
@@ -75,13 +76,23 @@ def total_economic_cost(
 
 def determination_electric_coverage_year(
     electric_consumption,
-    aviable_battery_energy,
-    pv_size,
-    pv_production_hourly,
-    battery_size,
+    aviable_battery_energy: np.ndarray,
+    pv_size: PositiveInt,
+    pv_unitary_production: np.ndarray,
+    battery_size: PositiveInt,
 ):
+    """
+    Determination of the eletric coverage per year covedered by PV and battery; and energy taken from the grid (kWh).
+
+    Attrs:
+        electric_consumption: float - electric yearly consumption in kWh
+        aviable_battery_energy: array - energy available at the beginning to be stored in battery in kWh
+        pv_size: PositiveInt - size of the PV plant in kW
+        pv_unitary_production: array - PV hourly production in kWh, for a PV of 1 kW
+        battery_size: PositiveInt - size of the battery in kWh
+    """
     # Precompute PV production scaled by size
-    pv_production = pv_production_hourly * pv_size
+    pv_production = pv_unitary_production * pv_size
 
     # Initialize arrays for tracking energy
     energy_from_grid = np.zeros_like(electric_consumption)
@@ -114,11 +125,14 @@ def determination_electric_coverage_year(
 
 
 def calculation_energy_production_cogen(
-    electric_consumption, thermal_consumption, threshold=0.7
-):
+    electric_consumption, thermal_consumption
+) -> np.ndarray:
+    """
+    Annual production of electric energy from cogenerator.
+    """
+    threshold = common.Optimizer().COGEN_COVERAGE
     size_cogen = calculate_cogen_size_optimized(
         thermal_consumption,
-        threshold,
         thermal_efficiency=common.THERMAL_EFFICIENCY_COGEN,
     )
     electric_energy_cogen_hourly, thermal_energy_cogen_hourly = (
@@ -138,7 +152,12 @@ def calculation_energy_production_cogen(
     return electric_energy_cogen
 
 
-def energy_used_from_cogen(electric_energy_cogen, electric_consumption):
+def energy_used_from_cogen(
+    electric_energy_cogen, electric_consumption
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Quantity of energy used from the cogenerator and quantity of still available energy producted by the cogenerator (kWh).
+    """
     # energy from cogenerator
     excess_energy_cogen = np.where(
         electric_energy_cogen - electric_consumption > 0,
@@ -151,9 +170,12 @@ def energy_used_from_cogen(electric_energy_cogen, electric_consumption):
     return electric_consumption, excess_energy_cogen
 
 
-def cost_function_optimized(
+def cost_function(
     x, electric_consumption, pv_production_hourly, available_energy_battery
 ):
+    """
+    Determination of the objective function to be minimized.
+    """
 
     PV_size, battery_size = x
 
@@ -185,16 +207,18 @@ def optimizer(electric_consumption, thermal_consumption, pv_production_hourly):
         electric_energy_production_cogen, electric_consumption
     )
     # available_energy_battery = np.zeros_like(electric_consumption)
-    initial_guess = [0, 10]  # Guess for PV size and battery size
+    initial_guess = (
+        common.Optimizer().INITIAL_GUESS
+    )  # Guess for PV size and battery size
     result = minimize(
-        cost_function_optimized,
+        cost_function,
         initial_guess,
         args=(
             electric_consumption,
             pv_production_hourly,
             available_energy_battery,
         ),
-        bounds=[(0, 1000), (0, 50)],  # Bounds for PV size and battery size
+        bounds=common.Optimizer().BOUNDS,  # Bounds for PV size and battery size
     )
     PV_size, battery_size = result.x
     return PV_size, battery_size

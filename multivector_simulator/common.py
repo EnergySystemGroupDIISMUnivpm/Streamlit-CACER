@@ -2,7 +2,9 @@ import pandas as pd
 import numpy as np
 from typing import Annotated
 
-from pydantic import AfterValidator, Field
+from pydantic import AfterValidator, Field, BaseModel, PositiveInt
+
+from cacer_simulator.common import PositiveOrZeroFloat
 
 
 def validate_consumption_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -58,3 +60,18 @@ def PV_year_production() -> pd.Series:
     PV_data = pd.read_csv("././resources/PV_data.csv", header=None)
     PV_annual_production = PV_data[2]
     return PV_annual_production
+
+
+class Optimizer(BaseModel):
+    ALPHA: PositiveOrZeroFloat = (
+        0.5  # balance between minimizing costs and maximizing coverage
+    )
+    INITIAL_GUESS: list[int] = [0, 10]  # initial guess for PV and Battery sizes
+    BOUNDS: list[tuple[int, int]] = [
+        (0, 1000),
+        (0, 50),
+    ]  # bounds for PV and Battery sizes
+    YEARS: PositiveInt = 20  # years to be considered for the calculation of cost
+    COGEN_COVERAGE: PositiveOrZeroFloat = (
+        0.7  # trashold, how many hours has the cogenerator to cover. see:https://industriale.viessmann.it/blog/dimensionare-cogeneratore-massima-efficienza
+    )

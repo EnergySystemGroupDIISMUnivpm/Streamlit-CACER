@@ -5,6 +5,7 @@ from typing import Tuple
 from cacer_simulator.common import get_kw_cost
 import pandas as pd
 from scipy.optimize import minimize
+import matplotlib.pyplot as plt
 
 
 def cost_PV_installation(PV_size: PositiveInt) -> float:
@@ -19,7 +20,7 @@ def cost_PV_installation(PV_size: PositiveInt) -> float:
 
 
 def calculate_cogen_size_optimized(
-    thermal_consumption: np.array, threshold: float, thermal_efficiency: float
+    thermal_consumption: np.ndarray, threshold: float, thermal_efficiency: float
 ) -> int:
     """
     Calculation of the best size in kW of cogenerator based on the thermal consumption.
@@ -30,6 +31,7 @@ def calculate_cogen_size_optimized(
     # Power required to cover the threshold of the time
     threshold_hours = int(threshold * len(thermal_consumption))
     size_cogen = sorted_consumption[threshold_hours] / thermal_efficiency
+    print(f"""Optimal cogenerator size: {size_cogen} kW""")
     return round(size_cogen)
 
 
@@ -42,16 +44,78 @@ def production_cogen_optimized(size_cogen: int) -> Tuple[float, float]:
     return electric_production, thermal_production
 
 
-def cost_function_optimized(
-    x, electric_consumption, thermal_consumption, pv_production_hourly
+def total_economic_cost(
+    annual_energy_from_grid: PositiveFloat,
+    PV_size: PositiveInt,
+    battery_size: PositiveInt,
+    years=20,
 ):
-    PV_size, battery_size = x
+    """
+    Calculation of the total economical cost of the installation and use of PV, installation and use of battery and usage of energy from the grid over the years.
 
+    Attrs:
+        annual_energy_from_grid: float - energy from grid in kWh
+        PV_size: PositiveInt - size of the PV plant in kW
+        battery_size: PositiveInt - size of the battery in kWh
+        years: PositiveInt - number of years over wich calculate the economical cost. If not setted is equal to 20.
+
+    """
+    cost_electricity_from_grid = (
+        np.sum(annual_energy_from_grid) * common.ELECTRIC_ENERGY_PRICE
+    )
+    cost_installation_PV = cost_PV_installation(PV_size)
+    cost_installation_battery = battery_size * common.COST_INSTALLATION_BATTERY
+    total_cost = (
+        cost_installation_PV
+        + cost_installation_battery
+        + (cost_electricity_from_grid * years)
+    )
+    return total_cost
+
+
+def determination_electric_coverage_year(
+    electric_consumption,
+    aviable_battery_energy,
+    pv_size,
+    pv_production_hourly,
+    battery_size,
+):
     # Precompute PV production scaled by size
-    pv_production = pv_production_hourly * PV_size
+    pv_production = pv_production_hourly * pv_size
 
-    # COGENERATOR
-    threshold = 0.8
+    # Initialize arrays for tracking energy
+    energy_from_grid = np.zeros_like(electric_consumption)
+    energy_covered = np.zeros_like(electric_consumption)
+    initial_energy_consumption = electric_consumption
+    aviable_battery_energy = np.clip(aviable_battery_energy, 0, battery_size)
+
+    # Energy from PV
+    excess_energy_pv = np.where(
+        pv_production - electric_consumption > 0,
+        pv_production - electric_consumption,
+        0,
+    )
+    electric_consumption = np.clip(electric_consumption - pv_production, 0, None)
+    aviable_battery_energy = np.clip(
+        aviable_battery_energy + excess_energy_pv, 0, battery_size
+    )
+
+    # energy from battery
+    electric_consumption = np.clip(
+        electric_consumption - aviable_battery_energy, 0, None
+    )
+
+    # energy from grid
+    energy_from_grid = electric_consumption
+
+    # Coverage of consumption
+    energy_covered = initial_energy_consumption - energy_from_grid
+    return energy_covered, energy_from_grid
+
+
+def calculation_energy_production_cogen(
+    electric_consumption, thermal_consumption, threshold=0.7
+):
     size_cogen = calculate_cogen_size_optimized(
         thermal_consumption,
         threshold,
@@ -65,73 +129,94 @@ def cost_function_optimized(
     electric_energy_cogen = np.full_like(
         electric_consumption, electric_energy_cogen_hourly
     )
-
-    # Initialize arrays for tracking energy
-    energy_from_grid = np.zeros_like(electric_consumption)
-    energy_covered = np.zeros_like(electric_consumption)
-    aviable_battery_energy = np.zeros_like(electric_consumption)
-
-    # Calculate available energy at each hour
-    excess_energy_pv = np.clip(pv_production - electric_consumption, 0, None)
-    excess_energy_cogen = np.clip(electric_energy_cogen - electric_consumption, 0, None)
-
-    # Total available energy for battery charging
-    energy_excess_total = excess_energy_pv + excess_energy_cogen
-    aviable_battery_energy = np.minimum(np.cumsum(energy_excess_total), battery_size)
-
-    # Energy that is covered by PV, cogenerator, and battery
-    energy_from_pv_cogen = np.minimum(
-        electric_consumption, pv_production + electric_energy_cogen
+    plt.plot(
+        range(len(electric_energy_cogen)),
+        electric_energy_cogen,
+        label="E Production Cogen",
+        color="blue",
     )
-    remaining_energy = np.clip(electric_consumption - energy_from_pv_cogen, 0, None)
-    energy_from_battery = np.minimum(remaining_energy, aviable_battery_energy)
+    return electric_energy_cogen
 
-    # Energy from the grid is the energy still needed after PV, cogenerator, and battery
-    energy_from_grid = remaining_energy - energy_from_battery
 
-    # Coverage of consumption
-    energy_covered = electric_consumption - energy_from_grid
+def energy_used_from_cogen(electric_energy_cogen, electric_consumption):
+    # energy from cogenerator
+    excess_energy_cogen = np.where(
+        electric_energy_cogen - electric_consumption > 0,
+        electric_energy_cogen - electric_consumption,
+        0,
+    )
+    electric_consumption = np.clip(
+        electric_consumption - electric_energy_cogen, 0, None
+    )
+    return electric_consumption, excess_energy_cogen
 
-    # COSTS
-    years = 20
-    cost_electricity_from_grid = np.sum(energy_from_grid) * common.ELECTRIC_ENERGY_PRICE
-    cost_installation_PV = cost_PV_installation(PV_size)
-    cost_installation_battery = battery_size * common.COST_INSTALLATION_BATTERY
 
-    total_cost = (
-        cost_installation_PV
-        + cost_installation_battery
-        + (cost_electricity_from_grid * years)
+def cost_function_optimized(
+    x, electric_consumption, pv_production_hourly, available_energy_battery
+):
+
+    PV_size, battery_size = x
+
+    energy_covered, energy_from_grid = determination_electric_coverage_year(
+        electric_consumption,
+        available_energy_battery,
+        PV_size,
+        pv_production_hourly,
+        battery_size,
     )
 
     # Percentage of electric consumption coverage
     percentage_electric_coverage = np.sum(energy_covered) / np.sum(electric_consumption)
 
+    # COSTS
+    total_cost = total_economic_cost(energy_from_grid, PV_size, battery_size)
+
     # Final objective function: balance between minimizing costs and maximizing coverage
-    alpha = 0.8
+    alpha = 0.6
     objective_function = (1 - alpha) * total_cost - alpha * percentage_electric_coverage
     return objective_function
 
 
 def optimizer(electric_consumption, thermal_consumption, pv_production_hourly):
-    initial_guess = [10, 0]  # Guess for PV size and battery size
+    electric_energy_production_cogen = calculation_energy_production_cogen(
+        electric_consumption, thermal_consumption
+    )
+    electric_consumption, available_energy_battery = energy_used_from_cogen(
+        electric_energy_production_cogen, electric_consumption
+    )
+    # available_energy_battery = np.zeros_like(electric_consumption)
+    initial_guess = [0, 10]  # Guess for PV size and battery size
     result = minimize(
         cost_function_optimized,
         initial_guess,
-        args=(electric_consumption, thermal_consumption, pv_production_hourly),
-        bounds=[(0, 1000), (0, 10)],  # Bounds for PV size and battery size
+        args=(
+            electric_consumption,
+            pv_production_hourly,
+            available_energy_battery,
+        ),
+        bounds=[(0, 1000), (0, 50)],  # Bounds for PV size and battery size
     )
     PV_size, battery_size = result.x
     return PV_size, battery_size
 
 
 def test_optimizer():
-    test_data = pd.read_csv(
-        "././resources/Dati_Simulati_di_Consumi_Elettrici_e_Termici.csv"
+    thermal_consumption = (
+        pd.read_excel("././resources/univpm_carichitermici.xlsx")[
+            "Carico_Termico_MW"
+        ].to_numpy()
+        * 1000
     )
-    thermal_consumption = test_data["Consumo_Termico_kWh"].to_numpy()
-    electric_consumption = test_data["Consumo_Elettrico_kWh"].to_numpy()
-
+    electric_consumption = pd.read_csv(
+        "././resources/Dati_consumi_elettrici_esempio.csv", header=None
+    )
+    electric_consumption = electric_consumption[1] * 1000
+    plt.plot(
+        range(len(electric_consumption)),
+        electric_consumption,
+        label="Consumption",
+        color="red",
+    )
     # Simulated PV production per hour (you can replace it with real data if available)
     pv_production_hourly = pd.read_csv("././resources/PV_data.csv", header=None)[
         2
@@ -140,9 +225,17 @@ def test_optimizer():
     PV_size, battery_size = optimizer(
         electric_consumption, thermal_consumption, pv_production_hourly
     )
-    print(f"Optimal PV size: {PV_size}, Optimal battery size: {battery_size}")
+    optimal_pv_production = pv_production_hourly * PV_size
+    plt.plot(
+        range(len(optimal_pv_production)),
+        optimal_pv_production,
+        label="PV production",
+        color="green",
+    )
 
-    __import__("ipdb").set_trace()  # Breakpoint for debugging
+    print(f"Optimal PV size: {PV_size}, Optimal battery size: {battery_size}")
 
 
 test_optimizer()
+plt.legend()
+plt.show()

@@ -16,6 +16,7 @@ pendulum = "^3.0.0"
 openpyxl = "^3.1.5"
 pulp = "^2.9.0"
 scipy = "^1.14.1"
+matplotlib = "^3.9.2"
 
 
 [tool.poetry.group.dev.dependencies]

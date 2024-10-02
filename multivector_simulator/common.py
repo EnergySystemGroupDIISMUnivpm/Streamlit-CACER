@@ -54,7 +54,7 @@ ELECTRIC_ENERGY_PRICE = 0.16  # cost of electricity from the grid, €/kWh
 THERMAL_ENERGY_PRICE = 0.055  # cost of thermal energy from the grid, €/kWh
 
 
-def PV_year_production() -> pd.DataFrame:
+def PV_year_production() -> pd.Series:
     PV_data = pd.read_csv("././resources/PV_data.csv", header=None)
-    PV_year_production = PV_data[2]
-    return PV_year_production
+    PV_annual_production = PV_data[2]
+    return PV_annual_production

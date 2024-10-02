@@ -261,5 +261,5 @@ def test_optimizer():
 
 
 test_optimizer()
-plt.legend()
-plt.show()
+#plt.legend()
+#plt.show()

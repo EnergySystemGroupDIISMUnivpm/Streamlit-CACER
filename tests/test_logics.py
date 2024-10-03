@@ -9,7 +9,7 @@ from cacer_simulator.models.model import (
     optimal_members,
     optimal_sizing,
 )
-from multivector_simulator.models.model import calculate_cogen_size
+from multivector_simulator.models.model import calculate_cogen_size_optimized
 
 
 def test_optimal_members():
@@ -88,7 +88,7 @@ def test_optimal_sizing():
 
 
 def test_calculate_cogen_size():
-    result = calculate_cogen_size(
-        np.array([1000, 1000, 2000, 500, 500, 200, 1000, 3000, 1500, 1000]), 0.8, 0.5
+    result = calculate_cogen_size_optimized(
+        np.array([1000, 1000, 2000, 500, 500, 200, 1000, 3000, 1500, 1000])
     )
     assert result == 1000

@@ -1,3 +1,4 @@
+from msilib import type_binary
 import streamlit as st
 from pydantic import BaseModel, ConfigDict, Field, AfterValidator, validate_call
 import pandas as pd
@@ -5,6 +6,7 @@ import numpy as np
 from cacer_simulator.common import PositiveOrZeroFloat
 import multivector_simulator.common as common
 from pydantic import PositiveFloat, validate_call, PositiveInt, NonNegativeInt
+import plotly.graph_objects as go
 
 
 def title_multivettore():
@@ -83,15 +85,62 @@ class UserOuput(BaseModel):
             )
 
     def see_coverage_energy_plot(
-        self, consumed_energy: np.ndarray, produced_energy: np.ndarray
+        self,
+        consumed_energy: np.ndarray,
+        produced_energy: np.ndarray,
+        self_consumption: np.ndarray,
+        energy_type: str,
     ):
         ore = np.arange(len(consumed_energy))
-
-        data_to_be_plotted = pd.DataFrame(
-            {
-                "energia_consumata": consumed_energy,
-                "energia_autoprodotta": produced_energy,
-                "ore": ore,
-            }
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x=ore,
+                y=consumed_energy,
+                fill="tozeroy",
+                mode="none",
+                name=f"Energia {energy_type} consumata",
+                fillcolor="rgba(255,242,0,0.4)",
+            )
         )
-        st.area_chart(data_to_be_plotted.set_index("ore"))
+        fig.add_trace(
+            go.Scatter(
+                x=ore,
+                y=produced_energy,
+                fill="tozeroy",
+                mode="none",
+                name=f"Energia {energy_type} autoprodotta",
+                fillcolor="rgba(8,120,170,0.4)",
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=ore,
+                y=self_consumption,
+                fill="tozeroy",
+                mode="none",
+                name=f"Energia {energy_type} autoconsumata",
+                fillcolor="rgba(34,177,76,0.2)",
+            )
+        )
+        fig.update_layout(
+            title=f"Confronto tra Energia {energy_type} Consumata e Autoprodotta: Quota di Autoconsumo annuale",
+            xaxis_title="Ore",
+            yaxis_title=f"Energia {energy_type} (kWh)",
+            showlegend=True,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    def see_costs_investment_recovery(
+        self, costs: PositiveFloat, recovery_time: PositiveInt
+    ):
+        st.markdown(
+            f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in circa {recovery_time} anni.",
+            help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {common.COST_GAS_FOR_GEN}€/Smc.",
+        )
+
+    def see_environmental_benefit(self, reduced_CO2: PositiveFloat):
+        st.markdown(
+            f"Attraverso l'uso e l'installazione di questi impianti ridurresti le emissioni di circa {reduced_CO2} kg CO2 ogni anno.",
+            help="Questi dati sono stati calcolati utilizzando il fattore di emissione medio riportato dall'Ispra per il 2022.",
+        )

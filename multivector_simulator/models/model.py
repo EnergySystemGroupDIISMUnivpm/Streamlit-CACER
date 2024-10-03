@@ -8,6 +8,27 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
 
+def energy_self_consumed(
+    produced_energy: np.ndarray, consumed_energy: np.ndarray
+) -> np.ndarray:
+    self_consumption = np.minimum(produced_energy, consumed_energy)
+    return self_consumption
+
+
+def cost_battery_installation(battery_size: PositiveInt) -> PositiveFloat:
+    cost_battery = battery_size * common.COST_INSTALLATION_BATTERY
+    return cost_battery
+
+
+def cost_cogen_installation(cogen_size: PositiveInt) -> PositiveFloat:
+    cost_cogen = cogen_size * common.COST_INSTALLATION_COGEN
+    return cost_cogen
+
+
+def cost_cogen_usage_gas(cogen_size: PositiveInt) -> PositiveFloat:
+    pass
+
+
 def cost_PV_installation(PV_size: PositiveInt) -> float:
     """
     Calculation of the cost of the installation of the PV plant in euro.
@@ -20,7 +41,7 @@ def cost_PV_installation(PV_size: PositiveInt) -> float:
 
 
 def calculate_cogen_size_optimized(
-    thermal_consumption: np.ndarray, thermal_efficiency: float
+    thermal_consumption: np.ndarray, thermal_efficiency=common.THERMAL_EFFICIENCY_COGEN
 ) -> int:
     """
     Calculation of the best size in kW of cogenerator based on the thermal consumption.
@@ -45,7 +66,7 @@ def production_cogen_optimized(size_cogen: int) -> Tuple[float, float]:
     return electric_production, thermal_production
 
 
-def total_economic_cost(
+def total_economic_cost_PV_battery_grid(
     annual_energy_from_grid: PositiveFloat,
     PV_size: PositiveInt,
     battery_size: PositiveInt,
@@ -65,7 +86,7 @@ def total_economic_cost(
         np.sum(annual_energy_from_grid) * common.ELECTRIC_ENERGY_PRICE
     )
     cost_installation_PV = cost_PV_installation(PV_size)
-    cost_installation_battery = battery_size * common.COST_INSTALLATION_BATTERY
+    cost_installation_battery = cost_battery_installation(battery_size)
     total_cost = (
         cost_installation_PV
         + cost_installation_battery
@@ -191,7 +212,9 @@ def cost_function(
     percentage_electric_coverage = np.sum(energy_covered) / np.sum(electric_consumption)
 
     # COSTS
-    total_cost = total_economic_cost(energy_from_grid, PV_size, battery_size)
+    total_cost = total_economic_cost_PV_battery_grid(
+        energy_from_grid, PV_size, battery_size
+    )
 
     # Final objective function: balance between minimizing costs and maximizing coverage
     alpha = 0.6
@@ -261,5 +284,5 @@ def test_optimizer():
 
 
 test_optimizer()
-#plt.legend()
-#plt.show()
+# plt.legend()
+# plt.show()

@@ -77,9 +77,9 @@ Un **Gruppo di Autoconsumatori** è composto da almeno due utenti che vivono nel
         st.header("Sezione Multivettore energetico")
         st.markdown(
             """
-            Questo servizio ti consente di esplorare l'integrazione di diverse fonti energetiche tramite modelli di multivettori energetici   autandoti a comprendere l'impatto ambientale ed economico delle tue scelte energetiche.
+            Questo servizio ti consente di **ottimizzare l'integrazione di diverse fonti energetiche** tramite modelli di multivettori energetici autandoti a comprendere l'impatto ambientale ed economico delle tue scelte energetiche.
             
-            Un **multivettore energetico** è un sistema che integra diverse forme di energia, come elettricità, gas e idrogeno, per ottimizzare l'efficienza e ridurre le emissioni. Questa combinazione, propriamente gestita, consente di sfruttare meglio le risorse e migliorare la sostenibilità energetica."""
+            Un multivettore energetico è un sistema che integra diverse fonti di energia, come fotovoltaico, cogenerazione e sistemi di accumulo, per ottimizzare l'efficienza complessiva e ridurre le emissioni. Una gestione efficiente di queste risorse consente di massimizzare l'uso dell'energia disponibile, migliorando la sostenibilità e riducendo significativamente i costi."""
         )
         if st.button("Avvia il Simulatore Multivettore"):
             st.session_state["selection"] = MacroSelection.Multivettore

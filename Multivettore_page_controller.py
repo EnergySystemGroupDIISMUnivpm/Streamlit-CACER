@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 from multivector_simulator.views.view import UserInput, UserOuput, title_multivettore
+from multivector_simulator.models import model
 import numpy as np
+
 
 def Simulator_Multivettore():
     title_multivettore()
@@ -9,5 +11,4 @@ def Simulator_Multivettore():
     user_input = UserInput()
     consumption = user_input.download_upload_consumption()
     user_output = UserOuput()
-    user_output.see_coverage_energy_plot(np.array([1,6,8,9,4]), np.array([1,6,7,8,2]))
-
+    user_output.see_costs_investment_recovery(34555, 20)

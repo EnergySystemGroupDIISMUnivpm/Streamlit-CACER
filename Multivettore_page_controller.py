@@ -11,4 +11,4 @@ def Simulator_Multivettore():
     user_input = UserInput()
     consumption = user_input.download_upload_consumption()
     user_output = UserOuput()
-    user_output.see_costs_investment_recovery(34555, 20)
+    

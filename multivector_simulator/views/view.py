@@ -66,23 +66,32 @@ class UserOuput(BaseModel):
 
         return view_result
 
-    def see_pv_size(self, pv_size: NonNegativeInt):
+    def see_optimal_sizes(
+        self,
+        pv_size: NonNegativeInt,
+        cogen_size: NonNegativeInt,
+        battery_size: NonNegativeInt,
+    ):
+        st.markdown("##### **Risulati del simulatore**")
+        st.markdown(
+            """Per minimizzare la copertura dei tuoi consumi e minimizzare i costi puoi installare i seguenti impianti:
+"""
+        )
         if pv_size > 0:
-            st.markdown(
-                f"**La dimensione ottimale dell'impianto fotovoltaico:** {pv_size} kW"
-            )
+            self.see_pv_size(pv_size)
+        if cogen_size > 0:
+            self.see_cogen_size(cogen_size)
+        if battery_size > 0:
+            self.see_battery_size(battery_size)
+
+    def see_pv_size(self, pv_size: NonNegativeInt):
+        st.markdown(f"- un **impianto fotovoltaico** da {pv_size} kW")
 
     def see_cogen_size(self, cogen_size: NonNegativeInt):
-        if cogen_size > 0:
-            st.markdown(
-                f"**La dimensione ottimale dell'impianto di cogenerazione:** {cogen_size} kW"
-            )
+        st.markdown(f"- un **impianto di cogenerazione** da {cogen_size} kW")
 
-    def battery_size(self, battery_size: NonNegativeInt):
-        if battery_size > 0:
-            st.markdown(
-                f"**La dimensione ottimale del sistema di accumolo:** {battery_size} kW"
-            )
+    def see_battery_size(self, battery_size: NonNegativeInt):
+        st.markdown(f"- un **impianto di accumulo** da {battery_size} kW")
 
     def see_coverage_energy_plot(
         self,

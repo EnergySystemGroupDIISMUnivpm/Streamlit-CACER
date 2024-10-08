@@ -1,8 +1,8 @@
 import numpy as np
-from pydantic import PositiveFloat, validate_call, PositiveInt
+from pydantic import NonNegativeInt, PositiveFloat, validate_call, PositiveInt
 import multivector_simulator.common as common
 from typing import Tuple
-from cacer_simulator.common import get_kw_cost
+from cacer_simulator.common import PositiveOrZeroFloat, get_kw_cost
 import pandas as pd
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
@@ -25,8 +25,24 @@ def cost_cogen_installation(cogen_size: PositiveInt) -> PositiveFloat:
     return cost_cogen
 
 
-def cost_cogen_usage_gas(cogen_size: PositiveInt) -> PositiveFloat:
-    pass
+def cogen_usage_gas(
+    cogen_size: PositiveInt, working_hours: PositiveInt
+) -> PositiveFloat:
+    """
+    Calculation of the quantity (Smc) of gas used by cogenerator to work for a certain amount of hours working at full capacity.
+    """
+    used_gas = cogen_size * working_hours * common.CONSUMPTION_COGEN_HOUR
+    return used_gas
+
+
+def cost_gas_used_cogen(used_gas: PositiveFloat) -> PositiveFloat:
+    """
+    Calculation of the cost of the gas used by cogenerator in euro.
+    Attrs:
+        used_gas: PositiveFloat - quantity of gas used in Smc
+    """
+    cost_gas = used_gas * common.COST_GAS_FOR_GEN
+    return cost_gas
 
 
 def cost_PV_installation(PV_size: PositiveInt) -> float:
@@ -38,6 +54,75 @@ def cost_PV_installation(PV_size: PositiveInt) -> float:
     """
     cost_PV = get_kw_cost(PV_size) * PV_size
     return cost_PV
+
+
+def total_cost_investment(
+    PV_size: NonNegativeInt, battery_size: NonNegativeInt, cogen_size: NonNegativeInt
+) -> PositiveFloat:
+    """
+    Calculation of the total cost of the investment (installation of PV, battery and/or cogenerator) in euro.
+    Attrs:
+        PV_size: NonNegativeInt - size of the PV plant in kW
+        battery_size: NonNegativeInt - size of the battery in kWh
+        cogen_size: NonNegativeInt - size of the cogenerator in kW"""
+    total_cost = (
+        cost_PV_installation(PV_size)
+        + cost_battery_installation(battery_size)
+        + cost_cogen_installation(cogen_size)
+    )
+    return total_cost
+
+
+def cost_energy_from_grid(energy_from_grid: PositiveOrZeroFloat) -> PositiveOrZeroFloat:
+    """
+    Calculation of the cost of the energy from the grid in euro.
+    Attrs:
+        energy_from_grid: PositiveOrZeroFloat - energy from grid in kWh
+    """
+    cost_grid_energy = energy_from_grid * common.ELECTRIC_ENERGY_PRICE
+    return cost_grid_energy
+
+
+def savings_using_implants(
+    energy_from_pv: PositiveOrZeroFloat,
+    energy_from_battery: PositiveOrZeroFloat,
+    energy_from_cogen: PositiveOrZeroFloat,
+) -> PositiveOrZeroFloat:
+    """
+    Calculation of the savings in euro using PV, battery end/or cogenerator.
+    Attrs:
+        energy_from_pv: PositiveOrZeroFloat - used electric energy from PV in kWh
+        energy_from_battery: PositiveOrZeroFloat - used electric energy from battery in kWh
+        energy_from_cogen: PositiveOrZeroFloat - used thermal energy from cogenerator in kWh
+    """
+    savings = (
+        (energy_from_pv + energy_from_battery) * common.ELECTRIC_ENERGY_PRICE
+        + energy_from_cogen * common.THERMAL_ENERGY_PRICE
+    )
+    return savings
+
+
+def calc_payback_time(
+    savings: PositiveOrZeroFloat, investment: PositiveOrZeroFloat
+) -> NonNegativeInt:
+    """
+    Calculation of the payback time in years.
+    Attrs:
+        savings: PositiveOrZeroFloat - savings in euro of each year, obtained by the usage of PV, battery and/or cogenerator.
+        investment: PositiveOrZeroFloat - investment in euro
+    """
+    payback_time = savings / investment
+    payback_time = round(payback_time)
+    return payback_time
+
+
+def savings_in_a_period(savings: PositiveFloat, period: PositiveInt) -> PositiveFloat:
+    """Calculation of the savings over a period of time.
+    Attrs:
+        savings: PositiveFloat - savings in euro
+        period: PositiveInt - period in years"""
+    savings_period = savings * period
+    return savings_period
 
 
 def calculate_cogen_size_optimized(
@@ -59,7 +144,9 @@ def calculate_cogen_size_optimized(
 
 def production_cogen_optimized(size_cogen: int) -> Tuple[float, float]:
     """
-    Calculate the electric and thermal production based on the size of the cogenerator.Production for hour.
+    Calculate the electric and thermal unitary production based on the size of the cogenerator. Production in one hour.
+    Attrs:
+        size_cogen: int - size of the cogenerator in kW
     """
     electric_production = size_cogen * common.ELECTRIC_EFFICIENCY_COGEN
     thermal_production = size_cogen * common.THERMAL_EFFICIENCY_COGEN

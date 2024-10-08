@@ -50,6 +50,7 @@ ELECTRIC_EFFICIENCY_COGEN = 0.35
 THERMAL_EFFICIENCY_COGEN = 0.45
 COST_INSTALLATION_COGEN = 1200  # cost of installation of cogenerator for kW
 COST_GAS_FOR_GEN = 0.4  # cost of gas for cogenerator in €/Smc
+CONSUMPTION_COGEN_HOUR = 0.105  # Consumption by 1kW cogenerator of gas in Smc for each hour, working at full capacity
 COST_INSTALLATION_BATTERY = 1000  # cost of installation of battery for kWh
 
 ELECTRIC_ENERGY_PRICE = 0.16  # cost of electricity from the grid, €/kWh

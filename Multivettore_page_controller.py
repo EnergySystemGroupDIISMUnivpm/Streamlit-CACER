@@ -30,5 +30,5 @@ def Simulator_Multivettore():
             eletric_production_pv = model.calculation_pv_production(PV_size)
             self_consumed_eletric = model.energy_self_consumed(eletric_production_cogen + eletric_production_pv, eletric_consumption)
             self_consumed_thermal = model.energy_self_consumed(thermal_production_cogen, thermal_consumption)
-            user_output.see_coverage_energy_plot(eletric_consumption, eletric_production_cogen + eletric_production_pv, self_consumed_eletric, "Elettrica")
-            user_output.see_coverage_energy_plot(thermal_consumption, thermal_production_cogen, self_consumed_thermal, "Termica")
+            user_output.see_coverage_energy_plot(eletric_consumption[0:168], eletric_production_cogen[0:168] + eletric_production_pv[0:168], "Elettrica")
+            user_output.see_coverage_energy_plot(thermal_consumption[0:168], thermal_production_cogen[0:168], "Termica")

@@ -99,48 +99,19 @@ class UserOuput(BaseModel):
         self,
         consumed_energy: np.ndarray,
         produced_energy: np.ndarray,
-        self_consumption: np.ndarray,
+  
         energy_type: str,
     ):
         ore = np.arange(len(consumed_energy))
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x=ore,
-                y=consumed_energy,
-                fill="tozeroy",
-                mode="none",
-                name=f"Energia {energy_type} consumata",
-                fillcolor="rgba(255,242,0,0.4)",
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=ore,
-                y=produced_energy,
-                fill="tozeroy",
-                mode="none",
-                name=f"Energia {energy_type} autoprodotta",
-                fillcolor="rgba(8,120,170,0.4)",
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=ore,
-                y=self_consumption,
-                fill="tozeroy",
-                mode="none",
-                name=f"Energia {energy_type} autoconsumata",
-                fillcolor="rgba(34,177,76,0.2)",
-            )
-        )
-        fig.update_layout(
-            title=f"Confronto tra Energia {energy_type} Consumata e Autoprodotta: Quota di Autoconsumo annuale",
-            xaxis_title="Ore",
-            yaxis_title=f"Energia {energy_type} (kWh)",
-            showlegend=True,
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        chart_data = pd.DataFrame(
+    {
+        "Ore": ore,
+        "Energia consumata": consumed_energy,
+        "Energia prodotta": produced_energy,
+       
+    }
+)
+        st.area_chart(chart_data, x = "Ore")
 
     def see_costs_investment_recovery(
         self, costs: PositiveFloat, recovery_time: PositiveInt

@@ -180,13 +180,14 @@ def total_economic_cost_PV_battery_grid(
         + (cost_electricity_from_grid * years)
     )
     return total_cost
-
+def calculation_pv_production(pv_size):
+    pv_production = common.pv_production_hourly * pv_size
+    return pv_production
 
 def determination_electric_coverage_year(
     electric_consumption,
     aviable_battery_energy: np.ndarray,
     pv_size: PositiveInt,
-    pv_unitary_production: np.ndarray,
     battery_size: PositiveInt,
 ):
     """
@@ -200,7 +201,8 @@ def determination_electric_coverage_year(
         battery_size: PositiveInt - size of the battery in kWh
     """
     # Precompute PV production scaled by size
-    pv_production = pv_unitary_production * pv_size
+    
+    pv_production = calculation_pv_production(pv_size)
 
     # Initialize arrays for tracking energy
     energy_from_grid = np.zeros_like(electric_consumption)
@@ -232,9 +234,9 @@ def determination_electric_coverage_year(
     return energy_covered, energy_from_grid
 
 
-def calculation_energy_production_cogen(
+def calculation_energy_cogen(
     electric_consumption, thermal_consumption
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Annual production of electric energy from cogenerator.
     """
@@ -251,13 +253,19 @@ def calculation_energy_production_cogen(
     electric_energy_cogen = np.full_like(
         electric_consumption, electric_energy_cogen_hourly
     )
+
+
+    # Precompute the cogenerator production across the entire year
+    thermal_energy_cogen = np.full_like(
+        thermal_consumption, thermal_energy_cogen_hourly
+    )
     plt.plot(
         range(len(electric_energy_cogen)),
         electric_energy_cogen,
         label="E Production Cogen",
         color="blue",
     )
-    return electric_energy_cogen
+    return electric_energy_cogen, thermal_energy_cogen
 
 
 def energy_used_from_cogen(
@@ -267,6 +275,7 @@ def energy_used_from_cogen(
     Quantity of energy used from the cogenerator and quantity of still available energy producted by the cogenerator (kWh).
     """
     # energy from cogenerator
+    
     excess_energy_cogen = np.where(
         electric_energy_cogen - electric_consumption > 0,
         electric_energy_cogen - electric_consumption,
@@ -279,7 +288,7 @@ def energy_used_from_cogen(
 
 
 def cost_function(
-    x, electric_consumption, pv_production_hourly, available_energy_battery
+    x, electric_consumption, available_energy_battery
 ):
     """
     Determination of the objective function to be minimized.
@@ -291,7 +300,6 @@ def cost_function(
         electric_consumption,
         available_energy_battery,
         PV_size,
-        pv_production_hourly,
         battery_size,
     )
 
@@ -309,8 +317,10 @@ def cost_function(
     return objective_function
 
 
-def optimizer(electric_consumption, thermal_consumption, pv_production_hourly):
-    electric_energy_production_cogen = calculation_energy_production_cogen(
+
+
+def optimizer(electric_consumption, thermal_consumption):
+    electric_energy_production_cogen = calculation_energy_cogen(
         electric_consumption, thermal_consumption
     )
     electric_consumption, available_energy_battery = energy_used_from_cogen(
@@ -325,13 +335,12 @@ def optimizer(electric_consumption, thermal_consumption, pv_production_hourly):
         initial_guess,
         args=(
             electric_consumption,
-            pv_production_hourly,
             available_energy_battery,
         ),
         bounds=common.Optimizer().BOUNDS,  # Bounds for PV size and battery size
     )
     PV_size, battery_size = result.x
-    return PV_size, battery_size
+    return round(PV_size), round(battery_size)
 
 
 def test_optimizer():
@@ -351,15 +360,9 @@ def test_optimizer():
         label="Consumption",
         color="red",
     )
-    # Simulated PV production per hour (you can replace it with real data if available)
-    pv_production_hourly = pd.read_csv("././resources/PV_data.csv", header=None)[
-        2
-    ].to_numpy()
-
-    PV_size, battery_size = optimizer(
-        electric_consumption, thermal_consumption, pv_production_hourly
-    )
-    optimal_pv_production = pv_production_hourly * PV_size
+    
+    PV_size, battery_size = optimizer(electric_consumption, thermal_consumption)
+    optimal_pv_production = common.pv_production_hourly * PV_size
     plt.plot(
         range(len(optimal_pv_production)),
         optimal_pv_production,
@@ -370,6 +373,6 @@ def test_optimizer():
     print(f"Optimal PV size: {PV_size}, Optimal battery size: {battery_size}")
 
 
-test_optimizer()
+#test_optimizer()
 # plt.legend()
 # plt.show()

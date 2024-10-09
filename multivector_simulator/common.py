@@ -11,8 +11,8 @@ def validate_consumption_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     # Verifica che le colonne inserite siano compatibili con quelle richieste
     required_columns = [
         "Ora",
-        "Consumi elettrici (kWh)",
-        "Consumi Termici (J)",
+        "Consumi Elettrici (kWh)",
+        "Consumi Termici (kWh)",
         "Consumi Frigoriferi (kWh)",
     ]
     for col in df.columns:
@@ -38,6 +38,10 @@ def validate_consumption_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         )
     return df
 
+pv_production_hourly = pd.read_csv("././resources/PV_data.csv", header=None)[
+    2
+].to_numpy()
+
 
 ConsumptionDataFrameType = Annotated[
     pd.DataFrame,
@@ -55,6 +59,7 @@ COST_INSTALLATION_BATTERY = 1000  # cost of installation of battery for kWh
 
 ELECTRIC_ENERGY_PRICE = 0.16  # cost of electricity from the grid, €/kWh
 THERMAL_ENERGY_PRICE = 0.055  # cost of thermal energy from the grid, €/kWh
+
 
 
 def PV_year_production() -> pd.Series:

@@ -2,7 +2,7 @@ import datetime
 from unittest import result
 
 from numpy import power
-from pydantic import PositiveFloat, validate_call
+from pydantic import NonNegativeFloat, PositiveFloat, validate_call
 from cacer_simulator.views.view import UserInput, Results
 from cacer_simulator.models import model
 import cacer_simulator.common as common
@@ -101,6 +101,7 @@ def results_from_PV_power(
                 region,
                 percentage_daily_consumption,
                 power_pv,
+                add_power,
             )
 
 
@@ -113,16 +114,21 @@ def presence_overproduction_or_undeproduction(
     region: common.RegionType,
     percentage_daily_consumption: common.PercentageType,
     power_pv: PositiveFloat,
+    add_power: NonNegativeFloat,
 ):
     """
     determitaion of overproduction or undeproduction and visualization of relative results. For Self_consumer and Group.
     """
     # case of overproduction, so there is visualization of advice for creating a CER
+    production = model.production_estimate(power_pv + add_power, region)
     if overproduction_or_undeproduction == "Overproduction":
+        results.bar_chart_consum_prod(consumption, production)
         results.visualize_advices()
         results.see_CER_info(label_use_case)
+
     # case of underproduction, so there is visualization of advice for boosting PV plant.
     elif overproduction_or_undeproduction == "Underproduction":
+        results.bar_chart_consum_prod(consumption, production)
         results.visualize_advices()
         optimal_PV_size = model.optimal_sizing(
             consumption,
@@ -222,6 +228,7 @@ def results_CER(
 
     # case of Overproduction. So new possible members of CER are proposed with relative economical and environmental benefits.
     if overproduction_or_undeproduction == "Overproduction":
+        results.bar_chart_consum_prod(consumption, production)
         optimal_members = model.optimal_members(energy_difference_produc_consum)
         results.visualize_advices()
         results.see_optimal_members(optimal_members, "membri già presenti")
@@ -270,6 +277,7 @@ def results_CER(
         )
     # case of unserproduction so the optimal dimension of PV plant is proosed.
     elif overproduction_or_undeproduction == "Underproduction":
+        results.bar_chart_consum_prod(consumption, production)
         optimal_PV_size = model.optimal_sizing(
             consumption,
             region,
@@ -309,7 +317,7 @@ def results_CER(
 
     # case of optimal dimension of PV plant. Results are simply visualized.
     elif overproduction_or_undeproduction == "Optimal":
-
+        results.bar_chart_consum_prod(consumption, production)
         benefit_b_present_members = model.economical_benefit_b(
             power_pv,
             year_pv,

@@ -3,8 +3,9 @@ import datetime
 
 import streamlit as st
 from pydantic import PositiveFloat, validate_call, BaseModel
-
+import pandas as pd
 import cacer_simulator.common as common
+import plotly.graph_objects as go
 
 
 def title_CACER():
@@ -16,7 +17,7 @@ def title_CACER():
 
 
 class UserInput(BaseModel):
-
+    
     ## Input in common for all 3 use case
     # Region
     def insert_region(self) -> common.RegionType | None:
@@ -76,7 +77,7 @@ class UserInput(BaseModel):
     @validate_call(validate_return=True)
     def insert_year_power_PV(
         self,
-    ) -> tuple[datetime.date, PositiveFloat]:
+    ) -> tuple[datetime.date , PositiveFloat]: 
 
         year_PV = st.date_input(
             "Inserisci la data di entrata in esercizio dell'impianto fotovoltaico",
@@ -226,7 +227,7 @@ class Results(BaseModel):
         if benefit_b_new is not None:
             benefit_b_new = common.round_data(benefit_b_new)
             st.markdown(
-                f"Considerando anche i nuovi membri, potresti ricevere fino a {benefit_b_new}€ all'anno di incetivi economici.",
+                f"Considerando anche i nuovi membri, potresti ricevere fino a {benefit_b_new}€ all'anno di incentivi economici.",
                 help="Valori calcolati sulla base del decreto Decreto MASE n. 414 del 7 dicembre 2023 e del TIAD.",
             )
 
@@ -265,7 +266,7 @@ class Results(BaseModel):
         power_pv = common.round_data(power_pv)
 
         st.markdown(
-            f"""Nell'area che ai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} kW.""",
+            f"""Nell'area che hai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} kW.""",
             help="Questi dati sono stati calcolati usando come riferimento le caratteristiche medie di un pannello fotovoltaico in silicio monocristallino.",
         )
 
@@ -274,7 +275,7 @@ class Results(BaseModel):
             st.write(
                 f"""Abbiamo stimato che in media produci più energia di quella di quella che consumi. Potresti condividere questa energia con altre persone.
                     Per esempio potresti valutare l'idea di partecipare a una Comunità Energetica Rinnovabile (CER).
-                    Potresti ricevere ulteriori incetivi statali e migliorersti il tuo impatto ambientale.
+                    Potresti ricevere ulteriori incentivi statali e migliorersti il tuo impatto ambientale.
                     Per maggiori informazioni puoi provare la sezione CER di questo simulatore.
     """
             )
@@ -282,7 +283,7 @@ class Results(BaseModel):
             st.write(
                 f"""Abbiamo stimato che il tuo condominio produce più energia di quella che consuma. Potresti condividere l'energia in eccesso. 
                     Per esempio potresti valutare l'idea di far partecipare il tuo condominio a una Comunità Energetica Rinnovabile (CER).
-                    Potresti ricevere ulteriori incetivi statali e migliorersti il tuo impatto ambientale.
+                    Potresti ricevere ulteriori incentivi statali e migliorersti il tuo impatto ambientale.
                     Per maggiori informazioni puoi provare la sezione CER di questo simulatore.
     """
             )
@@ -319,3 +320,42 @@ class Results(BaseModel):
 
     def visualize_advices(self):
         st.markdown("##### **Consigli**")
+    
+
+    def bar_chart_consum_prod(self, consumed_energy: float, produced_energy: float):
+        energy_diff = produced_energy - consumed_energy
+        next_year = "Anno 2025"
+        df = pd.DataFrame(
+            {
+                "Anno": [next_year],
+                "Energia Consumata": [consumed_energy],
+                "Energia Prodotta": [produced_energy],
+                "Differenza": [energy_diff],
+            }
+        )
+        st.title(f"Energia per l'anno {next_year}")
+
+        # Crea il grafico con Plotly
+        fig = go.Figure()
+
+        fig.add_trace(
+            go.Bar(
+                x=["Energia Consumata", "Energia Prodotta", "Differenza"],
+                y=[consumed_energy, produced_energy, energy_diff],
+                marker_color=["red", "green", "blue"],
+            )
+        )
+
+        fig.update_layout(
+            xaxis_title="Tipo di Energia",
+            yaxis_title="Energia (kWh)",
+            title=f"Confronto tra Energia Consumata, Prodotta e Differenza per l'anno {next_year}",
+        )
+
+        # Mostra il grafico in Streamlit
+        st.plotly_chart(fig, key="bar_chart_consum_prod")
+
+        # Mostra i valori in una tabella
+        st.subheader("Valori dettagliati:")
+        st.table(df)
+

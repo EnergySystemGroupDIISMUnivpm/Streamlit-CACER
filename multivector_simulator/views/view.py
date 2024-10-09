@@ -7,6 +7,7 @@ from cacer_simulator.common import PositiveOrZeroFloat
 import multivector_simulator.common as common
 from pydantic import PositiveFloat, validate_call, PositiveInt, NonNegativeInt
 import plotly.graph_objects as go
+from datetime import datetime
 
 
 def title_multivettore():
@@ -56,6 +57,7 @@ class UserInput(BaseModel):
         return None
 
 
+# Output
 class UserOuput(BaseModel):
     def see_results(self) -> bool:
         view_result = st.button(
@@ -74,7 +76,7 @@ class UserOuput(BaseModel):
     ):
         st.markdown("##### **Risulati del simulatore**")
         st.markdown(
-            """Per minimizzare la copertura dei tuoi consumi e minimizzare i costi puoi installare i seguenti impianti:
+            """Per massimizzare la copertura dei tuoi consumi e minimizzare i costi puoi installare i seguenti impianti:
 """
         )
         if pv_size > 0:
@@ -153,3 +155,5 @@ class UserOuput(BaseModel):
             f"Attraverso l'uso e l'installazione di questi impianti ridurresti le emissioni di circa {reduced_CO2} kg CO2 ogni anno.",
             help="Questi dati sono stati calcolati utilizzando il fattore di emissione medio riportato dall'Ispra per il 2022.",
         )
+
+    

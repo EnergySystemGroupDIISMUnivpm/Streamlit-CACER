@@ -56,7 +56,15 @@ class UserInput(BaseModel):
 
         return None
 
+    def select_period_plot(self):
+        period_label=None
+        period_label=st.radio(
+            "Seleziona il periodo in cui visualizzare la distribuzione media della tua energia",
+            options=list(common.PERIOD_TO_BE_PLOTTED.keys()), index=None, key="select label of period"
+        )
+        return period_label
 
+    
 # Output
 class UserOuput(BaseModel):
     def see_results(self) -> bool:
@@ -95,12 +103,18 @@ class UserOuput(BaseModel):
     def see_battery_size(self, battery_size: NonNegativeInt):
         st.markdown(f"- un **impianto di accumulo** da {battery_size} kW")
 
+    
+    def extract_period_from_period_label(self, period_label:str)->int:
+        period = common.PERIOD_TO_BE_PLOTTED[period_label]
+        return period
+    
     def see_coverage_energy_plot(
         self,
         consumed_energy: np.ndarray,
         produced_energy: np.ndarray,
   
         energy_type: str,
+        period_label="str"
     ):
         ore = np.arange(len(consumed_energy))
         chart_data = pd.DataFrame(
@@ -110,7 +124,9 @@ class UserOuput(BaseModel):
         "Energia prodotta": produced_energy,
        
     }
-)
+)       
+        
+        st.markdown(f"""Distribuzione media dell'energia {energy_type} {period_label}""")
         st.area_chart(chart_data, x = "Ore")
 
     def see_costs_investment_recovery(

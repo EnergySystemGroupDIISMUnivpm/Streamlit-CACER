@@ -372,6 +372,20 @@ def test_optimizer():
 
     print(f"Optimal PV size: {PV_size}, Optimal battery size: {battery_size}")
 
+def calculate_mean_over_period(data:np.ndarray, hours:int) -> np.ndarray:
+    """
+    Calculate the mean value of production or consumption of a period of time.
+    Attrs:
+        data: array - production or consumption data
+        hours: int - number of hours in the period"""
+    
+    data_start=data[0:hours]
+    for i in range(1, round((len(data)/hours))-1):
+        data_start=data_start+data [hours*i+1:hours*(i+1)+1]
+    mean_value=data_start/round(len(data)/hours)
+    return mean_value
+
+
 
 #test_optimizer()
 # plt.legend()

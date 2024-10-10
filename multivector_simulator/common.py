@@ -67,6 +67,11 @@ def PV_year_production() -> pd.Series:
     PV_annual_production = PV_data[2]
     return PV_annual_production
 
+PERIOD_TO_BE_PLOTTED={
+    "giornaliero":24,
+    "settimanale":168,
+    "mensile":720
+}
 
 class Optimizer(BaseModel):
     ALPHA: PositiveOrZeroFloat = (
@@ -81,3 +86,4 @@ class Optimizer(BaseModel):
     COGEN_COVERAGE: PositiveOrZeroFloat = (
         0.7  # trashold, how many hours has the cogenerator to cover. see:https://industriale.viessmann.it/blog/dimensionare-cogeneratore-massima-efficienza
     )
+

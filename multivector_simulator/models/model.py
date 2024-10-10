@@ -15,6 +15,20 @@ def energy_self_consumed(
     return self_consumption
 
 
+def calculate_reducted_CO2(
+    self_consumption: np.ndarray, label: common.LabelEnergyType
+) -> PositiveOrZeroFloat:
+    """
+    Calculation of the reducted CO2 emissions (kg) by using self produced energy instead of energy from the grid.
+    """
+    CO2 = 0
+    if label == "Elettrica" or label == "Frigorifera":
+        CO2 = (self_consumption * common.AVG_EMISSIONS_FACTOR_ELETRICITY).sum()
+    elif label == "Termica":
+        CO2 = (self_consumption * common.AVG_EMISSIONS_FACTOR_THERMAL).sum()
+    return CO2
+
+
 def cost_battery_installation(battery_size: PositiveInt) -> PositiveFloat:
     cost_battery = battery_size * common.COST_INSTALLATION_BATTERY
     return cost_battery
@@ -43,6 +57,19 @@ def cost_gas_used_cogen(used_gas: PositiveFloat) -> PositiveFloat:
     """
     cost_gas = used_gas * common.COST_GAS_FOR_GEN
     return cost_gas
+
+
+def calculate_production_CO2_cogen(quantity_gas: PositiveFloat) -> PositiveOrZeroFloat:
+    """
+    Calculation of how much CO2 (kg) is produced by using the cogenerator.
+    Attrs:
+        quantity_gas: PositiveFloat - quantity of gas used in Smc"""
+    CO2 = (
+        quantity_gas
+        * common.AVG_EMISSIONS_FACTOR_THERMAL
+        * common.COGEN_CONVERSION_FACTOR
+    )
+    return CO2
 
 
 def cost_PV_installation(PV_size: PositiveInt) -> float:
@@ -84,21 +111,18 @@ def cost_energy_from_grid(energy_from_grid: PositiveOrZeroFloat) -> PositiveOrZe
 
 
 def savings_using_implants(
-    energy_from_pv: PositiveOrZeroFloat,
-    energy_from_battery: PositiveOrZeroFloat,
-    energy_from_cogen: PositiveOrZeroFloat,
+    electric_energy: PositiveOrZeroFloat,
+    thermal_energy: PositiveOrZeroFloat,
 ) -> PositiveOrZeroFloat:
     """
     Calculation of the savings in euro using PV, battery end/or cogenerator.
     Attrs:
-        energy_from_pv: PositiveOrZeroFloat - used electric energy from PV in kWh
-        energy_from_battery: PositiveOrZeroFloat - used electric energy from battery in kWh
-        energy_from_cogen: PositiveOrZeroFloat - used thermal energy from cogenerator in kWh
+        electric_energy: PositiveOrZeroFloat - electric energy self-consumed in kWh
+        thermal_energy: PositiveOrZeroFloat - thermal energy self-consumed in kWh
     """
     savings = (
-        (energy_from_pv + energy_from_battery) * common.ELECTRIC_ENERGY_PRICE
-        + energy_from_cogen * common.THERMAL_ENERGY_PRICE
-    )
+        electric_energy
+    ) * common.ELECTRIC_ENERGY_PRICE + thermal_energy * common.THERMAL_ENERGY_PRICE
     return savings
 
 
@@ -180,13 +204,16 @@ def total_economic_cost_PV_battery_grid(
         + (cost_electricity_from_grid * years)
     )
     return total_cost
+
+
 def calculation_pv_production(pv_size):
     pv_production = common.pv_production_hourly * pv_size
     return pv_production
 
+
 def determination_electric_coverage_year(
     electric_consumption,
-    aviable_battery_energy: np.ndarray,
+    available_battery_energy_from_cogen: np.ndarray,
     pv_size: PositiveInt,
     battery_size: PositiveInt,
 ):
@@ -195,20 +222,23 @@ def determination_electric_coverage_year(
 
     Attrs:
         electric_consumption: float - electric yearly consumption in kWh
-        aviable_battery_energy: array - energy available at the beginning to be stored in battery in kWh
+        available_battery_energy: array - energy available at the beginning to be stored in battery in kWh
         pv_size: PositiveInt - size of the PV plant in kW
         pv_unitary_production: array - PV hourly production in kWh, for a PV of 1 kW
         battery_size: PositiveInt - size of the battery in kWh
     """
     # Precompute PV production scaled by size
-    
+
     pv_production = calculation_pv_production(pv_size)
 
     # Initialize arrays for tracking energy
     energy_from_grid = np.zeros_like(electric_consumption)
     energy_covered = np.zeros_like(electric_consumption)
     initial_energy_consumption = electric_consumption
-    aviable_battery_energy = np.clip(aviable_battery_energy, 0, battery_size)
+    available_battery_energy = np.clip(
+        available_battery_energy_from_cogen, 0, battery_size
+    )
+    available_battery_energy_pv = np.zeros_like(electric_consumption)
 
     # Energy from PV
     excess_energy_pv = np.where(
@@ -216,22 +246,43 @@ def determination_electric_coverage_year(
         pv_production - electric_consumption,
         0,
     )
+    electric_consumption_before_pv = electric_consumption
     electric_consumption = np.clip(electric_consumption - pv_production, 0, None)
-    aviable_battery_energy = np.clip(
-        aviable_battery_energy + excess_energy_pv, 0, battery_size
+    self_consumption_electric_energy_from_pv = (
+        electric_consumption_before_pv - electric_consumption
+    )
+    available_battery_energy = np.clip(
+        available_battery_energy + excess_energy_pv, 0, battery_size
+    )
+    available_battery_energy_from_pv = (
+        available_battery_energy - available_battery_energy_from_cogen
     )
 
     # energy from battery
+    electric_consumption_before_battery = electric_consumption
     electric_consumption = np.clip(
-        electric_consumption - aviable_battery_energy, 0, None
+        electric_consumption - available_battery_energy, 0, None
     )
+    # how much of the used energy from the battery derives from the pv or the cogenerator
+    self_consumed_energy_battery_pv = (
+        electric_consumption_before_battery - electric_consumption
+    ) * (available_battery_energy_from_pv / available_battery_energy)
+    self_consumed_energy_battery_cogen = (
+        electric_consumption_before_battery - electric_consumption
+    ) * (available_battery_energy_from_cogen / available_battery_energy)
 
     # energy from grid
     energy_from_grid = electric_consumption
 
     # Coverage of consumption
     energy_covered = initial_energy_consumption - energy_from_grid
-    return energy_covered, energy_from_grid
+    return (
+        energy_covered,
+        energy_from_grid,
+        self_consumed_energy_battery_pv,
+        self_consumed_energy_battery_cogen,
+        self_consumption_electric_energy_from_pv,
+    )
 
 
 def calculation_energy_cogen(
@@ -254,7 +305,6 @@ def calculation_energy_cogen(
         electric_consumption, electric_energy_cogen_hourly
     )
 
-
     # Precompute the cogenerator production across the entire year
     thermal_energy_cogen = np.full_like(
         thermal_consumption, thermal_energy_cogen_hourly
@@ -275,7 +325,7 @@ def energy_used_from_cogen(
     Quantity of energy used from the cogenerator and quantity of still available energy producted by the cogenerator (kWh).
     """
     # energy from cogenerator
-    
+
     excess_energy_cogen = np.where(
         electric_energy_cogen - electric_consumption > 0,
         electric_energy_cogen - electric_consumption,
@@ -287,16 +337,20 @@ def energy_used_from_cogen(
     return electric_consumption, excess_energy_cogen
 
 
-def cost_function(
-    x, electric_consumption, available_energy_battery
-):
+def cost_function(x, electric_consumption, available_energy_battery):
     """
     Determination of the objective function to be minimized.
     """
 
     PV_size, battery_size = x
 
-    energy_covered, energy_from_grid = determination_electric_coverage_year(
+    (
+        energy_covered,
+        energy_from_grid,
+        energy_battery_pv,
+        energy_battery_cogen,
+        electric_energy_from_pv,
+    ) = determination_electric_coverage_year(
         electric_consumption,
         available_energy_battery,
         PV_size,
@@ -317,14 +371,16 @@ def cost_function(
     return objective_function
 
 
-
-
 def optimizer(electric_consumption, thermal_consumption):
     electric_energy_production_cogen = calculation_energy_cogen(
         electric_consumption, thermal_consumption
     )
-    electric_consumption, available_energy_battery = energy_used_from_cogen(
+    electric_consumption_before_cogen = electric_consumption
+    electric_consumption, available_energy_battery_cogen = energy_used_from_cogen(
         electric_energy_production_cogen, electric_consumption
+    )
+    self_consumption_electric_cogen = (
+        electric_consumption_before_cogen - electric_consumption
     )
     # available_energy_battery = np.zeros_like(electric_consumption)
     initial_guess = (
@@ -335,58 +391,28 @@ def optimizer(electric_consumption, thermal_consumption):
         initial_guess,
         args=(
             electric_consumption,
-            available_energy_battery,
+            available_energy_battery_cogen,
         ),
         bounds=common.Optimizer().BOUNDS,  # Bounds for PV size and battery size
     )
     PV_size, battery_size = result.x
-    return round(PV_size), round(battery_size)
-
-
-def test_optimizer():
-    thermal_consumption = (
-        pd.read_excel("././resources/univpm_carichitermici.xlsx")[
-            "Carico_Termico_MW"
-        ].to_numpy()
-        * 1000
-    )
-    electric_consumption = pd.read_csv(
-        "././resources/Dati_consumi_elettrici_esempio.csv", header=None
-    )
-    electric_consumption = electric_consumption[1] * 1000
-    plt.plot(
-        range(len(electric_consumption)),
-        electric_consumption,
-        label="Consumption",
-        color="red",
-    )
-    
-    PV_size, battery_size = optimizer(electric_consumption, thermal_consumption)
-    optimal_pv_production = common.pv_production_hourly * PV_size
-    plt.plot(
-        range(len(optimal_pv_production)),
-        optimal_pv_production,
-        label="PV production",
-        color="green",
+    return (
+        round(PV_size),
+        round(battery_size),
+        available_energy_battery_cogen.sum(),
+        self_consumption_electric_cogen.sum(),
     )
 
-    print(f"Optimal PV size: {PV_size}, Optimal battery size: {battery_size}")
 
-def calculate_mean_over_period(data:np.ndarray, hours:int) -> np.ndarray:
+def calculate_mean_over_period(data: np.ndarray, hours: int) -> np.ndarray:
     """
     Calculate the mean value of production or consumption of a period of time.
     Attrs:
         data: array - production or consumption data
         hours: int - number of hours in the period"""
-    
-    data_start=data[0:hours]
-    for i in range(1, round((len(data)/hours))-1):
-        data_start=data_start+data [hours*i+1:hours*(i+1)+1]
-    mean_value=data_start/round(len(data)/hours)
+
+    data_start = data[0:hours]
+    for i in range(1, round((len(data) / hours)) - 1):
+        data_start = data_start + data[hours * i + 1 : hours * (i + 1) + 1]
+    mean_value = data_start / round(len(data) / hours)
     return mean_value
-
-
-
-#test_optimizer()
-# plt.legend()
-# plt.show()

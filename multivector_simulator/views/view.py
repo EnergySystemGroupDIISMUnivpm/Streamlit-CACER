@@ -27,6 +27,9 @@ class UserInput(BaseModel):
 
     @validate_call
     def download_upload_consumption(self) -> common.ConsumptionDataFrameType | None:
+        """
+        Function that gives the possibility to user to download an excel file, complete it and upload it with its Electrical, Thermal and Refrigerator compsumptions.
+        """
         df_uploaded = None
         st.markdown(
             "Scarica, Compila con i tuoi consumi energetici e Ricarica il File Excel. Il file deve contenere i consumi elettrici, caloriferi e frigoriferi orari riferiti ad un periodo di un anno."
@@ -46,6 +49,7 @@ class UserInput(BaseModel):
             df_uploaded = pd.read_excel(uploaded_file, engine="openpyxl")
 
             try:
+                # validation of the file. Check that it complies with our model
                 df_uploaded = common.validate_consumption_dataframe(df_uploaded)
                 st.success("Contenuto del file Excel caricato con successo:")
                 st.dataframe(df_uploaded)
@@ -57,17 +61,27 @@ class UserInput(BaseModel):
         return None
 
     def select_period_plot(self):
-        period_label=None
-        period_label=st.radio(
-            "Seleziona il periodo in cui visualizzare la distribuzione media della tua energia",
-            options=list(common.PERIOD_TO_BE_PLOTTED.keys()), index=None, key="select label of period"
+        st.markdown(" ")
+        st.markdown(
+            "###### **Qui sotto puoi visulaizzare l'andamento tipico dell'energia che consumi e che produrresti con gli impianti consigliati**",
+            help="Per andamento tipico si intende l'andamento medio calcolato sui dati annuali",
+        )
+        period_label = None
+        period_label = st.radio(
+            "Per prima cosa, seleziona la durata del periodo in cui vuoi visualizzare l'andamento della tua energia",
+            options=list(common.PERIOD_TO_BE_PLOTTED.keys()),
+            index=None,
+            key="select label of period",
         )
         return period_label
 
-    
+
 # Output
 class UserOuput(BaseModel):
     def see_results(self) -> bool:
+        """
+        Botton to visualize results
+        """
         view_result = st.button(
             "Clicca qui per vedere la tipologia e la dimensione ottimale degli impianti che potresti installare i base ai tuoi consumi",
             key="visualize-result-multivettore",
@@ -103,39 +117,19 @@ class UserOuput(BaseModel):
     def see_battery_size(self, battery_size: NonNegativeInt):
         st.markdown(f"- un **impianto di accumulo** da {battery_size} kW")
 
-    
-    def extract_period_from_period_label(self, period_label:str)->int:
-        period = common.PERIOD_TO_BE_PLOTTED[period_label]
-        return period
-    
-    def see_coverage_energy_plot(
-        self,
-        consumed_energy: np.ndarray,
-        produced_energy: np.ndarray,
-  
-        energy_type: str,
-        period_label="str"
-    ):
-        ore = np.arange(len(consumed_energy))
-        chart_data = pd.DataFrame(
-    {
-        "Ore": ore,
-        "Energia consumata": consumed_energy,
-        "Energia prodotta": produced_energy,
-       
-    }
-)       
-        
-        st.markdown(f"""Distribuzione media dell'energia {energy_type} {period_label}""")
-        st.area_chart(chart_data, x = "Ore")
-
     def see_costs_investment_recovery(
         self, costs: PositiveFloat, recovery_time: PositiveInt
     ):
-        st.markdown(
-            f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in circa {recovery_time} anni.",
-            help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {common.COST_GAS_FOR_GEN}€/Smc.",
-        )
+        if recovery_time > 0:
+            st.markdown(
+                f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in circa {recovery_time} anni.",
+                help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {common.COST_GAS_FOR_GEN}€/Smc.",
+            )
+        else:
+            st.markdown(
+                f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento meno di un anno.",
+                help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {common.COST_GAS_FOR_GEN}€/Smc.",
+            )
 
     def see_environmental_benefit(self, reduced_CO2: PositiveFloat):
         st.markdown(
@@ -143,4 +137,33 @@ class UserOuput(BaseModel):
             help="Questi dati sono stati calcolati utilizzando il fattore di emissione medio riportato dall'Ispra per il 2022.",
         )
 
-    
+    ##GRAPH PRODUCTION AND CONSUMPTION
+    @validate_call()
+    def extract_period_from_period_label(
+        self, period_label: common.LabelPeriodLabelsList
+    ) -> int:
+        period = common.PERIOD_TO_BE_PLOTTED[period_label]
+        return period
+
+    def see_coverage_energy_plot(
+        self,
+        consumed_energy: np.ndarray,
+        produced_energy: np.ndarray,
+        energy_type: common.LabelEnergyType,
+        period_label=common.LabelPeriodLabelsList,
+    ):
+        """
+        Plot graph showing the trend of energy consumed and produced over a period of time (hours)
+        """
+        ore = np.arange(len(consumed_energy))
+        chart_data = pd.DataFrame(
+            {
+                "Ore": ore,
+                f"Energia {energy_type} consumata": consumed_energy,
+                f"Energia {energy_type} prodotta": produced_energy,
+            }
+        )
+        st.markdown(
+            f"""Distribuzione media {period_label} dell'Energia {energy_type} prodotta e consumata"""
+        )
+        st.area_chart(chart_data, x="Ore", y_label="kWh", x_label="Ore")

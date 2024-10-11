@@ -37,6 +37,8 @@ def Simulator_Multivettore():
                 energy_store_battery_from_cogen,
                 self_consump_electric_cogen,
             ) = model.optimizer(eletric_consumption, thermal_consumption)
+            energy_store_battery_from_cogen = np.nansum(energy_store_battery_from_cogen)
+            self_consump_electric_cogen = np.nansum(self_consump_electric_cogen)
 
             user_output.see_optimal_sizes(PV_size, cogen_size, battery_size)
 
@@ -58,17 +60,27 @@ def Simulator_Multivettore():
                 PV_size,
                 battery_size,
             )
+            # calculation of the total energies in a year
+            energy_covered_pv_batteries = np.nansum(energy_covered_pv_batteries)
+            self_consumed_energy_battery_pv = np.nansum(self_consumed_energy_battery_pv)
+            self_consumed_energy_battery_cogen = np.nansum(
+                self_consumed_energy_battery_cogen
+            )
+            self_consumed_energy_from_pv = np.nansum(self_consumed_energy_from_pv)
+            energy_from_grid = np.nansum(energy_from_grid)
 
             total_self_consumed_energy_from_battery = np.nansum(
                 [self_consumed_energy_battery_pv, self_consumed_energy_battery_cogen],
                 axis=0,
             )
             total_self_consumed_energy_electric = np.nansum(
-                [energy_covered_pv_batteries.sum(), self_consump_electric_cogen], axis=0
+                [energy_covered_pv_batteries, self_consump_electric_cogen], axis=0
             )
-            total_self_consumed_energy_thermal = model.energy_self_consumed(
-                thermal_production_cogen, thermal_consumption
-            ).sum()
+            total_self_consumed_energy_thermal = np.nansum(
+                model.energy_self_consumed(
+                    thermal_production_cogen, thermal_consumption
+                )
+            )
 
             # INVESTIMENTS
             quantity_used_gas_cogen = model.cogen_usage_gas(cogen_size, 24 * 365)

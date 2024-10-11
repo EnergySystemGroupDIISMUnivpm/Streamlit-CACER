@@ -23,10 +23,10 @@ def calculate_reducted_CO2(
     """
     CO2 = 0
     if label == "Elettrica" or label == "Frigorifera":
-        CO2 = (self_consumption * common.AVG_EMISSIONS_FACTOR_ELETRICITY).sum()
+        CO2 = np.nansum(self_consumption * common.AVG_EMISSIONS_FACTOR_ELETRICITY)
     elif label == "Termica":
-        CO2 = (self_consumption * common.AVG_EMISSIONS_FACTOR_THERMAL).sum()
-    return CO2
+        CO2 = np.nansum(self_consumption * common.AVG_EMISSIONS_FACTOR_THERMAL)
+    return CO2  # type:ignore
 
 
 def cost_battery_installation(battery_size: PositiveInt) -> PositiveFloat:
@@ -194,7 +194,7 @@ def total_economic_cost_PV_battery_grid(
     """
     years = common.Optimizer().YEARS
     cost_electricity_from_grid = (
-        np.sum(annual_energy_from_grid) * common.ELECTRIC_ENERGY_PRICE
+        np.nansum(annual_energy_from_grid) * common.ELECTRIC_ENERGY_PRICE
     )
     cost_installation_PV = cost_PV_installation(PV_size)
     cost_installation_battery = cost_battery_installation(battery_size)
@@ -216,7 +216,7 @@ def determination_electric_coverage_year(
     available_battery_energy_from_cogen: np.ndarray,
     pv_size: PositiveInt,
     battery_size: PositiveInt,
-):
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Determination of the eletric coverage per year covedered by PV and battery; and energy taken from the grid (kWh).
 
@@ -358,11 +358,14 @@ def cost_function(x, electric_consumption, available_energy_battery):
     )
 
     # Percentage of electric consumption coverage
-    percentage_electric_coverage = np.sum(energy_covered) / np.sum(electric_consumption)
+    percentage_electric_coverage = np.nansum(energy_covered) / np.nansum(
+        electric_consumption
+    )
 
     # COSTS
+    total_energy_from_grid = np.nansum(energy_from_grid)
     total_cost = total_economic_cost_PV_battery_grid(
-        energy_from_grid, PV_size, battery_size
+        total_energy_from_grid, PV_size, battery_size
     )
 
     # Final objective function: balance between minimizing costs and maximizing coverage
@@ -371,7 +374,9 @@ def cost_function(x, electric_consumption, available_energy_battery):
     return objective_function
 
 
-def optimizer(electric_consumption, thermal_consumption):
+def optimizer(
+    electric_consumption, thermal_consumption
+) -> Tuple[int, int, np.ndarray, np.ndarray]:
     electric_energy_production_cogen = calculation_energy_cogen(
         electric_consumption, thermal_consumption
     )
@@ -399,8 +404,8 @@ def optimizer(electric_consumption, thermal_consumption):
     return (
         round(PV_size),
         round(battery_size),
-        available_energy_battery_cogen.sum(),
-        self_consumption_electric_cogen.sum(),
+        available_energy_battery_cogen,
+        self_consumption_electric_cogen,
     )
 
 

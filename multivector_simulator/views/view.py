@@ -127,7 +127,7 @@ class UserOuput(BaseModel):
             )
         else:
             st.markdown(
-                f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento meno di un anno.",
+                f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in meno di un anno.",
                 help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {common.COST_GAS_FOR_GEN}€/Smc.",
             )
 
@@ -160,10 +160,10 @@ class UserOuput(BaseModel):
             {
                 "Ore": ore,
                 f"Energia {energy_type} consumata": consumed_energy,
-                f"Energia {energy_type} prodotta": produced_energy,
+                f"Energia {energy_type} auto-prodotta": produced_energy,
             }
         )
         st.markdown(
-            f"""Distribuzione media {period_label} dell'Energia {energy_type} prodotta e consumata"""
+            f"""Distribuzione media {period_label} dell'Energia {energy_type} auto-prodotta e consumata"""
         )
         st.area_chart(chart_data, x="Ore", y_label="kWh", x_label="Ore")

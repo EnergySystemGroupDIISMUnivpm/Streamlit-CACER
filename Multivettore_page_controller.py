@@ -44,7 +44,7 @@ def Simulator_Multivettore():
 
             # ENERGY PRODUCED AND SELF-CONSUMED FROM EACH IMPLANT
             eletric_production_cogen, thermal_production_cogen = (
-                model.calculation_energy_cogen(eletric_consumption, thermal_consumption)
+                model.annual_energy_cogen(eletric_consumption, thermal_consumption)
             )
             eletric_production_pv = model.calculation_pv_production(PV_size)
 

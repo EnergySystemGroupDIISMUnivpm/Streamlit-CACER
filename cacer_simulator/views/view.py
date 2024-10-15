@@ -17,7 +17,7 @@ def title_CACER():
 
 
 class UserInput(BaseModel):
-    
+
     ## Input in common for all 3 use case
     # Region
     def insert_region(self) -> common.RegionType | None:
@@ -77,7 +77,7 @@ class UserInput(BaseModel):
     @validate_call(validate_return=True)
     def insert_year_power_PV(
         self,
-    ) -> tuple[datetime.date , PositiveFloat]: 
+    ) -> tuple[datetime.date, PositiveFloat]:
 
         year_PV = st.date_input(
             "Inserisci la data di entrata in esercizio dell'impianto fotovoltaico",
@@ -320,42 +320,48 @@ class Results(BaseModel):
 
     def visualize_advices(self):
         st.markdown("##### **Consigli**")
-    
 
     def bar_chart_consum_prod(self, consumed_energy: float, produced_energy: float):
         energy_diff = produced_energy - consumed_energy
-        next_year = "Anno 2025"
         df = pd.DataFrame(
             {
-                "Anno": [next_year],
                 "Energia Consumata": [consumed_energy],
                 "Energia Prodotta": [produced_energy],
                 "Differenza": [energy_diff],
             }
         )
-        st.title(f"Energia per l'anno {next_year}")
 
+        [col1, col2] = st.columns(2)
         # Crea il grafico con Plotly
-        fig = go.Figure()
+        st.markdown(" ")
+        with col1:
+            fig = go.Figure()
 
-        fig.add_trace(
-            go.Bar(
-                x=["Energia Consumata", "Energia Prodotta", "Differenza"],
-                y=[consumed_energy, produced_energy, energy_diff],
-                marker_color=["red", "green", "blue"],
+            fig.add_trace(
+                go.Bar(
+                    x=[
+                        "Energia Consumata",
+                        "Energia Prodotta",
+                        "Differenza tra Produzione e Consumo",
+                    ],
+                    y=[consumed_energy, produced_energy, energy_diff],
+                    marker_color=["#0078AC", "#FFFF99", "#B9FDB9"],
+                )
             )
-        )
 
-        fig.update_layout(
-            xaxis_title="Tipo di Energia",
-            yaxis_title="Energia (kWh)",
-            title=f"Confronto tra Energia Consumata, Prodotta e Differenza per l'anno {next_year}",
-        )
+            st.write(f"Confronto tra Energia Consumata e Prodotta in un anno:")
+            fig.update_layout(
+                yaxis_title="Energia (kWh)",
+                yaxis_title_font_size=16,
+                xaxis_title_font_size=16,
+            )
+            fig.update_traces(
+                textfont_size=16,  # Imposta la dimensione del font
+            )
 
-        # Mostra il grafico in Streamlit
-        st.plotly_chart(fig, key="bar_chart_consum_prod")
-
-        # Mostra i valori in una tabella
-        st.subheader("Valori dettagliati:")
-        st.table(df)
-
+            # Mostra il grafico in Streamlit
+            st.plotly_chart(fig, key="bar_chart_consum_prod")
+        with col2:
+            # Mostra i valori in una tabella
+            st.write(f"Valori dettagliati:")
+            st.dataframe(df, hide_index=True, use_container_width=True)

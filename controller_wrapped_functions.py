@@ -122,13 +122,11 @@ def presence_overproduction_or_undeproduction(
     # case of overproduction, so there is visualization of advice for creating a CER
     production = model.production_estimate(power_pv + add_power, region)
     if overproduction_or_undeproduction == "Overproduction":
-        results.bar_chart_consum_prod(consumption, production)
         results.visualize_advices()
         results.see_CER_info(label_use_case)
 
     # case of underproduction, so there is visualization of advice for boosting PV plant.
     elif overproduction_or_undeproduction == "Underproduction":
-        results.bar_chart_consum_prod(consumption, production)
         results.visualize_advices()
         optimal_PV_size = model.optimal_sizing(
             consumption,
@@ -168,6 +166,7 @@ def benefit_results(
         results.see_computed_costs_plant(cost_plant, "Creazione")
     # both for area and PV plant already present
     results.see_production(production, label_pv_or_area)
+    results.bar_chart_consum_prod(consumption, production)
     results.visualize_economical_environmental_benefits()
     benefit_b = model.economical_benefit_b(
         power_pv,
@@ -225,10 +224,10 @@ def results_CER(
         results.see_computed_costs_plant(cost_plant, "Creazione")
 
     results.see_production(production, label_pv_or_area)
+    results.bar_chart_consum_prod(consumption, production)
 
     # case of Overproduction. So new possible members of CER are proposed with relative economical and environmental benefits.
     if overproduction_or_undeproduction == "Overproduction":
-        results.bar_chart_consum_prod(consumption, production)
         optimal_members = model.optimal_members(energy_difference_produc_consum)
         results.visualize_advices()
         results.see_optimal_members(optimal_members, "membri già presenti")
@@ -277,7 +276,6 @@ def results_CER(
         )
     # case of unserproduction so the optimal dimension of PV plant is proosed.
     elif overproduction_or_undeproduction == "Underproduction":
-        results.bar_chart_consum_prod(consumption, production)
         optimal_PV_size = model.optimal_sizing(
             consumption,
             region,
@@ -317,7 +315,6 @@ def results_CER(
 
     # case of optimal dimension of PV plant. Results are simply visualized.
     elif overproduction_or_undeproduction == "Optimal":
-        results.bar_chart_consum_prod(consumption, production)
         benefit_b_present_members = model.economical_benefit_b(
             power_pv,
             year_pv,

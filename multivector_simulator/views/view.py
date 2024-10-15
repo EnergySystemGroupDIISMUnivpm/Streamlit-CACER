@@ -93,6 +93,7 @@ class UserOuput(BaseModel):
         self,
         pv_size: NonNegativeInt,
         cogen_size: NonNegativeInt,
+        trigen_size: NonNegativeInt,
         battery_size: NonNegativeInt,
     ):
         st.markdown("##### **Risulati del simulatore**")
@@ -104,6 +105,8 @@ class UserOuput(BaseModel):
             self.see_pv_size(pv_size)
         if cogen_size > 0:
             self.see_cogen_size(cogen_size)
+        if trigen_size > 0:
+            self.see_trigen_size(trigen_size)
         if battery_size > 0:
             self.see_battery_size(battery_size)
 
@@ -113,21 +116,25 @@ class UserOuput(BaseModel):
     def see_cogen_size(self, cogen_size: NonNegativeInt):
         st.markdown(f"- un **impianto di cogenerazione** da {cogen_size} kW")
 
+    def see_trigen_size(self, trigen_size: NonNegativeInt):
+        st.markdown(f"- un **impianto di trigenerazione** da {trigen_size} kW")
+
     def see_battery_size(self, battery_size: NonNegativeInt):
         st.markdown(f"- un **impianto di accumulo** da {battery_size} kW")
 
     def see_costs_investment_recovery(
         self, costs: PositiveFloat, recovery_time: PositiveInt
     ):
+        trigen_cogen = common.Trigen_Cogen()
         if recovery_time > 0:
             st.markdown(
                 f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in circa {recovery_time} anni.",
-                help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {common.COST_GAS_FOR_GEN}€/Smc.",
+                help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {trigen_cogen.COST_GAS_FOR_GEN}€/Smc.",
             )
         else:
             st.markdown(
                 f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in meno di un anno.",
-                help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {common.COST_GAS_FOR_GEN}€/Smc.",
+                help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {trigen_cogen.COST_GAS_FOR_GEN}€/Smc.",
             )
 
     def see_environmental_benefit(self, reduced_CO2: PositiveFloat):

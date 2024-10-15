@@ -2,9 +2,90 @@ import pandas as pd
 import numpy as np
 from typing import Annotated
 
-from pydantic import AfterValidator, Field, BaseModel, PositiveInt
+from pydantic import AfterValidator, Field, BaseModel, PositiveFloat, PositiveInt
 
 from cacer_simulator.common import PositiveOrZeroFloat
+
+AVG_EMISSIONS_FACTOR_ELETRICITY = 0.309  # how much CO2 is emitted for each kWh produced by the italian traditional electricity grid (kg CO2/kWh)
+AVG_EMISSIONS_FACTOR_THERMAL = 0.2  # how much CO2 is emitted for each kWh produced by the italian traditional thermal grid (kg CO2/kWh)
+
+
+# cogenerator/trigenerator
+class Trigen_Cogen(BaseModel):
+    COST_GAS_FOR_GEN: PositiveFloat = (
+        0.4  # cost of gas for cogenerator/trigenerator in €/Smc
+    )
+    CONSUMPTION_COGEN_HOUR: PositiveFloat = (
+        0.105  # Consumption by 1kW cogenerator/trigenerator of gas in Smc for each hour, working at full capacity
+    )
+    COGEN_CONVERSION_FACTOR: PositiveFloat = (
+        9.52  # PCI: allows to pass from Smc of burned gas to quantity of energy produced (kWh).
+    )
+    MINIMAL_THERMAL: PositiveFloat = (
+        0.4  # the thermal consumption must be at least 40% of the total consumpitons to have a cogen or trigen
+    )
+    MINIMAL_REFRIGERATOR: PositiveFloat = (
+        0.2  # the refrigerator consumption must be at least 20% of the total consumpitons to have a trigenerator
+    )
+
+    class Cogenerator(BaseModel):
+        ELECTRIC_EFFICIENCY_COGEN: PositiveFloat = (
+            0.3  # eletric efficiency of cogenerator. For 1kWh of energy of gas, 0.3kWh of eletricity are produced.
+        )
+        THERMAL_EFFICIENCY_COGEN: PositiveFloat = (
+            0.5  # thermal efficiency of cogenerator. For 1kWh of energy of gas, 0.5kWh of thermal energy are produced.
+        )
+
+        # cost of 1kW of cogenerator in euro
+        kw_cost_cogen: dict[tuple[float, float], int] = {
+            (0, 1000): 1200,
+            (1000, float("inf")): 800,
+        }
+
+        def get_kw_cost_cogen(self, cogenerator_size: int | float) -> int:
+
+            assert (
+                cogenerator_size >= 0
+            ), "cogenerator power must be positive to compute cost!"
+
+            for power_range, cost in self.kw_cost_cogen.items():
+                if power_range[0] <= cogenerator_size < power_range[1]:
+                    return cost
+            return 0
+
+    class Trigenerator(BaseModel):
+        ELECTRIC_EFFICIENCY_TRIGEN: PositiveFloat = (
+            0.3  # eletric efficiency of trigenerator. For 1kWh of energy of gas, 0.3kWh of eletricity are produced.
+        )
+        THERMAL_EFFICIENCY_TRIGEN: PositiveFloat = (
+            0.3  # thermal efficiency of trigenerator. For 1kWh of energy of gas, 0.3kWh of thermal energy are produced.
+        )
+        REFRIGERATION_EFFICIENCY_TRIGEN: PositiveFloat = (
+            0.2  # refrigeration efficiency of trigenerator. For 1kWh of energy of gas, 0.2kWh of refrigeneration are produced.
+        )
+
+        kw_cost_trigen: dict[tuple[float, float], int] = {
+            (0, 1000): 2000,
+            (1000, float("inf")): 1200,
+        }
+
+        def get_kw_cost_trigen(self, trigenerator_size: int | float) -> int:
+
+            assert (
+                trigenerator_size >= 0
+            ), "trigenerator power must be positive to compute cost!"
+
+            for power_range, cost in self.kw_cost_trigen.items():
+                if power_range[0] <= trigenerator_size < power_range[1]:
+                    return cost
+            return 0
+
+
+COST_INSTALLATION_BATTERY = 1000  # cost of installation of battery for kWh
+
+
+ELECTRIC_ENERGY_PRICE = 0.16  # cost of electricity from the grid, €/kWh
+THERMAL_ENERGY_PRICE = 0.055  # cost of thermal energy from the grid, €/kWh
 
 
 def validate_consumption_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -51,20 +132,6 @@ ConsumptionDataFrameType = Annotated[
 ]
 
 
-ELECTRIC_EFFICIENCY_COGEN = 0.35
-THERMAL_EFFICIENCY_COGEN = 0.45
-COST_INSTALLATION_COGEN = 1200  # cost of installation of cogenerator for kW
-COST_GAS_FOR_GEN = 0.4  # cost of gas for cogenerator in €/Smc
-CONSUMPTION_COGEN_HOUR = 0.105  # Consumption by 1kW cogenerator of gas in Smc for each hour, working at full capacity
-COST_INSTALLATION_BATTERY = 1000  # cost of installation of battery for kWh
-COGEN_CONVERSION_FACTOR = (9.52 / ELECTRIC_EFFICIENCY_COGEN) + (
-    9.52 / THERMAL_EFFICIENCY_COGEN
-)  # factor that allows to pass from Smc used by cogenerator to the quantity of energy producted
-
-ELECTRIC_ENERGY_PRICE = 0.16  # cost of electricity from the grid, €/kWh
-THERMAL_ENERGY_PRICE = 0.055  # cost of thermal energy from the grid, €/kWh
-
-
 def PV_year_production() -> pd.Series:
     PV_data = pd.read_csv("././resources/PV_data.csv", header=None)
     PV_annual_production = PV_data[2]
@@ -103,9 +170,6 @@ LabelEnergyType = Annotated[
     AfterValidator(is_valid_energy_type),
     Field(description=f"Label use case among {ENERGY_TYPE}"),
 ]
-
-AVG_EMISSIONS_FACTOR_ELETRICITY = 0.309  # how much CO2 is emitted for each kWh produced by the italian traditional electricity grid (kg CO2/kWh)
-AVG_EMISSIONS_FACTOR_THERMAL = 0.2  # how much CO2 is emitted for each kWh produced by the italian traditional thermal grid (kg CO2/kWh)
 
 
 class Optimizer(BaseModel):

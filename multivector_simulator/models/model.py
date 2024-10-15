@@ -38,21 +38,31 @@ def cost_battery_installation(battery_size: PositiveInt) -> PositiveFloat:
     return cost_battery
 
 
-def cost_cogen_installation(cogen_size: PositiveInt) -> PositiveFloat:
-    """Calculation of installation costs for cogenerator (euro).
+def cost_cogen_trigen_installation(
+    cogen_size: NonNegativeInt, trigen_size: NonNegativeInt
+) -> PositiveFloat:
+    """Calculation of installation costs for cogenerator/trigenerator (euro).
     Attrs:
-    cogen_size: PositiveInt - size of the cogenerator in kW"""
-    cost_cogen = cogen_size * common.COST_INSTALLATION_COGEN
-    return cost_cogen
+    cogen_size: NonNegativeInt - size of the cogenerator in kW
+    trigen_size: NonNegativeInt - size of the trigenerator in kW"""
+    cost_cogen_trigen = 0
+    if cogen_size > 0:
+        cogen = common.Trigen_Cogen().Cogenerator()
+        cost_cogen_trigen = cogen_size * cogen.get_kw_cost_cogen(cogen_size)
+    elif trigen_size > 0:
+        trigen = common.Trigen_Cogen().Trigenerator()
+        cost_cogen_trigen = trigen_size * trigen.get_kw_cost_trigen(trigen_size)
+    return cost_cogen_trigen
 
 
-def cost_gas_used_cogen(used_gas: PositiveFloat) -> PositiveFloat:
+def cost_gas_used_cogen_trigen(used_gas: PositiveFloat) -> PositiveFloat:
     """
-    Calculation of the cost of the gas used by cogenerator in euro.
+    Calculation of the cost of the gas used by cogenerator/trigenerator in euro.
     Attrs:
         used_gas: PositiveFloat - quantity of gas used in Smc
     """
-    cost_gas = used_gas * common.COST_GAS_FOR_GEN
+    trigen_cogen = common.Trigen_Cogen()
+    cost_gas = used_gas * trigen_cogen.COST_GAS_FOR_GEN
     return cost_gas
 
 
@@ -68,18 +78,22 @@ def cost_PV_installation(PV_size: PositiveInt) -> float:
 
 
 def total_cost_investment(
-    PV_size: NonNegativeInt, battery_size: NonNegativeInt, cogen_size: NonNegativeInt
+    PV_size: NonNegativeInt,
+    battery_size: NonNegativeInt,
+    cogen_size: NonNegativeInt,
+    trigen_size: NonNegativeInt,
 ) -> PositiveFloat:
     """
-    Calculation of the total cost of the investment (installation of PV, battery and/or cogenerator) in euro.
+    Calculation of the total cost of the investment (installation of PV, battery and/or cogeneratorTrigenerator) in euro.
     Attrs:
         PV_size: NonNegativeInt - size of the PV plant in kW
         battery_size: NonNegativeInt - size of the battery in kWh
-        cogen_size: NonNegativeInt - size of the cogenerator in kW"""
+        cogen_size: NonNegativeInt - size of the cogenerator in kW
+        trigen_size: NonNegativeInt - size of the cogenerator in kW"""
     total_cost = (
         cost_PV_installation(PV_size)
         + cost_battery_installation(battery_size)
-        + cost_cogen_installation(cogen_size)
+        + cost_cogen_trigen_installation(cogen_size, trigen_size)
     )
     return total_cost
 
@@ -94,13 +108,14 @@ def cost_energy_from_grid(energy_from_grid: PositiveOrZeroFloat) -> PositiveOrZe
     return cost_grid_energy
 
 
-def cogen_usage_gas(
-    cogen_size: PositiveInt, working_hours: PositiveInt
+def cogen_trigen_usage_gas(
+    cogen_trigen_size: PositiveInt, working_hours: PositiveInt
 ) -> PositiveFloat:
     """
-    Calculation of the quantity (Smc) of gas used by cogenerator to work for a certain amount of hours working at full capacity.
+    Calculation of the quantity (Smc) of gas used by cogenerator/trigenerator to work for a certain amount of hours working at full capacity.
     """
-    used_gas = cogen_size * working_hours * common.CONSUMPTION_COGEN_HOUR
+    trigen_cogen = common.Trigen_Cogen()
+    used_gas = cogen_trigen_size * working_hours * trigen_cogen.CONSUMPTION_COGEN_HOUR
     return used_gas
 
 
@@ -109,10 +124,11 @@ def calculate_production_CO2_cogen(quantity_gas: PositiveFloat) -> PositiveOrZer
     Calculation of how much CO2 (kg) is produced by using the cogenerator.
     Attrs:
         quantity_gas: PositiveFloat - quantity of gas used in Smc"""
+    trigen_cogen = common.Trigen_Cogen()
     CO2 = (
         quantity_gas
         * common.AVG_EMISSIONS_FACTOR_THERMAL
-        * common.COGEN_CONVERSION_FACTOR
+        * trigen_cogen.COGEN_CONVERSION_FACTOR
     )
     return CO2
 
@@ -149,16 +165,20 @@ def total_economic_cost_PV_battery_grid(
 def savings_using_implants(
     electric_energy: PositiveOrZeroFloat,
     thermal_energy: PositiveOrZeroFloat,
+    refrigeration_energy: PositiveOrZeroFloat,
 ) -> PositiveOrZeroFloat:
     """
     Calculation of the savings in euro.
     Attrs:
         electric_energy: PositiveOrZeroFloat - electric energy self-consumed in kWh
         thermal_energy: PositiveOrZeroFloat - thermal energy self-consumed in kWh
+        refrigeration_energy: PositiveOrZeroFloat - refrigeration energy self-consumed in kWh
     """
     savings = (
-        electric_energy
-    ) * common.ELECTRIC_ENERGY_PRICE + thermal_energy * common.THERMAL_ENERGY_PRICE
+        (electric_energy) * common.ELECTRIC_ENERGY_PRICE
+        + thermal_energy * common.THERMAL_ENERGY_PRICE
+        + refrigeration_energy * common.ELECTRIC_ENERGY_PRICE
+    )
     return savings
 
 
@@ -185,21 +205,68 @@ def calc_payback_time(
     return payback_time
 
 
-def calculate_cogen_size_optimized(
-    thermal_consumption: np.ndarray, thermal_efficiency=common.THERMAL_EFFICIENCY_COGEN
-) -> int:
+def calculate_cogen_or_trigen_size_optimized(
+    thermal_consumption: np.ndarray,
+    refrigerator_consumption: np.ndarray,
+    electric_consumption: np.ndarray,
+) -> Tuple[int, int]:
     """
     Calculation of the best size in kW of cogenerator based on the thermal consumption.
     For more info regarding the used method see: https://industriale.viessmann.it/blog/dimensionare-cogeneratore-massima-efficienza
     """
-    threshold = common.Optimizer().COGEN_COVERAGE
+    threshold = common.Optimizer().COGEN_COVERAGE  # time trashold
     # Sort the heat consumption in decreasing order
     sorted_consumption = np.sort(thermal_consumption)[::-1]
-
-    # Power required to cover the threshold of the time
+    trigen_cogen = common.Trigen_Cogen()
+    # Verification of the fact that the thermal consumption are at least Threshold% of the hours of the year and the thermal consumption are at least minimal_thermal% of the total consumptions
     threshold_hours = int(threshold * len(thermal_consumption))
-    size_cogen = sorted_consumption[threshold_hours] / thermal_efficiency
-    return round(size_cogen)
+    thermal_minimum_hours = (
+        sorted_consumption[threshold_hours] != 0
+    )  # condizion of percentage of hours
+    thermal_minumim_consumptions = (
+        np.nansum(thermal_consumption)
+        >= (
+            np.nansum(electric_consumption)
+            + np.nansum(refrigerator_consumption)
+            + np.nansum(thermal_consumption)
+        )
+        * trigen_cogen.MINIMAL_THERMAL
+    )
+
+    if thermal_minimum_hours and thermal_minumim_consumptions:
+        # verfication of the fact that the refrigerator consumption are at least minmal_refrigerator% of the total consumptions
+        refrigerator_minimal_consumptions = (
+            np.nansum(refrigerator_consumption)
+            >= (
+                np.nansum(electric_consumption)
+                + np.nansum(refrigerator_consumption)
+                + np.nansum(thermal_consumption)
+            )
+            * trigen_cogen.MINIMAL_REFRIGERATOR
+        )
+
+        if (
+            refrigerator_minimal_consumptions
+        ):  # if refrigerator consumptions are at least minmal_refrigerator% of the total consumptions
+            trigenerator = trigen_cogen.Trigenerator()  # we have trigenerator
+            size_cogen = 0
+            size_trigen = (
+                sorted_consumption[threshold_hours]
+                / trigenerator.THERMAL_EFFICIENCY_TRIGEN
+            )
+        else:
+            cogenerator = trigen_cogen.Cogenerator()  # we have cogenerator
+            size_cogen = (
+                sorted_consumption[threshold_hours]
+                / cogenerator.THERMAL_EFFICIENCY_COGEN
+            )
+            size_trigen = 0
+
+    else:
+        size_cogen = 0
+        size_trigen = 0
+
+    return round(size_cogen), round(size_trigen)
 
 
 def unitary_production_cogen_optimized(size_cogen: int) -> Tuple[float, float]:
@@ -208,36 +275,74 @@ def unitary_production_cogen_optimized(size_cogen: int) -> Tuple[float, float]:
     Attrs:
         size_cogen: int - size of the cogenerator in kW
     """
-    electric_production = size_cogen * common.ELECTRIC_EFFICIENCY_COGEN
-    thermal_production = size_cogen * common.THERMAL_EFFICIENCY_COGEN
+    cogen = common.Trigen_Cogen().Cogenerator()
+    electric_production = size_cogen * cogen.ELECTRIC_EFFICIENCY_COGEN
+    thermal_production = size_cogen * cogen.THERMAL_EFFICIENCY_COGEN
     return electric_production, thermal_production
 
 
-def annual_energy_cogen(
-    electric_consumption, thermal_consumption
-) -> tuple[np.ndarray, np.ndarray]:
+def unitary_production_trigen_optimized(size_trigen: int) -> Tuple[float, float, float]:
     """
-    Annual production of electric and thermal energy from cogenerator.
+    Calculate the electric, thermal and refrigeration unitary production based on the size of the trigenerator. Production in one hour.
+    Attrs:
+        size_trigen: int - size of the trigenerator in kW
     """
-    threshold = common.Optimizer().COGEN_COVERAGE
-    size_cogen = calculate_cogen_size_optimized(
-        thermal_consumption,
-        thermal_efficiency=common.THERMAL_EFFICIENCY_COGEN,
-    )
-    electric_energy_cogen_hourly, thermal_energy_cogen_hourly = (
-        unitary_production_cogen_optimized(size_cogen)
-    )
+    trigen = common.Trigen_Cogen().Trigenerator()
+    electric_production = size_trigen * trigen.ELECTRIC_EFFICIENCY_TRIGEN
+    thermal_production = size_trigen * trigen.THERMAL_EFFICIENCY_TRIGEN
+    refrigerator_production = size_trigen * trigen.REFRIGERATION_EFFICIENCY_TRIGEN
+    return electric_production, thermal_production, refrigerator_production
 
-    # Precompute the cogenerator production across the entire year
-    electric_energy_cogen = np.full_like(
-        electric_consumption, electric_energy_cogen_hourly
-    )
 
-    # Precompute the cogenerator production across the entire year
-    thermal_energy_cogen = np.full_like(
-        thermal_consumption, thermal_energy_cogen_hourly
+def annual_energy_cogen_trigen(
+    electric_consumption, thermal_consumption, refrigerator_consumption
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Annual production of electric, thermal and refrigeration energy from cogenerator/trigenerator.
+    """
+    size_cogen, size_trigen = calculate_cogen_or_trigen_size_optimized(
+        thermal_consumption, refrigerator_consumption, electric_consumption
     )
-    return electric_energy_cogen, thermal_energy_cogen
+    electric_energy_cogen_trigen = np.zeros_like(electric_consumption)
+    thermal_energy_cogen_trigen = np.zeros_like(electric_consumption)
+    refrigeration_energy_trigen = np.zeros_like(electric_consumption)
+    if size_cogen != 0 and size_trigen == 0:
+        electric_energy_cogen_trigen_hourly, thermal_energy_cogen_trigen_hourly = (
+            unitary_production_cogen_optimized(size_cogen)
+        )
+
+        # Precompute the cogenerator production across the entire year
+        electric_energy_cogen_trigen = np.full_like(
+            electric_consumption, electric_energy_cogen_trigen_hourly
+        )
+
+        # Precompute the cogenerator production across the entire year
+        thermal_energy_cogen_trigen = np.full_like(
+            thermal_consumption, thermal_energy_cogen_trigen_hourly
+        )
+    elif size_cogen == 0 and size_trigen != 0:
+        (
+            electric_energy_cogen_trigen_hourly,
+            thermal_energy_cogen_trigen_hourly,
+            refrigeration_energy_trigen_hourly,
+        ) = unitary_production_trigen_optimized(size_trigen)
+        electric_energy_cogen_trigen = np.full_like(
+            electric_consumption, electric_energy_cogen_trigen_hourly
+        )
+
+        # Precompute the cogenerator production across the entire year
+        thermal_energy_cogen_trigen = np.full_like(
+            thermal_consumption, thermal_energy_cogen_trigen_hourly
+        )
+        refrigeration_energy_trigen = np.full_like(
+            refrigerator_consumption, refrigeration_energy_trigen_hourly
+        )
+
+    return (
+        electric_energy_cogen_trigen,
+        thermal_energy_cogen_trigen,
+        refrigeration_energy_trigen,
+    )
 
 
 def calculation_pv_production(pv_size):
@@ -338,27 +443,27 @@ def determination_electric_coverage_year(
     )
 
 
-def electric_self_consumption_from_cogen(
-    electric_energy_cogen: np.ndarray, electric_consumption: np.ndarray
+def electric_self_consumption_from_cogen_trigen(
+    electric_energy_cogen_trigen: np.ndarray, electric_consumption: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Quantity of electric energy produced by cogen self-consumed and quantity of still available (kWh).
+    Quantity of electric energy produced by cogen/trigen self-consumed and quantity of still available eletric energy (kWh).
     Attrs:
-        electric_energy_cogen: array - energy produced by cogen in kWh
+        electric_energy_cogen_trigen: array - energy produced by cogen/trigen in kWh
         electric_consumption: array - electric yearly consumption in kWh
 
     """
-    # energy from cogenerator
+    # energy from cogenerator/trigenerator
 
-    excess_energy_cogen = np.where(
-        electric_energy_cogen - electric_consumption > 0,
-        electric_energy_cogen - electric_consumption,
+    excess_energy_cogen_trigen = np.where(
+        electric_energy_cogen_trigen - electric_consumption > 0,
+        electric_energy_cogen_trigen - electric_consumption,
         0,
     )
     electric_consumption = np.clip(
-        electric_consumption - electric_energy_cogen, 0, None
+        electric_consumption - electric_energy_cogen_trigen, 0, None
     )
-    return electric_consumption, excess_energy_cogen
+    return electric_consumption, excess_energy_cogen_trigen
 
 
 def objective_function(x, electric_consumption, available_energy_battery):
@@ -404,19 +509,23 @@ def objective_function(x, electric_consumption, available_energy_battery):
 
 
 def optimizer(
-    electric_consumption, thermal_consumption
+    electric_consumption, thermal_consumption, refrigerator_consumption
 ) -> Tuple[int, int, np.ndarray, np.ndarray]:
-    electric_energy_production_cogen, thermal_energy_production_cogen = (
-        annual_energy_cogen(electric_consumption, thermal_consumption)
+    (
+        electric_energy_production_cogen_trigen,
+        thermal_energy_production_cogen_trigen,
+        refrigerator_energy_production_trigen,
+    ) = annual_energy_cogen_trigen(
+        electric_consumption, thermal_consumption, refrigerator_consumption
     )
-    electric_consumption_before_cogen = electric_consumption
-    electric_consumption, available_energy_battery_cogen = (
-        electric_self_consumption_from_cogen(
-            electric_energy_production_cogen, electric_consumption
+    electric_consumption_before_cogen_trigen = electric_consumption
+    electric_consumption, available_energy_battery_cogen_trigen = (
+        electric_self_consumption_from_cogen_trigen(
+            electric_energy_production_cogen_trigen, electric_consumption
         )
     )
-    self_consumption_electric_cogen = (
-        electric_consumption_before_cogen - electric_consumption
+    self_consumption_electric_cogen_trigen = (
+        electric_consumption_before_cogen_trigen - electric_consumption
     )
     # available_energy_battery = np.zeros_like(electric_consumption)
     initial_guess = (
@@ -427,7 +536,7 @@ def optimizer(
         initial_guess,
         args=(
             electric_consumption,
-            available_energy_battery_cogen,
+            available_energy_battery_cogen_trigen,
         ),
         bounds=common.Optimizer().BOUNDS,  # Bounds for PV size and battery size
     )
@@ -435,6 +544,6 @@ def optimizer(
     return (
         round(PV_size),
         round(battery_size),
-        available_energy_battery_cogen,
-        self_consumption_electric_cogen,
+        available_energy_battery_cogen_trigen,
+        self_consumption_electric_cogen_trigen,
     )

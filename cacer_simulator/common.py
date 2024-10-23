@@ -195,11 +195,12 @@ kw_cost: dict[tuple[float, float], int] = {
 
 def get_kw_cost(plant_power: int | float) -> int:
 
-    assert plant_power >= 0, "plant power must be positive to compute tariff!"
-
-    for power_range, cost in kw_cost.items():
-        if power_range[0] <= plant_power < power_range[1]:
-            return cost
+    if plant_power <= 0:
+        return 0
+    else:
+        for power_range, cost in kw_cost.items():
+            if power_range[0] <= plant_power < power_range[1]:
+                return cost
     return 0
 
 

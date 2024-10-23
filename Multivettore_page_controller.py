@@ -15,7 +15,7 @@ def Simulator_Multivettore():
 
     # Load consumption type
     if consumption is not None:
-        eletric_consumption = consumption["Consumi Elettrici (kWh)"].to_numpy()
+        electric_consumption = consumption["Consumi Elettrici (kWh)"].to_numpy()
         thermal_consumption = consumption["Consumi Termici (kWh)"].to_numpy()
         refrigeration_consumption = consumption["Consumi Frigoriferi (kWh)"].to_numpy()
 
@@ -30,79 +30,76 @@ def Simulator_Multivettore():
         if st.session_state["see_results"]:
 
             # OPTIMAL SIZES
-            cogen_size, trigen_size = model.calculate_cogen_or_trigen_size_optimized(
-                thermal_consumption, refrigeration_consumption, eletric_consumption
-            )
-            (
-                PV_size,
-                battery_size,
-                energy_store_battery_from_cogen_trigen,
-                self_consump_electric_cogen_trigen,
-            ) = model.optimizer(
-                eletric_consumption, thermal_consumption, refrigeration_consumption
-            )
-            energy_store_battery_from_cogen_trigen = np.nansum(
-                energy_store_battery_from_cogen_trigen
-            )
-            self_consump_electric_cogen_trigen = np.nansum(
-                self_consump_electric_cogen_trigen
+            (PV_size, battery_size, cogen_size) = model.optimizer(
+                electric_consumption,
+                thermal_consumption,
+                refrigeration_consumption,
+                "Cogen",
             )
 
+            trigen_size = 0
             user_output.see_optimal_sizes(
                 PV_size, cogen_size, trigen_size, battery_size
             )
 
-            # ENERGY PRODUCED AND SELF-CONSUMED FROM EACH IMPLANT
             (
-                eletric_production_cogen_trigen,
-                thermal_production_cogen_trigen,
-                refrigeration_production_trigen,
-            ) = model.annual_energy_cogen_trigen(
-                eletric_consumption, thermal_consumption, refrigeration_consumption
+                electric_energy_from_grid,
+                thermal_energy_from_grid,
+                refrigeration_energy_from_grid,
+                self_consumption_electric_energy_from_cogen_trigen,
+                self_consumption_thermal_energy_from_cogen_trigen,
+                self_consumption_refrigeration_energy_from_cogen_trigen,
+                available_battery_energy_from_cogen_trigen,
+            ) = model.calculate_cogen_or_trigen_energy_coverage(
+                thermal_consumption,
+                refrigeration_consumption,
+                electric_consumption,
+                cogen_size,
+                "Cogen",
             )
-            eletric_production_pv = model.calculation_pv_production(PV_size)
-
             (
-                energy_covered_pv_batteries,
-                energy_from_grid,
+                energy_covered_pv_battery,
+                energy_from_pv_battery,
                 self_consumed_energy_battery_pv,
-                self_consumed_energy_battery_cogen_trigen,
-                self_consumed_energy_from_pv,
-            ) = model.determination_electric_coverage_year(
-                eletric_consumption,
-                energy_store_battery_from_cogen_trigen,
+                self_consumed_energy_battery_cogen,
+                self_consumption_electric_energy_from_pv,
+            ) = model.determination_electric_coverage_year_PV_battery(
+                electric_consumption,
+                available_battery_energy_from_cogen_trigen,
                 PV_size,
                 battery_size,
             )
-            # calculation of the total energies in a year
-            energy_covered_pv_batteries = np.nansum(energy_covered_pv_batteries)
-            self_consumed_energy_battery_pv = np.nansum(self_consumed_energy_battery_pv)
-            self_consumed_energy_battery_cogen_trigen = np.nansum(
-                self_consumed_energy_battery_cogen_trigen
-            )
-            self_consumed_energy_from_pv = np.nansum(self_consumed_energy_from_pv)
-            energy_from_grid = np.nansum(energy_from_grid)
 
+            # calculation of the total energies in a year
+            energy_store_battery_from_cogen_trigen = np.nansum(
+                self_consumed_energy_battery_cogen
+            )
+            total_self_consump_electric_cogen_trigen = np.nansum(
+                self_consumption_electric_energy_from_cogen_trigen
+            )
+            total_self_consumption_electric_energy_from_pv = np.nansum(
+                self_consumption_electric_energy_from_pv
+            )
             total_self_consumed_energy_from_battery = np.nansum(
                 [
-                    self_consumed_energy_battery_pv,
-                    self_consumed_energy_battery_cogen_trigen,
+                    np.nansum(self_consumed_energy_battery_pv),
+                    np.nansum(self_consumed_energy_battery_cogen),
                 ],
                 axis=0,
             )
             total_self_consumed_energy_electric = np.nansum(
-                [energy_covered_pv_batteries, self_consump_electric_cogen_trigen],
+                [
+                    total_self_consumed_energy_from_battery,
+                    total_self_consump_electric_cogen_trigen,
+                    total_self_consumption_electric_energy_from_pv,
+                ],
                 axis=0,
             )
             total_self_consumed_energy_thermal = np.nansum(
-                model.energy_self_consumed(
-                    thermal_production_cogen_trigen, thermal_consumption
-                )
+                self_consumption_thermal_energy_from_cogen_trigen
             )
             total_self_consumed_energy_refrigeration = np.nansum(
-                model.energy_self_consumed(
-                    refrigeration_production_trigen, refrigeration_consumption
-                )
+                self_consumption_refrigeration_energy_from_cogen_trigen
             )
 
             # INVESTIMENTS
@@ -111,7 +108,7 @@ def Simulator_Multivettore():
                 cogen_size, 24 * 365
             )
             investment_costs = model.total_cost_investment(
-                PV_size, battery_size, cogen_size, trigen_size
+                PV_size, battery_size, cogen_size, "Cogen"
             )
             savings = model.savings_using_implants(
                 total_self_consumed_energy_electric,
@@ -133,11 +130,17 @@ def Simulator_Multivettore():
                     st.session_state["period_label"]
                 )
                 electric_consumption_period = model.calculate_mean_over_period(
-                    eletric_consumption, period_to_be_plot
+                    electric_consumption, period_to_be_plot
                 )
+                electric_production_pv = model.calculation_pv_production(PV_size)
+                (
+                    electric_production_cogen,
+                    thermal_production_cogen,
+                    refrigeration_production_cogen,
+                ) = model.annual_production_cogen_trigen(cogen_size, "Cogen")
                 electric_production_period = model.calculate_mean_over_period(
                     np.nansum(
-                        [eletric_production_cogen_trigen, eletric_production_pv], axis=0
+                        [electric_production_cogen, electric_production_pv], axis=0
                     ),
                     period_to_be_plot,
                 )
@@ -148,9 +151,9 @@ def Simulator_Multivettore():
                     st.session_state["period_label"],
                 )
 
-                if np.nansum(thermal_production_cogen_trigen) > 0:
+                if np.nansum(thermal_production_cogen) > 0:
                     thermal_production_cogen_period = model.calculate_mean_over_period(
-                        thermal_production_cogen_trigen, period_to_be_plot
+                        thermal_production_cogen, period_to_be_plot
                     )
                     thermal_consumption_period = model.calculate_mean_over_period(
                         thermal_consumption, period_to_be_plot
@@ -162,12 +165,12 @@ def Simulator_Multivettore():
                         st.session_state["period_label"],
                     )
 
-                if np.nansum(refrigeration_production_trigen) > 0:
+                if np.nansum(refrigeration_production_cogen) > 0:
                     refrigeration_consumption_period = model.calculate_mean_over_period(
                         refrigeration_consumption, period_to_be_plot
                     )
                     refrigeration_production_period = model.calculate_mean_over_period(
-                        refrigeration_production_trigen, period_to_be_plot
+                        refrigeration_production_cogen, period_to_be_plot
                     )
                     user_output.see_coverage_energy_plot(
                         refrigeration_consumption_period,

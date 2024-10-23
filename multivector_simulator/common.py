@@ -1,13 +1,24 @@
+from tkinter import N
+from matplotlib import tri
 import pandas as pd
 import numpy as np
-from typing import Annotated
+from typing import ClassVar, List, Tuple, Optional, Annotated
 
-from pydantic import AfterValidator, Field, BaseModel, PositiveFloat, PositiveInt
+from pydantic import (
+    AfterValidator,
+    Field,
+    BaseModel,
+    NonNegativeInt,
+    PositiveFloat,
+    PositiveInt,
+)
 
 from cacer_simulator.common import PositiveOrZeroFloat
 
 AVG_EMISSIONS_FACTOR_ELETRICITY = 0.309  # how much CO2 is emitted for each kWh produced by the italian traditional electricity grid (kg CO2/kWh)
 AVG_EMISSIONS_FACTOR_THERMAL = 0.2  # how much CO2 is emitted for each kWh produced by the italian traditional thermal grid (kg CO2/kWh)
+
+HOURS_OF_YEAR = 8760
 
 
 # cogenerator/trigenerator
@@ -42,15 +53,16 @@ class Trigen_Cogen(BaseModel):
             (1000, float("inf")): 800,
         }
 
-        def get_kw_cost_cogen(self, cogenerator_size: int | float) -> int:
+        def get_kw_cost_cogen(
+            self, cogenerator_size: NonNegativeInt | PositiveOrZeroFloat
+        ) -> int:
 
-            assert (
-                cogenerator_size >= 0
-            ), "cogenerator power must be positive to compute cost!"
-
-            for power_range, cost in self.kw_cost_cogen.items():
-                if power_range[0] <= cogenerator_size < power_range[1]:
-                    return cost
+            if cogenerator_size <= 0:
+                return 0
+            else:
+                for power_range, cost in self.kw_cost_cogen.items():
+                    if power_range[0] <= cogenerator_size < power_range[1]:
+                        return cost
             return 0
 
     class Trigenerator(BaseModel):
@@ -69,15 +81,16 @@ class Trigen_Cogen(BaseModel):
             (1000, float("inf")): 1200,
         }
 
-        def get_kw_cost_trigen(self, trigenerator_size: int | float) -> int:
+        def get_kw_cost_trigen(
+            self, trigenerator_size: NonNegativeInt | PositiveOrZeroFloat
+        ) -> int:
 
-            assert (
-                trigenerator_size >= 0
-            ), "trigenerator power must be positive to compute cost!"
-
-            for power_range, cost in self.kw_cost_trigen.items():
-                if power_range[0] <= trigenerator_size < power_range[1]:
-                    return cost
+            if trigenerator_size <= 0:
+                return 0
+            else:
+                for power_range, cost in self.kw_cost_trigen.items():
+                    if power_range[0] <= trigenerator_size < power_range[1]:
+                        return cost
             return 0
 
 
@@ -176,12 +189,14 @@ class Optimizer(BaseModel):
     ALPHA: PositiveOrZeroFloat = (
         0.5  # balance between minimizing costs and maximizing coverage
     )
-    INITIAL_GUESS: list[int] = [0, 10]  # initial guess for PV and Battery sizes
-    BOUNDS: list[tuple[int, int]] = [
-        (0, 1000),
-        (0, 50),
-    ]  # bounds for PV and Battery sizes
+    INITIAL_GUESS: list[NonNegativeInt] = [
+        100,
+        0,
+        10,
+    ]  # initial guess for PV and Battery sizes
+    BOUNDS: ClassVar[List[Tuple[Optional[int], Optional[int]]]] = [
+        (0, None),  # Bound per PV size
+        (0, None),  # Bound per Battery size
+        (0, None),  # Bound per cogen/trigen size
+    ]
     YEARS: PositiveInt = 20  # years to be considered for the calculation of cost
-    COGEN_COVERAGE: PositiveOrZeroFloat = (
-        0.7  # trashold, how many hours has the cogenerator to cover. see:https://industriale.viessmann.it/blog/dimensionare-cogeneratore-massima-efficienza
-    )

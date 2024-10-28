@@ -1,9 +1,11 @@
+from math import e
 import streamlit as st
 import pandas as pd
 from multivector_simulator.views.view import UserInput, UserOuput, title_multivettore
 from multivector_simulator.models import model
 import numpy as np
 import multivector_simulator.common as common
+import multivector_controller_wrapped_functions
 
 
 def Simulator_Multivettore():
@@ -29,93 +31,67 @@ def Simulator_Multivettore():
 
         if st.session_state["see_results"]:
 
-            # OPTIMAL SIZES
-            (PV_size, battery_size, cogen_size) = model.optimizer(
+            # cogen
+            (
+                PV_size_C,
+                cogen_size_C,
+                trigen_size_C,
+                battery_size_C,
+                savings_C,
+                investment_costs_C,
+                total_costs_C,
+                percentage_energy_coverage_C,
+            ) = multivector_controller_wrapped_functions.sizes_energies_costs(
                 electric_consumption,
                 thermal_consumption,
                 refrigeration_consumption,
                 "Cogen",
             )
+            # trigen
+            (
+                PV_size_T,
+                cogen_size_T,
+                trigen_size_T,
+                battery_size_T,
+                savings_T,
+                investment_costs_T,
+                total_costs_T,
+                percentage_energy_coverage_T,
+            ) = multivector_controller_wrapped_functions.sizes_energies_costs(
+                electric_consumption,
+                thermal_consumption,
+                refrigeration_consumption,
+                "Trigen",
+            )
+            # choose between cogen or trigen
+            LabelCogTrigen = model.choose_cogen_trigen(
+                total_costs_C,
+                percentage_energy_coverage_C,
+                total_costs_T,
+                percentage_energy_coverage_T,
+            )
+            if LabelCogTrigen == "Cogen":
+                PV_size = PV_size_C
+                cogen_size = cogen_size_C
+                cogen_trigen_size = cogen_size
+                trigen_size = trigen_size_C
+                battery_size = battery_size_C
+                savings = savings_C
+                investment_costs = investment_costs_C
 
-            trigen_size = 0
+            else:
+                PV_size = PV_size_T
+                cogen_size = cogen_size_T
+                trigen_size = trigen_size_T
+                cogen_trigen_size = trigen_size
+                battery_size = battery_size_T
+                savings = savings_T
+                investment_costs = investment_costs_T
+
+            # RESULTS
             user_output.see_optimal_sizes(
                 PV_size, cogen_size, trigen_size, battery_size
             )
-
-            (
-                electric_energy_from_grid,
-                thermal_energy_from_grid,
-                refrigeration_energy_from_grid,
-                self_consumption_electric_energy_from_cogen_trigen,
-                self_consumption_thermal_energy_from_cogen_trigen,
-                self_consumption_refrigeration_energy_from_cogen_trigen,
-                available_battery_energy_from_cogen_trigen,
-            ) = model.calculate_cogen_or_trigen_energy_coverage(
-                thermal_consumption,
-                refrigeration_consumption,
-                electric_consumption,
-                cogen_size,
-                "Cogen",
-            )
-            (
-                energy_covered_pv_battery,
-                energy_from_pv_battery,
-                self_consumed_energy_battery_pv,
-                self_consumed_energy_battery_cogen,
-                self_consumption_electric_energy_from_pv,
-            ) = model.determination_electric_coverage_year_PV_battery(
-                electric_consumption,
-                available_battery_energy_from_cogen_trigen,
-                PV_size,
-                battery_size,
-            )
-
-            # calculation of the total energies in a year
-            energy_store_battery_from_cogen_trigen = np.nansum(
-                self_consumed_energy_battery_cogen
-            )
-            total_self_consump_electric_cogen_trigen = np.nansum(
-                self_consumption_electric_energy_from_cogen_trigen
-            )
-            total_self_consumption_electric_energy_from_pv = np.nansum(
-                self_consumption_electric_energy_from_pv
-            )
-            total_self_consumed_energy_from_battery = np.nansum(
-                [
-                    np.nansum(self_consumed_energy_battery_pv),
-                    np.nansum(self_consumed_energy_battery_cogen),
-                ],
-                axis=0,
-            )
-            total_self_consumed_energy_electric = np.nansum(
-                [
-                    total_self_consumed_energy_from_battery,
-                    total_self_consump_electric_cogen_trigen,
-                    total_self_consumption_electric_energy_from_pv,
-                ],
-                axis=0,
-            )
-            total_self_consumed_energy_thermal = np.nansum(
-                self_consumption_thermal_energy_from_cogen_trigen
-            )
-            total_self_consumed_energy_refrigeration = np.nansum(
-                self_consumption_refrigeration_energy_from_cogen_trigen
-            )
-
-            # INVESTIMENTS
-
-            quantity_used_gas_cogen_trigen = model.cogen_trigen_usage_gas(
-                cogen_size, 24 * 365
-            )
-            investment_costs = model.total_cost_investment(
-                PV_size, battery_size, cogen_size, "Cogen"
-            )
-            savings = model.savings_using_implants(
-                total_self_consumed_energy_electric,
-                total_self_consumed_energy_thermal,
-                total_self_consumed_energy_refrigeration,
-            ) - model.cost_gas_used_cogen_trigen(quantity_used_gas_cogen_trigen)
-
             recovery_time = model.calc_payback_time(savings, investment_costs)
             user_output.see_costs_investment_recovery(investment_costs, recovery_time)
 
@@ -137,7 +113,9 @@ def Simulator_Multivettore():
                     electric_production_cogen,
                     thermal_production_cogen,
                     refrigeration_production_cogen,
-                ) = model.annual_production_cogen_trigen(cogen_size, "Cogen")
+                ) = model.annual_production_cogen_trigen(
+                    cogen_trigen_size, LabelCogTrigen
+                )
                 electric_production_period = model.calculate_mean_over_period(
                     np.nansum(
                         [electric_production_cogen, electric_production_pv], axis=0

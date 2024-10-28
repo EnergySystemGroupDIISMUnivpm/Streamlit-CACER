@@ -1,7 +1,7 @@
 import numpy as np
 from pydantic import NonNegativeInt, PositiveFloat, validate_call, PositiveInt
 import multivector_simulator.common as common
-from typing import Tuple
+from typing import Literal, Tuple
 from cacer_simulator.common import PositiveOrZeroFloat, get_kw_cost
 import pandas as pd
 from scipy.optimize import minimize
@@ -632,3 +632,29 @@ def optimizer(
         round(battery_size),
         round(cogen_trigen_size),
     )
+
+
+def choose_cogen_trigen(
+    total_costs_cogen,
+    percentage_energy_coverage_cogen,
+    total_costs_trigen,
+    percentage_energy_coverage_trigen,
+) -> Literal["Cogen", "Trigen"]:
+    """Determitazion of best soluzion between cogenerator and trigenerator based on the cost of installation and cost of usage of gas and on the percentage of energy coverage
+    Attrs:
+    total_costs_cogen: float - total cost of cogen installation in euro
+    percentage_energy_coverage_cogen: float - percentage of energy coverage of cogen
+    total_costs_trigen: float - total cost of trigen installation in euro
+    percentage_energy_coverage_trigen: float - percentage of energy coverage of trigen
+    """
+    alpha = common.Optimizer().ALPHA
+    score_cogen = (
+        1 - alpha
+    ) * total_costs_cogen - alpha * percentage_energy_coverage_cogen
+    score_trigen = (
+        1 - alpha
+    ) * total_costs_trigen - alpha * percentage_energy_coverage_trigen
+    if score_cogen >= score_trigen:
+        return "Cogen"
+    else:
+        return "Trigen"

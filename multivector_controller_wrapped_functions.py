@@ -5,7 +5,25 @@ import numpy as np
 def sizes_energies_costs(
     electric_consumption, thermal_consumption, refrigeration_consumption, LabelCogTrigen
 ):
+    """
+    Calculation of the best sizes of PV, battery and cogen/trigen and relative savings, investment costs, total costs, percentage of energy coverage.
+    Attrs:
+    electric_consumption: np.ndarray - electric annual consumptions in kWh
+    thermal_consumption: np.ndarray - thermal annual consumptions in kWh
+    refrigerator_consumption: np.ndarray - refrigerator annual consumption in kWh
+    LabelCogTrigen: str - indicating "Cogen" or "Trigen"
 
+    Returns:
+    Tuple cotaining:
+    -PV_size: NonNegativeInt - best pv size in KW
+    -cogen_size: NonNegativeInt - best cogen size in kW if label is Cogen else is 0
+    -trigen_size: NonNegativeInt - best trigen size in kW if label is Trigen else is 0
+    -battery_size: NonNegativeInt - best battery size in kW
+    -savings: PositiveFloat - savings in euro from the usage of the best sizes over a period of one year
+    -investment_costs: PositiveFloat - total costs in euro of installation of battery, pv, cogen/trigen
+    -total_costs: PositiveFloat - total costs in euro of installations and usage of gas from cogen/trigen and pv/battery
+    -percentage_energy_coverage: PositiveFloat - percentage of energy coverage of pv, battery, cogen/trigen considering one year
+    """
     # OPTIMAL SIZES
     (PV_size, battery_size, cogen_trigen_size) = model.optimizer(
         electric_consumption,

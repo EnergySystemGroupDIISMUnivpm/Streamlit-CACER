@@ -31,7 +31,7 @@ def Simulator_Multivettore():
 
         if st.session_state["see_results"]:
 
-            # cogen
+            # calculation of the best size of cogen, pv, battery
             (
                 PV_size_C,
                 cogen_size_C,
@@ -47,7 +47,7 @@ def Simulator_Multivettore():
                 refrigeration_consumption,
                 "Cogen",
             )
-            # trigen
+            # calculation of the best size of trigen, pv, battery
             (
                 PV_size_T,
                 cogen_size_T,
@@ -88,11 +88,14 @@ def Simulator_Multivettore():
                 savings = savings_T
                 investment_costs = investment_costs_T
 
-            # RESULTS
+            # calculation of recovery time
+            recovery_time = model.calc_payback_time(savings, investment_costs)
+
+            # SEE RESULTS
             user_output.see_optimal_sizes(
                 PV_size, cogen_size, trigen_size, battery_size
             )
-            recovery_time = model.calc_payback_time(savings, investment_costs)
+
             user_output.see_costs_investment_recovery(investment_costs, recovery_time)
 
             # GRAPH WITH ENERGY PRODUCTION AND CONSUMPTION

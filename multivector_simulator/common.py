@@ -22,7 +22,7 @@ HOURS_OF_YEAR = 8760
 # cogenerator/trigenerator
 class Trigen_Cogen(BaseModel):
     COST_GAS_FOR_GEN: PositiveFloat = 0.4
-    quantity_gas_for_gen = {
+    quantity_gas_for_gen: dict[tuple[int, int], int] = {
         (0, 50): 13,  # Micro-cogenerazione: 12-15 Smc/h,
         (50, 100): 40,  # Inizio cogenerazione media: 40-70 Smc/h,
         (100, 500): 100,  # Cogenerazione media: 70-100 Smc/h,

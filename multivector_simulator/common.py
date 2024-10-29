@@ -21,7 +21,7 @@ HOURS_OF_YEAR = 8760
 
 # cogenerator/trigenerator
 class Trigen_Cogen(BaseModel):
-    COST_GAS_FOR_GEN = 0.4
+    COST_GAS_FOR_GEN: PositiveFloat = 0.4
     quantity_gas_for_gen = {
         (0, 50): 13,  # Micro-cogenerazione: 12-15 Smc/h,
         (50, 100): 40,  # Inizio cogenerazione media: 40-70 Smc/h,
@@ -111,11 +111,13 @@ class Trigen_Cogen(BaseModel):
             return 0
 
 
-COST_INSTALLATION_BATTERY = 1000  # cost of installation of battery for kWh
+COST_INSTALLATION_BATTERY: int = 1000  # cost of installation of battery for kWh
 
 
-ELECTRIC_ENERGY_PRICE = 0.16  # cost of electricity from the grid, €/kWh
-THERMAL_ENERGY_PRICE = 0.12  # cost of thermal energy from the grid, €/kWh
+ELECTRIC_ENERGY_PRICE: PositiveFloat = 0.16  # cost of electricity from the grid, €/kWh
+THERMAL_ENERGY_PRICE: PositiveFloat = (
+    0.12  # cost of thermal energy from the grid, €/kWh
+)
 
 
 def validate_consumption_dataframe(df: pd.DataFrame) -> pd.DataFrame:

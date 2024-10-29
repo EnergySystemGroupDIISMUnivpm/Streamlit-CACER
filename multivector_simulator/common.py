@@ -1,7 +1,5 @@
-from tkinter import N
-from matplotlib import tri
 import pandas as pd
-import numpy as np
+
 from typing import ClassVar, List, Tuple, Optional, Annotated
 
 from pydantic import (
@@ -23,25 +21,38 @@ HOURS_OF_YEAR = 8760
 
 # cogenerator/trigenerator
 class Trigen_Cogen(BaseModel):
-    COST_GAS_FOR_GEN: PositiveFloat = (
-        0.4  # cost of gas for cogenerator/trigenerator in €/Smc
-    )
+    COST_GAS_FOR_GEN = 0.4
+    quantity_gas_for_gen = {
+        (0, 50): 13,  # Micro-cogenerazione: 12-15 Smc/h,
+        (50, 100): 40,  # Inizio cogenerazione media: 40-70 Smc/h,
+        (100, 500): 100,  # Cogenerazione media: 70-100 Smc/h,
+        (500, 999): 150,  # Fine cogenerazione media: 100-150 Smc/h,
+        (1000, 2000): 500,  # Inizio grande cogenerazione: 300-500 Smc/h,
+        (2000, 5000): 1000,  # Grande cogenerazione: 500-1000 Smc/h,
+    }
+
+    def get_gas_quantity_cogen_trigen(
+        self, cogen_trigen_size: NonNegativeInt | PositiveOrZeroFloat
+    ) -> int:
+
+        if cogen_trigen_size <= 0:
+            return 0
+        else:
+            for power_range, cost in self.quantity_gas_for_gen.items():
+                if power_range[0] <= cogen_trigen_size < power_range[1]:
+                    return cost
+        return 0
+
     CONSUMPTION_COGEN_HOUR: PositiveFloat = (
         0.105  # Consumption by 1kW cogenerator/trigenerator of gas in Smc for each hour, working at full capacity
     )
     COGEN_CONVERSION_FACTOR: PositiveFloat = (
         9.52  # PCI: allows to pass from Smc of burned gas to quantity of energy produced (kWh).
     )
-    MINIMAL_THERMAL: PositiveFloat = (
-        0.4  # the thermal consumption must be at least 40% of the total consumpitons to have a cogen or trigen
-    )
-    MINIMAL_REFRIGERATOR: PositiveFloat = (
-        0.2  # the refrigerator consumption must be at least 20% of the total consumpitons to have a trigenerator
-    )
 
     class Cogenerator(BaseModel):
         ELECTRIC_EFFICIENCY_COGEN: PositiveFloat = (
-            0.3  # eletric efficiency of cogenerator. For 1kWh of energy of gas, 0.3kWh of eletricity are produced.
+            0.33  # eletric efficiency of cogenerator. For 1kWh of energy of gas, 0.33kWh of eletricity are produced.
         )
         THERMAL_EFFICIENCY_COGEN: PositiveFloat = (
             0.5  # thermal efficiency of cogenerator. For 1kWh of energy of gas, 0.5kWh of thermal energy are produced.
@@ -49,8 +60,11 @@ class Trigen_Cogen(BaseModel):
 
         # cost of 1kW of cogenerator in euro
         kw_cost_cogen: dict[tuple[float, float], int] = {
-            (0, 1000): 1200,
-            (1000, float("inf")): 800,
+            (0, 50): 1500,
+            (50, 100): 1000,
+            (100, 1000): 1500,
+            (1000, 2000): 800,
+            (2000, float("inf")): 400,
         }
 
         def get_kw_cost_cogen(
@@ -67,18 +81,21 @@ class Trigen_Cogen(BaseModel):
 
     class Trigenerator(BaseModel):
         ELECTRIC_EFFICIENCY_TRIGEN: PositiveFloat = (
-            0.3  # eletric efficiency of trigenerator. For 1kWh of energy of gas, 0.3kWh of eletricity are produced.
+            0.33  # eletric efficiency of trigenerator. For 1kWh of energy of gas, 0.33kWh of eletricity are produced.
         )
         THERMAL_EFFICIENCY_TRIGEN: PositiveFloat = (
-            0.3  # thermal efficiency of trigenerator. For 1kWh of energy of gas, 0.3kWh of thermal energy are produced.
+            0.34  # thermal efficiency of trigenerator. For 1kWh of energy of gas, 0.34kWh of thermal energy are produced.
         )
         REFRIGERATION_EFFICIENCY_TRIGEN: PositiveFloat = (
-            0.2  # refrigeration efficiency of trigenerator. For 1kWh of energy of gas, 0.2kWh of refrigeneration are produced.
+            0.24  # refrigeration efficiency of trigenerator. For 1kWh of energy of gas, 0.24kWh of refrigeneration are produced.
         )
 
         kw_cost_trigen: dict[tuple[float, float], int] = {
-            (0, 1000): 2000,
-            (1000, float("inf")): 1200,
+            (0, 200): 2000,
+            (200, 600): 1000,
+            (600, 1000): 1300,
+            (1000, 2000): 1000,
+            (2000, float("inf")): 600,
         }
 
         def get_kw_cost_trigen(
@@ -98,7 +115,7 @@ COST_INSTALLATION_BATTERY = 1000  # cost of installation of battery for kWh
 
 
 ELECTRIC_ENERGY_PRICE = 0.16  # cost of electricity from the grid, €/kWh
-THERMAL_ENERGY_PRICE = 0.055  # cost of thermal energy from the grid, €/kWh
+THERMAL_ENERGY_PRICE = 0.12  # cost of thermal energy from the grid, €/kWh
 
 
 def validate_consumption_dataframe(df: pd.DataFrame) -> pd.DataFrame:

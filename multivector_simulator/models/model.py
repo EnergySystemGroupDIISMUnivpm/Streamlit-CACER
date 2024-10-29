@@ -124,7 +124,9 @@ def cogen_trigen_usage_gas(
         working_hours: NonNegativeInt - amount of hours working at full capacity
     """
     trigen_cogen = common.Trigen_Cogen()
-    used_gas = cogen_trigen_size * working_hours * trigen_cogen.CONSUMPTION_COGEN_HOUR
+    used_gas = working_hours * trigen_cogen.get_gas_quantity_cogen_trigen(
+        cogen_trigen_size
+    )
     return used_gas
 
 

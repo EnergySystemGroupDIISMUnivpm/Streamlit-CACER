@@ -53,7 +53,7 @@ def sizes_energies_costs(
         thermal_consumption,
         refrigeration_consumption,
         electric_consumption,
-        cogen_size,
+        cogen_trigen_size,
         LabelCogTrigen,
     )
     # from pv/battery
@@ -103,9 +103,11 @@ def sizes_energies_costs(
     )
 
     # INVESTIMENTS
-    quantity_used_gas_cogen_trigen = model.cogen_trigen_usage_gas(cogen_size, 24 * 365)
+    quantity_used_gas_cogen_trigen = model.cogen_trigen_usage_gas(
+        cogen_trigen_size, 24 * 365
+    )
     investment_costs = model.total_cost_investment(
-        PV_size, battery_size, cogen_size, LabelCogTrigen
+        PV_size, battery_size, cogen_trigen_size, LabelCogTrigen
     )
     cost_gas = model.cost_gas_used_cogen_trigen(quantity_used_gas_cogen_trigen)
     savings = (

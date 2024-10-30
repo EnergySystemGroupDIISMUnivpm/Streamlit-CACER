@@ -47,6 +47,7 @@ def Simulator_Multivettore():
                 refrigeration_consumption,
                 "Cogen",
             )
+
             # calculation of the best size of trigen, pv, battery
             (
                 PV_size_T,
@@ -63,14 +64,11 @@ def Simulator_Multivettore():
                 refrigeration_consumption,
                 "Trigen",
             )
+
             # choose between cogen or trigen
-            LabelCogTrigen = model.choose_cogen_trigen(
-                total_costs_C,
-                percentage_energy_coverage_C,
-                total_costs_T,
-                percentage_energy_coverage_T,
-            )
-            if LabelCogTrigen == "Cogen":
+            if (
+                total_costs_C < total_costs_T
+            ):  # the cost of cogen are less then trigen -> choose cogen
                 PV_size = PV_size_C
                 cogen_size = cogen_size_C
                 cogen_trigen_size = cogen_size
@@ -78,8 +76,9 @@ def Simulator_Multivettore():
                 battery_size = battery_size_C
                 savings = savings_C
                 investment_costs = investment_costs_C
+                LabelCogTrigen = "Cogen"
 
-            else:
+            else:  # the cost of cogen are less then trigen -> choose trigen
                 PV_size = PV_size_T
                 cogen_size = cogen_size_T
                 trigen_size = trigen_size_T
@@ -87,6 +86,7 @@ def Simulator_Multivettore():
                 battery_size = battery_size_T
                 savings = savings_T
                 investment_costs = investment_costs_T
+                LabelCogTrigen = "Trigen"
 
             # calculation of recovery time
             recovery_time = model.calc_payback_time(savings, investment_costs)

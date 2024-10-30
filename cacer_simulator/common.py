@@ -184,7 +184,6 @@ POWER_PEAK = 300
 # area of 1 single pannel in m2 with the power defined as power peak
 AREA_ONE_PV = 1.7 * 1.1
 
-# cost of 1kW of PV in euro
 kw_cost: dict[tuple[float, float], int] = {
     (0, 5): 1500,
     (5, 10): 1300,

@@ -70,14 +70,12 @@ class Trigen_Cogen(BaseModel):
         def get_kw_cost_cogen(
             self, cogenerator_size: NonNegativeInt | PositiveOrZeroFloat
         ) -> int:
-
-            if cogenerator_size <= 0:
-                return 0
-            else:
+            cost = 0
+            if cogenerator_size > 0:
                 for power_range, cost in self.kw_cost_cogen.items():
                     if power_range[0] <= cogenerator_size < power_range[1]:
                         return cost
-            return 0
+            return cost
 
     class Trigenerator(BaseModel):
         ELECTRIC_EFFICIENCY_TRIGEN: PositiveFloat = (
@@ -92,9 +90,9 @@ class Trigen_Cogen(BaseModel):
 
         kw_cost_trigen: dict[tuple[float, float], int] = {
             (0, 200): 2000,
-            (200, 600): 1000,
-            (600, 1000): 1300,
-            (1000, 2000): 1000,
+            (200, 600): 1300,
+            (600, 1000): 1000,
+            (1000, 2000): 800,
             (2000, float("inf")): 600,
         }
 
@@ -102,13 +100,12 @@ class Trigen_Cogen(BaseModel):
             self, trigenerator_size: NonNegativeInt | PositiveOrZeroFloat
         ) -> int:
 
-            if trigenerator_size <= 0:
-                return 0
-            else:
+            cost = 0
+            if trigenerator_size > 0:
                 for power_range, cost in self.kw_cost_trigen.items():
                     if power_range[0] <= trigenerator_size < power_range[1]:
                         return cost
-            return 0
+            return cost
 
 
 COST_INSTALLATION_BATTERY: int = 1000  # cost of installation of battery for kWh

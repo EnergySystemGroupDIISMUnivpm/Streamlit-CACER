@@ -615,3 +615,20 @@ def optimizer(
         round(battery_size),
         round(cogen_trigen_size),
     )
+
+
+def cost_actualization(annual_cost: PositiveFloat) -> np.ndarray:
+    """
+    Calculation of the cost of actualization over a period of time (years) based on "formula del valore attuale" .
+    Attrs:
+        annual_cost: PositiveFloat - annual cost in euro
+
+    Returns:
+        actualized_cost: np.ndarray - actualized costs in euro. i-th element is the actualized cost for the i-th year.
+    """
+    years = common.Optimizer().YEARS
+    discount_rate = common.Optimizer().DISCOUNT_RATE
+    actualized_cost = np.array(
+        [annual_cost / ((1 + discount_rate) ** i) for i in range(1, years + 1)]
+    )
+    return actualized_cost

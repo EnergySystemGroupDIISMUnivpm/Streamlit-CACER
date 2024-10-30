@@ -1,12 +1,9 @@
 import streamlit as st
-from pydantic import BaseModel, ConfigDict, Field, AfterValidator, validate_call
+from pydantic import BaseModel, validate_call
 import pandas as pd
 import numpy as np
-from cacer_simulator.common import PositiveOrZeroFloat
 import multivector_simulator.common as common
 from pydantic import PositiveFloat, validate_call, PositiveInt, NonNegativeInt
-import plotly.graph_objects as go
-from datetime import datetime
 
 
 def title_multivettore():

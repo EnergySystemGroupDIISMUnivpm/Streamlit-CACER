@@ -105,7 +105,6 @@ def Simulator_Multivettore():
                 investment_costs, recovery_time
             )  # TODO: check
             user_output.graph_return_investment(investment_costs, cost_gas, savings)
-            __import__("ipdb").set_trace()
 
             # GRAPH WITH ENERGY PRODUCTION AND CONSUMPTION
 

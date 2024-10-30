@@ -165,12 +165,12 @@ class UserOuput(BaseModel):
         chart_data = pd.DataFrame(
             {
                 "Ore": ore,
-                f"Energia {energy_type} consumata": consumed_energy,
-                f"Energia {energy_type} auto-prodotta": produced_energy,
+                f"Consumata": consumed_energy,
+                f"Prodotta": produced_energy,
             }
         )
         st.markdown(
-            f"""Distribuzione media {period_label} dell'Energia {energy_type} auto-prodotta e consumata"""
+            f"""Distribuzione media {period_label} dell'Energia {energy_type} prodotta e consumata"""
         )
         st.area_chart(chart_data, x="Ore", y_label="kWh", x_label="Ore")
 

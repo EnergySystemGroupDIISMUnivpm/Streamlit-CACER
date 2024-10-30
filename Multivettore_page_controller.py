@@ -64,7 +64,6 @@ def Simulator_Multivettore():
                 refrigeration_consumption,
                 "Trigen",
             )
-
             # choose between cogen or trigen
             if (
                 total_costs_C < total_costs_T
@@ -78,7 +77,7 @@ def Simulator_Multivettore():
                 investment_costs = investment_costs_C
                 LabelCogTrigen = "Cogen"
 
-            else:  # the cost of cogen are less then trigen -> choose trigen
+            else:  # the cost of trigen are less then cogen -> choose trigen
                 PV_size = PV_size_T
                 cogen_size = cogen_size_T
                 trigen_size = trigen_size_T

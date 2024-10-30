@@ -58,7 +58,6 @@ def sizes_energies_costs(
     )
     # from pv/battery
     (
-        energy_covered_pv_battery,
         energy_from_pv_battery,
         self_consumed_energy_battery_pv,
         self_consumed_energy_battery_cogen,

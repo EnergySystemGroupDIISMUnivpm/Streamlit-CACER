@@ -159,10 +159,10 @@ def total_economic_cost(
     """
     years = common.Optimizer().YEARS
     cost_electricity_from_grid = (
-        np.nansum(annual_electric_energy_from_grid) * common.ELECTRIC_ENERGY_PRICE
+        annual_electric_energy_from_grid * common.ELECTRIC_ENERGY_PRICE
     )
     cost_thermal_from_grid = (
-        np.nansum(annual_thermal_energy_from_grid) * common.THERMAL_ENERGY_PRICE
+        annual_thermal_energy_from_grid * common.THERMAL_ENERGY_PRICE
     )
     cost_installation_PV = cost_PV_installation(PV_size)
     cost_installation_battery = cost_battery_installation(battery_size)
@@ -196,7 +196,9 @@ def savings_using_implants(
     savings = (
         (electric_energy) * common.ELECTRIC_ENERGY_PRICE
         + thermal_energy * common.THERMAL_ENERGY_PRICE
-        + refrigeration_energy * common.ELECTRIC_ENERGY_PRICE
+        + refrigeration_energy
+        * (1 / common.EFFICIENCY_CONDITIONER)
+        * common.ELECTRIC_ENERGY_PRICE
     )
     return savings
 
@@ -379,7 +381,7 @@ def determination_electric_coverage_year_PV_battery(
     available_battery_energy_from_cogen: np.ndarray,
     pv_size: PositiveInt,
     battery_size: PositiveInt,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Determines the annual electric coverage provided by the PV system, battery storage,
     and the energy drawn from the grid (in kWh).
@@ -392,7 +394,6 @@ def determination_electric_coverage_year_PV_battery(
 
     Returns:
         Tuple containing:
-            - self_consumed_energy (np.ndarray): Total energy consumption covered by the PV and battery (kWh).
             - energy_from_grid (np.ndarray): Energy taken from the grid to meet the consumption (kWh).
             - self_consumed_energy_battery_pv (np.ndarray): Battery energy consumed, stored from PV (kWh).
             - self_consumed_energy_battery_cogen (np.ndarray): Battery energy consumed, stored from cogeneration (kWh).
@@ -405,7 +406,6 @@ def determination_electric_coverage_year_PV_battery(
 
     # INITIALIZE ARRAYS
     energy_from_grid = np.zeros_like(electric_consumption)
-    energy_covered = np.zeros_like(electric_consumption)
     # the energy available for battery is initialize to the energy in excess from the cogenerator/trigenerator
     available_battery_energy = np.clip(
         available_battery_energy_from_cogen, 0, battery_size
@@ -426,10 +426,13 @@ def determination_electric_coverage_year_PV_battery(
     )
 
     # save of energy available for battery coming from PV
-    available_battery_energy_from_pv = available_battery_energy.copy()
+    available_battery_energy_before_pv = np.clip(excess_energy_pv, 0, battery_size)
     # Update battery energy with excess PV production
     available_battery_energy = np.clip(
         available_battery_energy + excess_energy_pv, 0, battery_size
+    )
+    available_battery_energy_from_pv = (
+        available_battery_energy - available_battery_energy_before_pv
     )
 
     # Energy balance with battery storage
@@ -458,11 +461,7 @@ def determination_electric_coverage_year_PV_battery(
     # ENERGY FROM GRID (energy not covered with PV or battery)
     energy_from_grid = electric_consumption
 
-    # SELF CONSUMED ENERGY
-    self_consumed_energy = electric_consumption_before_pv - energy_from_grid
-
     return (
-        self_consumed_energy,
         energy_from_grid,
         self_consumed_energy_battery_pv,
         self_consumed_energy_battery_cogen,
@@ -492,6 +491,7 @@ def objective_function(
     PV_size, battery_size, cogen_or_trigen_size = x  # parameters to be determined
 
     # calculation of the electric, thermal and refrigerator coverage per year covered by cogen/trigen
+
     (
         electric_energy_from_grid_cogen,
         thermal_energy_from_grid,
@@ -517,7 +517,6 @@ def objective_function(
 
     # CALCULATION OF THE ELECTRIC COVERAGE PER YEAR COVERED BY PV AND BATTERY
     (
-        energy_covered_PV_battery,
         energy_from_grid_PV_battery,
         energy_battery_pv,
         energy_battery_cogen,
@@ -540,13 +539,13 @@ def objective_function(
             electric_energy_from_grid_cogen
         )  # electric energy from grid after adding cogen/trigen
         + np.nansum(
-            refrigeration_energy_from_grid
+            refrigeration_energy_from_grid * (1 / common.EFFICIENCY_CONDITIONER)
         )  # electric energy from grid after adding cogen/trigen for refrigeration
     )
     # thermal
     total_thermal_energy_from_grid = np.nansum(thermal_energy_from_grid)
 
-    # electric production by cogen
+    # electric production by cogen/trigen
     (
         electric_production_cogen,
         thermal_production_cogen,
@@ -605,7 +604,7 @@ def optimizer(
             refrigerator_consumption,
             labelCogTrigen,
         ),
-        method="L-BFGS-B",
+        method="SLSQP",
         bounds=common.Optimizer().BOUNDS,
     )
     PV_size, battery_size, cogen_trigen_size = result.x

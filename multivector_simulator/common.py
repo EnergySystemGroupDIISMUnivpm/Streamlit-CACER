@@ -18,6 +18,8 @@ AVG_EMISSIONS_FACTOR_THERMAL = 0.2  # how much CO2 is emitted for each kWh produ
 
 HOURS_OF_YEAR = 8760
 
+EFFICIENCY_CONDITIONER = 2  # efficiency of conditioner
+
 
 # cogenerator/trigenerator
 class Trigen_Cogen(BaseModel):
@@ -209,7 +211,7 @@ class Optimizer(BaseModel):
         100,
         0,
         10,
-    ]  # initial guess for PV and Battery sizes
+    ]  # initial guess for PV and Battery and cogen/trigen sizes
     BOUNDS: ClassVar[List[Tuple[Optional[int], Optional[int]]]] = [
         (0, None),  # Bound per PV size
         (0, None),  # Bound per Battery size

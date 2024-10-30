@@ -41,6 +41,7 @@ def Simulator_Multivettore():
                 investment_costs_C,
                 total_costs_C,
                 percentage_energy_coverage_C,
+                cost_gas_C,
             ) = multivector_controller_wrapped_functions.sizes_energies_costs(
                 electric_consumption,
                 thermal_consumption,
@@ -58,6 +59,7 @@ def Simulator_Multivettore():
                 investment_costs_T,
                 total_costs_T,
                 percentage_energy_coverage_T,
+                cost_gas_T,
             ) = multivector_controller_wrapped_functions.sizes_energies_costs(
                 electric_consumption,
                 thermal_consumption,
@@ -75,6 +77,7 @@ def Simulator_Multivettore():
                 battery_size = battery_size_C
                 savings = savings_C
                 investment_costs = investment_costs_C
+                cost_gas = cost_gas_C
                 LabelCogTrigen = "Cogen"
 
             else:  # the cost of trigen are less then cogen -> choose trigen
@@ -85,17 +88,24 @@ def Simulator_Multivettore():
                 battery_size = battery_size_T
                 savings = savings_T
                 investment_costs = investment_costs_T
+                cost_gas = cost_gas_T
                 LabelCogTrigen = "Trigen"
 
             # calculation of recovery time
-            recovery_time = model.calc_payback_time(savings, investment_costs)
+            recovery_time = model.calc_payback_time(
+                savings, investment_costs
+            )  # TODO: check
 
             # SEE RESULTS
             user_output.see_optimal_sizes(
                 PV_size, cogen_size, trigen_size, battery_size
             )
 
-            user_output.see_costs_investment_recovery(investment_costs, recovery_time)
+            user_output.see_costs_investment_recovery(
+                investment_costs, recovery_time
+            )  # TODO: check
+            user_output.graph_return_investment(investment_costs, cost_gas, savings)
+            __import__("ipdb").set_trace()
 
             # GRAPH WITH ENERGY PRODUCTION AND CONSUMPTION
 

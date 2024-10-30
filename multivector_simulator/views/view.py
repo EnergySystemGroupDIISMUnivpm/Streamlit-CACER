@@ -173,28 +173,16 @@ class UserOuput(BaseModel):
 
     def graph_return_investment(  # TODO: add attualizzazione dei costi
         self,
-        initial_investment: PositiveFloat,
-        costs_in_year: PositiveFloat,
-        savings_in_year: PositiveFloat,
+        df_cumulative_costs_and_savings: pd.DataFrame,
     ):
         st.markdown(
             "##### **Andamento Cumulativo di Costi e Risparmi Annuali**",
             help="Questo grafico mostra l'andamento cumulativo di costi e risparmi annuali, partendo dal costo iniziale dell'installazione  degli impianti e includendo i costi e i risparmi accumulati ogni anno. I valori negativi rappresentano le spese, mentre i valori positivi indicano i risparmi ottenuti. Il punto in cui la barra cumulativa supera lo zero rappresenta il momento in cui si ottiene il ritorno dell'investimento, segnando il passaggio da una situazione di costo netto a una di guadagno.",
         )
         years = common.Optimizer().YEARS
-        annual_value = [-initial_investment]
-        annual_costs = [-costs_in_year] * years
-        annual_savings = [savings_in_year] * years
-        for i in range(1, years + 1):
-            value = annual_value[-1] + annual_costs[i - 1] + annual_savings[i - 1]
-            annual_value.append(value)
-
-        df = pd.DataFrame(
-            {"Year": np.arange(0, years + 1), "Cumulative value": annual_value}
-        )
 
         st.bar_chart(
-            df.set_index("Year")["Cumulative value"],
+            df_cumulative_costs_and_savings.set_index("Year")["Cumulative value"],
             x_label="Anni dopo l'installazione degli impianti",
             y_label="€",
         )

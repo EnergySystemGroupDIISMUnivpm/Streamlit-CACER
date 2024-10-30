@@ -92,19 +92,18 @@ def Simulator_Multivettore():
                 LabelCogTrigen = "Trigen"
 
             # calculation of recovery time
-            recovery_time = model.calc_payback_time(
-                savings, investment_costs
-            )  # TODO: check
+            df_cumulative_cost_savings = model.cumulative_costs_savings(
+                savings, investment_costs, cost_gas
+            )
+            recovery_time = model.calc_payback_time(df_cumulative_cost_savings)
 
             # SEE RESULTS
             user_output.see_optimal_sizes(
                 PV_size, cogen_size, trigen_size, battery_size
             )
 
-            user_output.see_costs_investment_recovery(
-                investment_costs, recovery_time
-            )  # TODO: check
-            user_output.graph_return_investment(investment_costs, cost_gas, savings)
+            user_output.see_costs_investment_recovery(investment_costs, recovery_time)
+            user_output.graph_return_investment(df_cumulative_cost_savings)
 
             # GRAPH WITH ENERGY PRODUCTION AND CONSUMPTION
 

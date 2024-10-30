@@ -212,17 +212,41 @@ def savings_in_a_period(savings: PositiveFloat, period: PositiveInt) -> Positive
     return savings_period
 
 
-def calc_payback_time(
-    savings: PositiveOrZeroFloat, investment: PositiveOrZeroFloat
-) -> NonNegativeInt:
+def cumulative_costs_savings(
+    savings_in_year: PositiveOrZeroFloat,
+    initial_investment: PositiveOrZeroFloat,
+    costs_in_year: PositiveOrZeroFloat,
+) -> pd.DataFrame:
+    """
+    Calculation of the cumulative costs and savings in which the i-th element represents the cumulative sum of costs(negative)+savings(positive) of the i-th year.
+    Attrs:
+        savings_in_year: PositiveOrZeroFloat - savings in a year in euro
+        initial_investment: PositiveOrZeroFloat - initial investment in euro
+        costs_in_year: PositiveOrZeroFloat - costs in a year in euro
+    """
+
+    years = common.Optimizer().YEARS
+    annual_value = [-initial_investment]
+    annual_costs = [-costs_in_year] * years
+    annual_savings = [savings_in_year] * years
+    for i in range(1, years + 1):
+        value = annual_value[-1] + annual_costs[i - 1] + annual_savings[i - 1]
+        annual_value.append(value)
+
+    df = pd.DataFrame(
+        {"Year": np.arange(0, years + 1), "Cumulative value": annual_value}
+    )
+
+    return df
+
+
+def calc_payback_time(df: pd.DataFrame) -> NonNegativeInt:
     """
     Calculation of the payback time in years.
     Attrs:
-        savings: PositiveOrZeroFloat - savings in euro of each year, obtained by the usage of implants.
-        investment: PositiveOrZeroFloat - investment in euro
+        df: pd.DataFrame - cumulative costs and savings in which the i-th element represents the cumulative sum of costs(negative)+savings(positive) of the i-th year
     """
-    payback_time = savings / investment
-    payback_time = round(payback_time)
+    payback_time = np.where(df["Cumulative value"] > 0)[0][0]
     return payback_time
 
 

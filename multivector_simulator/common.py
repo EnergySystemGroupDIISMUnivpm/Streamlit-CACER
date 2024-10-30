@@ -218,4 +218,6 @@ class Optimizer(BaseModel):
         (0, None),  # Bound per cogen/trigen size
     ]
     YEARS: PositiveInt = 20  # years to be considered for the calculation of cost
-    DISCOUNT_RATE = 0.05  # discount rate for calculating the return of the investment
+    DISCOUNT_RATE: PositiveFloat = (
+        0.05  # discount rate for calculating the return of the investment
+    )

@@ -1,3 +1,4 @@
+from math import inf
 import numpy as np
 from pydantic import NonNegativeInt, PositiveFloat, validate_call, PositiveInt
 import multivector_simulator.common as common
@@ -157,26 +158,38 @@ def total_economic_cost(
         cogen_trigen_size: NonNegativeInt - size of the cogenerator or trigenerator in kW
         labelCogTrigen: str - indicating "Cogen" or "Trigen"
     """
-    years = common.Optimizer().YEARS
+
     cost_electricity_from_grid = (
         annual_electric_energy_from_grid * common.ELECTRIC_ENERGY_PRICE
     )
+    cost_electricity_from_grid_actualized = actualization(
+        cost_electricity_from_grid, labelCostSaving="Costs"
+    ).sum()
+
     cost_thermal_from_grid = (
         annual_thermal_energy_from_grid * common.THERMAL_ENERGY_PRICE
     )
+    cost_thermal_from_grid_actualized = actualization(
+        cost_thermal_from_grid, labelCostSaving="Costs"
+    ).sum()
+
     cost_installation_PV = cost_PV_installation(PV_size)
     cost_installation_battery = cost_battery_installation(battery_size)
     cost_installation_trigen_cogen = cost_cogen_trigen_installation(
         cogen_trigen_size, labelCogTrigen
     )
+
     annually_cost_gas = cost_gas_used_cogen_trigen(annually_used_gas)
+    annually_cost_gas_actualized = actualization(
+        annually_cost_gas, labelCostSaving="Costs"
+    ).sum()
     total_cost = (
         cost_installation_PV
         + cost_installation_battery
         + cost_installation_trigen_cogen
-        + (cost_electricity_from_grid * years)
-        + (cost_thermal_from_grid * years)
-        + (annually_cost_gas * years)
+        + (cost_electricity_from_grid_actualized)
+        + (cost_thermal_from_grid_actualized)
+        + (annually_cost_gas_actualized)
     )
     return total_cost
 
@@ -197,7 +210,9 @@ def savings_using_implants(
         (electric_energy) * common.ELECTRIC_ENERGY_PRICE
         + thermal_energy * common.THERMAL_ENERGY_PRICE
         + refrigeration_energy
-        * (1 / common.EFFICIENCY_CONDITIONER)
+        * (
+            1 / common.EFFICIENCY_CONDITIONER
+        )  # per ogni kwh che un condizionartore consuma, produce N kWh di energia frigorifera
         * common.ELECTRIC_ENERGY_PRICE
     )
     return savings
@@ -208,7 +223,7 @@ def savings_in_a_period(savings: PositiveFloat, period: PositiveInt) -> Positive
     Attrs:
         savings: PositiveFloat - savings in euro
         period: PositiveInt - period in years"""
-    savings_period = savings * period
+    savings_period = actualization(savings, period, "Savings").sum()
     return savings_period
 
 
@@ -227,8 +242,8 @@ def cumulative_costs_savings(
 
     years = common.Optimizer().YEARS
     annual_value = [-initial_investment]
-    annual_costs = [-costs_in_year] * years
-    annual_savings = [savings_in_year] * years
+    annual_costs = -actualization(costs_in_year, labelCostSaving="Costs")
+    annual_savings = actualization(savings_in_year, labelCostSaving="Savings")
     for i in range(1, years + 1):
         value = annual_value[-1] + annual_costs[i - 1] + annual_savings[i - 1]
         annual_value.append(value)
@@ -240,13 +255,18 @@ def cumulative_costs_savings(
     return df
 
 
-def calc_payback_time(df: pd.DataFrame) -> NonNegativeInt:
+def calc_payback_time(df: pd.DataFrame) -> NonNegativeInt | float:
     """
     Calculation of the payback time in years.
     Attrs:
         df: pd.DataFrame - cumulative costs and savings in which the i-th element represents the cumulative sum of costs(negative)+savings(positive) of the i-th year
     """
-    payback_time = np.where(df["Cumulative value"] > 0)[0][0]
+    if (df["Cumulative value"] > 0).any():
+        payback_time = np.where(df["Cumulative value"] > 0)[0][
+            0
+        ]  # takes first positive value
+    else:
+        payback_time = float(inf)
     return payback_time
 
 
@@ -563,7 +583,10 @@ def objective_function(
             electric_energy_from_grid_cogen
         )  # electric energy from grid after adding cogen/trigen
         + np.nansum(
-            refrigeration_energy_from_grid * (1 / common.EFFICIENCY_CONDITIONER)
+            refrigeration_energy_from_grid
+            * (
+                1 / common.EFFICIENCY_CONDITIONER
+            )  # per ogni kwh che un condizionartore consuma, produce N kWh di energia frigorifera
         )  # electric energy from grid after adding cogen/trigen for refrigeration
     )
     # thermal
@@ -607,6 +630,7 @@ def optimizer(
     electric_consumption: np.ndarray - electric annual consumptions in kWh
     thermal_consumption: np.ndarray - thermal annual consumptions in kWh
     refrigerator_consumption: np.ndarray - refrigerator annual consumption in kWh
+    labelCogTrigen: str - label indicating "Cogen" or "Trigen"
 
     Returns:
     Tuple cotaining:
@@ -641,18 +665,27 @@ def optimizer(
     )
 
 
-def cost_actualization(annual_cost: PositiveFloat) -> np.ndarray:
+def actualization(
+    annual_cost: PositiveFloat,
+    years=common.Optimizer().YEARS,
+    labelCostSaving: str = "Costs",
+) -> np.ndarray:
     """
-    Calculation of the cost of actualization over a period of time (years) based on "formula del valore attuale" .
+    Calculation of the value of a cost or of a saving over a period of time (years) based on "formula del valore attuale", in euro.
     Attrs:
         annual_cost: PositiveFloat - annual cost in euro
+        labelCostSaving: str - label indicating "Savings" or "Costs"
 
     Returns:
-        actualized_cost: np.ndarray - actualized costs in euro. i-th element is the actualized cost for the i-th year.
+        actualized_cost: np.ndarray - actualized costs/saving in euro. i-th element is the actualized cost/saving for the i-th year in euro.
     """
-    years = common.Optimizer().YEARS
     discount_rate = common.Optimizer().DISCOUNT_RATE
-    actualized_cost = np.array(
-        [annual_cost / ((1 + discount_rate) ** i) for i in range(1, years + 1)]
-    )
+    if labelCostSaving == "Savings":
+        actualized_cost = np.array(
+            [annual_cost / ((1 + discount_rate) ** i) for i in range(1, years + 1)]
+        )
+    else:
+        actualized_cost = np.array(
+            [annual_cost * ((1 + discount_rate) ** i) for i in range(1, years + 1)]
+        )
     return actualized_cost

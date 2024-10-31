@@ -18,7 +18,7 @@ AVG_EMISSIONS_FACTOR_THERMAL = 0.2  # how much CO2 is emitted for each kWh produ
 
 HOURS_OF_YEAR = 8760
 
-EFFICIENCY_CONDITIONER = 2  # efficiency of conditioner
+EFFICIENCY_CONDITIONER = 2  # efficiency of conditioner. In realtà per ongi kwh che un condizionartore consuma, produce 3 kWh di energia frigorifera. Ne consideriamo meno per tenere conto anche dei costi di installazione di in un condizionatore in maniera forfettaria
 
 
 # cogenerator/trigenerator

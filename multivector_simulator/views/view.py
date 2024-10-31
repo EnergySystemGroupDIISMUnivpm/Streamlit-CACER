@@ -120,7 +120,7 @@ class UserOuput(BaseModel):
         st.markdown(f"- un **impianto di accumulo** da {battery_size} kW")
 
     def see_costs_investment_recovery(
-        self, costs: PositiveFloat, recovery_time: PositiveInt
+        self, costs: PositiveFloat, recovery_time: PositiveInt | float
     ):
         trigen_cogen = common.Trigen_Cogen()
         if recovery_time > 0:

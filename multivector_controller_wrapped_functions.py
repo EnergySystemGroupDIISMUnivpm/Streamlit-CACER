@@ -59,12 +59,12 @@ def sizes_energies_costs(
     )
     # from pv/battery
     (
-        energy_from_pv_battery,
+        energy_from_grid_pv_battery,
         self_consumed_energy_battery_pv,
         self_consumed_energy_battery_cogen,
         self_consumption_electric_energy_from_pv,
     ) = model.determination_electric_coverage_year_PV_battery(
-        electric_consumption,
+        electric_consumption - self_consumption_electric_energy_from_cogen_trigen,
         available_battery_energy_from_cogen_trigen,
         PV_size,
         battery_size,

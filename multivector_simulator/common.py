@@ -20,6 +20,11 @@ HOURS_OF_YEAR = 8760
 
 EFFICIENCY_CONDITIONER = 2  # efficiency of conditioner. In realtà per ongi kwh che un condizionartore consuma, produce 3 kWh di energia frigorifera. Ne consideriamo meno per tenere conto anche dei costi di installazione di in un condizionatore in maniera forfettaria
 
+MAINTENANCE_COST_PV: dict[str, int] = {
+    "no_battery": 35,
+    "with_battery": 50,
+}  # annual maintenance cost for PV for kWp. Varies according presence of battery.
+
 
 # cogenerator/trigenerator
 class Trigen_Cogen(BaseModel):
@@ -50,6 +55,10 @@ class Trigen_Cogen(BaseModel):
     )
     COGEN_CONVERSION_FACTOR: PositiveFloat = (
         9.52  # PCI: allows to pass from Smc of burned gas to quantity of energy produced (kWh).
+    )
+
+    MAINTENANCE_COST_PERCENTAGE: PositiveFloat = (
+        0.3  # cost of maintenance of cogenerator/trigenerator is 3% of the initial investment cost each year.
     )
 
     class Cogenerator(BaseModel):

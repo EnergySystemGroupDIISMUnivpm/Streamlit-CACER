@@ -217,9 +217,9 @@ class Optimizer(BaseModel):
         0.5  # balance between minimizing costs and maximizing coverage
     )
     INITIAL_GUESS: list[NonNegativeInt] = [
-        100,
-        0,
         10,
+        0,
+        0,
     ]  # initial guess for PV and Battery and cogen/trigen sizes
     BOUNDS: ClassVar[List[Tuple[Optional[int], Optional[int]]]] = [
         (0, None),  # Bound per PV size

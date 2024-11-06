@@ -1,7 +1,6 @@
 from math import inf
 import numpy as np
 from pydantic import NonNegativeInt, PositiveFloat, validate_call, PositiveInt
-import main
 import multivector_simulator.common as common
 from typing import Literal, Tuple
 from cacer_simulator.common import PositiveOrZeroFloat, get_kw_cost
@@ -201,6 +200,7 @@ def total_economic_cost(
         PositiveFloat - total costs over 20 years in euro
     """
 
+    # COST OF ENERGY (ELECTRIC (and refrigeration), THERMAL)
     cost_electricity_from_grid = (
         annual_electric_energy_from_grid * common.ELECTRIC_ENERGY_PRICE
     )
@@ -215,17 +215,20 @@ def total_economic_cost(
         cost_thermal_from_grid, labelCostSaving="Costs"
     ).sum()
 
+    # INSTALLATION COST
     cost_installation_PV = cost_PV_installation(PV_size)
     cost_installation_battery = cost_battery_installation(battery_size)
     cost_installation_trigen_cogen = cost_cogen_trigen_installation(
         cogen_trigen_size, labelCogTrigen
     )
 
+    # COST OF GAS USE
     annually_cost_gas = cost_gas_used_cogen_trigen(annually_used_gas)
     annually_cost_gas_actualized = actualization(
         annually_cost_gas, labelCostSaving="Costs"
     ).sum()
 
+    # MAINTENANCE COST
     annually_cost_maintenance_PV = maintenance_cost_PV(PV_size, battery_size)
     cost_maintenance_PV_actualized = actualization(
         annually_cost_maintenance_PV, labelCostSaving="Costs"
@@ -237,6 +240,8 @@ def total_economic_cost(
     cost_maintenance_cogen_trigen_actualized = actualization(
         annually_cost_maintenance_cogen_trigen, labelCostSaving="Costs"
     ).sum()
+
+    # TOTAL COST
     total_cost = (
         cost_installation_PV
         + cost_installation_battery
@@ -708,7 +713,7 @@ def optimizer(
             refrigerator_consumption,
             labelCogTrigen,
         ),
-        method="SLSQP",
+        method="trust-constr",
         bounds=common.Optimizer().BOUNDS,
     )
     PV_size, battery_size, cogen_trigen_size = result.x

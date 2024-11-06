@@ -69,7 +69,7 @@ def Simulator_Multivettore():
             )
             # choose between cogen or trigen
             if (
-                total_costs_C < total_costs_T
+                total_costs_C <= total_costs_T
             ):  # the cost of cogen are less then trigen -> choose cogen
                 PV_size = PV_size_C
                 cogen_size = cogen_size_C
@@ -91,10 +91,14 @@ def Simulator_Multivettore():
                 investment_costs = investment_costs_T
                 cost_gas = cost_gas_T
                 LabelCogTrigen = "Trigen"
+            # cost of maintenance of PV and cogen/trigen in a year
+            annual_maintenance_cost = model.maintenance_cost_PV(
+                PV_size, battery_size
+            ) + model.maintenance_cost_cogen_trigen(cogen_trigen_size, LabelCogTrigen)
 
             # calculation of recovery time
             df_cumulative_cost_savings = model.cumulative_costs_savings(
-                savings, investment_costs, cost_gas
+                savings, investment_costs, cost_gas + annual_maintenance_cost
             )
             recovery_time = model.calc_payback_time(df_cumulative_cost_savings)
 

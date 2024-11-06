@@ -19,11 +19,11 @@ def sizes_energies_costs(
     -cogen_size: NonNegativeInt - best cogen size in kW if label is Cogen else is 0
     -trigen_size: NonNegativeInt - best trigen size in kW if label is Trigen else is 0
     -battery_size: NonNegativeInt - best battery size in kW
-    -savings: PositiveFloat - savings in euro from the usage of the best sizes over a period of one year considering the energy that is not purchased from the gird
+    -savings: PositiveFloat - annual savings in euro from the usage of the best sizes over a period of one year considering the energy that is not purchased from the gird
     -investment_costs: PositiveFloat - total costs in euro of installation of battery, pv, cogen/trigen
-    -total_costs: PositiveFloat - total costs in euro of installations and usage of gas from cogen/trigen and pv/battery
+    -total_costs: PositiveFloat - annual total costs in euro of installations, maintenance and usage of gas from cogen/trigen and pv/battery
     -percentage_energy_coverage: PositiveFloat - percentage of energy coverage of pv, battery, cogen/trigen considering one year
-    -cost_gas: PositiveFloat - cost of gas in euro from cogen/trigen for 1 year
+    -cost_gas: PositiveFloat - annual cost of gas in euro from cogen/trigen for 1 year
     """
     # OPTIMAL SIZES
     (PV_size, battery_size, cogen_trigen_size) = model.optimizer(
@@ -116,7 +116,11 @@ def sizes_energies_costs(
         total_self_consumed_energy_refrigeration,
     )
 
-    total_costs = investment_costs + cost_gas
+    annual_maintenance_cost = model.maintenance_cost_cogen_trigen(
+        cogen_trigen_size, LabelCogTrigen
+    ) + model.maintenance_cost_PV(PV_size, battery_size)
+
+    total_costs = investment_costs + cost_gas + annual_maintenance_cost
     if np.nansum(refrigeration_consumption) != 0:
         percentage_energy_coverage = (
             (total_self_consumed_energy_electric / np.nansum(electric_consumption))

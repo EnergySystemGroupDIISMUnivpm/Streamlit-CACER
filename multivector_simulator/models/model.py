@@ -1,6 +1,7 @@
 from math import inf
 import numpy as np
 from pydantic import NonNegativeInt, PositiveFloat, validate_call, PositiveInt
+import main
 import multivector_simulator.common as common
 from typing import Literal, Tuple
 from cacer_simulator.common import PositiveOrZeroFloat, get_kw_cost
@@ -131,6 +132,43 @@ def cogen_trigen_usage_gas(
     return used_gas
 
 
+def maintenance_cost_PV(
+    PV_size: NonNegativeInt, battery_size: NonNegativeInt
+) -> PositiveOrZeroFloat:
+    """
+    Calculation of the annual cost of the maintenance of the PV plant (with or without battery) in euro.
+    """
+    if battery_size != 0:
+        annually_cost_maintenance_PV = (
+            common.MAINTENANCE_COST_PV["with_battery"] * PV_size
+        )
+    else:
+        annually_cost_maintenance_PV = (
+            common.MAINTENANCE_COST_PV["no_battery"] * PV_size
+        )
+    return annually_cost_maintenance_PV
+
+
+def maintenance_cost_cogen_trigen(
+    cogen_trigen_size: NonNegativeInt, LabelCogTrigen: str
+) -> PositiveOrZeroFloat:
+    """
+    Calculation of the annual cost of the maintenance of the cogenerator/trigenerator in euro.
+    Attrs:
+        cogen_trigen_size: PositiveOrZeroFloat - size of the cogenerator or trigenerator in kW
+        labelCogTrigen: str - indicating "Cogen" or "Trigen"
+
+    """
+    cost_installation_trigen_cogen = cost_cogen_trigen_installation(
+        cogen_trigen_size, LabelCogTrigen
+    )
+    annually_maintenance_cost_cogen_trigen = (
+        common.Trigen_Cogen().MAINTENANCE_COST_PERCENTAGE
+        * cost_installation_trigen_cogen
+    )
+    return annually_maintenance_cost_cogen_trigen
+
+
 def total_economic_cost(
     annual_electric_energy_from_grid: PositiveOrZeroFloat,
     annual_thermal_energy_from_grid: PositiveOrZeroFloat,
@@ -139,15 +177,16 @@ def total_economic_cost(
     battery_size: NonNegativeInt,
     cogen_trigen_size: NonNegativeInt,
     labelCogTrigen: str,
-):
+) -> PositiveFloat:
     """
-    Calculation of total costs over a period of time, sum of:
+    Calculation of total costs over 20years, sum of:
     -installation of battery
     -installation of cogen/trigen
     -installation of PV
     -electric energy from grid
     -thermal energy from grid
     -gas used by cogen/trigen
+    -costs of maintenance of PV and cogen/trigen
 
     Attrs:
         annual_electric_energy_from_grid: PositiveOrZeroFloat - annual electric energy from grid in kWh
@@ -157,6 +196,9 @@ def total_economic_cost(
         battery_size: NonNegativeInt - size of the battery in kW
         cogen_trigen_size: NonNegativeInt - size of the cogenerator or trigenerator in kW
         labelCogTrigen: str - indicating "Cogen" or "Trigen"
+
+    Returns:
+        PositiveFloat - total costs over 20 years in euro
     """
 
     cost_electricity_from_grid = (
@@ -183,6 +225,18 @@ def total_economic_cost(
     annually_cost_gas_actualized = actualization(
         annually_cost_gas, labelCostSaving="Costs"
     ).sum()
+
+    annually_cost_maintenance_PV = maintenance_cost_PV(PV_size, battery_size)
+    cost_maintenance_PV_actualized = actualization(
+        annually_cost_maintenance_PV, labelCostSaving="Costs"
+    ).sum()
+
+    annually_cost_maintenance_cogen_trigen = maintenance_cost_cogen_trigen(
+        cogen_trigen_size, labelCogTrigen
+    )
+    cost_maintenance_cogen_trigen_actualized = actualization(
+        annually_cost_maintenance_cogen_trigen, labelCostSaving="Costs"
+    ).sum()
     total_cost = (
         cost_installation_PV
         + cost_installation_battery
@@ -190,6 +244,8 @@ def total_economic_cost(
         + (cost_electricity_from_grid_actualized)
         + (cost_thermal_from_grid_actualized)
         + (annually_cost_gas_actualized)
+        + (cost_maintenance_cogen_trigen_actualized)
+        + (cost_maintenance_PV_actualized)
     )
     return total_cost
 

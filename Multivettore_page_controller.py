@@ -6,6 +6,7 @@ from multivector_simulator.models import model
 import numpy as np
 import multivector_simulator.common as common
 import multivector_controller_wrapped_functions
+import calcoli_validazione
 
 
 def Simulator_Multivettore():
@@ -166,3 +167,8 @@ def Simulator_Multivettore():
                         "Frigorifera",
                         st.session_state["period_label"],
                     )
+                calcoli_validazione.validazione(
+                    electric_production_pv,
+                    electric_production_cogen,
+                    electric_consumption,
+                )

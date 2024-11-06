@@ -117,14 +117,20 @@ def sizes_energies_costs(
     )
 
     total_costs = investment_costs + cost_gas
-    percentage_energy_coverage = (
-        (total_self_consumed_energy_electric / np.nansum(electric_consumption))
-        + (total_self_consumed_energy_thermal / np.nansum(thermal_consumption))
-        + (
-            total_self_consumed_energy_refrigeration
-            / np.nansum(refrigeration_consumption)
+    if np.nansum(refrigeration_consumption) != 0:
+        percentage_energy_coverage = (
+            (total_self_consumed_energy_electric / np.nansum(electric_consumption))
+            + (total_self_consumed_energy_thermal / np.nansum(thermal_consumption))
+            + (
+                total_self_consumed_energy_refrigeration
+                / np.nansum(refrigeration_consumption)
+            )
         )
-    )
+    else:
+        percentage_energy_coverage = (
+            total_self_consumed_energy_electric / np.nansum(electric_consumption)
+        ) + (total_self_consumed_energy_thermal / np.nansum(thermal_consumption))
+
     return (
         PV_size,
         cogen_size,

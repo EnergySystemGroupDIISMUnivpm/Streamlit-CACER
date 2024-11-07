@@ -7,6 +7,7 @@ from cacer_simulator.common import PositiveOrZeroFloat, get_kw_cost
 import pandas as pd
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+from numpy.typing import NDArray
 
 
 def calculate_mean_over_period(data: np.ndarray, hours: int) -> np.ndarray:
@@ -176,7 +177,7 @@ def total_economic_cost(
     battery_size: NonNegativeInt,
     cogen_trigen_size: NonNegativeInt,
     labelCogTrigen: str,
-) -> PositiveFloat:
+) -> np.ndarray:
     """
     Calculation of total costs over 20years, sum of:
     -installation of battery
@@ -197,7 +198,7 @@ def total_economic_cost(
         labelCogTrigen: str - indicating "Cogen" or "Trigen"
 
     Returns:
-        PositiveFloat - total costs over 20 years in euro
+        np.ndarray - total costs over 20 years in euro
     """
 
     # COST OF ENERGY (ELECTRIC (and refrigeration), THERMAL)
@@ -206,14 +207,14 @@ def total_economic_cost(
     )
     cost_electricity_from_grid_actualized = actualization(
         cost_electricity_from_grid, labelCostSaving="Costs"
-    ).sum()
+    )  # costi attualizzati dell'energia elettrica da rete considerando un periodo di 20 anni
 
     cost_thermal_from_grid = (
         annual_thermal_energy_from_grid * common.THERMAL_ENERGY_PRICE
     )
     cost_thermal_from_grid_actualized = actualization(
         cost_thermal_from_grid, labelCostSaving="Costs"
-    ).sum()
+    )  # costi attualizzati dell'energia termica da rete considerando un periodo di 20 anni
 
     # INSTALLATION COST
     cost_installation_PV = cost_PV_installation(PV_size)
@@ -226,20 +227,30 @@ def total_economic_cost(
     annually_cost_gas = cost_gas_used_cogen_trigen(annually_used_gas)
     annually_cost_gas_actualized = actualization(
         annually_cost_gas, labelCostSaving="Costs"
-    ).sum()
+    )  # costi attualizzati dell'uso del gas considerando un periodo di 20 anni
 
     # MAINTENANCE COST
     annually_cost_maintenance_PV = maintenance_cost_PV(PV_size, battery_size)
     cost_maintenance_PV_actualized = actualization(
         annually_cost_maintenance_PV, labelCostSaving="Costs"
-    ).sum()
+    )  # costi attualizzati del mantenimento di PV considerando un periodo di 20 anni
 
     annually_cost_maintenance_cogen_trigen = maintenance_cost_cogen_trigen(
         cogen_trigen_size, labelCogTrigen
     )
     cost_maintenance_cogen_trigen_actualized = actualization(
         annually_cost_maintenance_cogen_trigen, labelCostSaving="Costs"
-    ).sum()
+    )  # costi attualizzati del mantenimento di cogen/trigen considerando un periodo di 20 anni
+
+    null_array = np.zeros_like(cost_maintenance_cogen_trigen_actualized)
+    null_array[0] = cost_installation_PV
+    cost_installation_PV = null_array
+
+    null_array[0] = cost_installation_battery
+    cost_installation_battery = null_array
+
+    null_array[0] = cost_installation_trigen_cogen
+    cost_installation_trigen_cogen = null_array
 
     # TOTAL COST
     total_cost = (
@@ -252,6 +263,7 @@ def total_economic_cost(
         + (cost_maintenance_cogen_trigen_actualized)
         + (cost_maintenance_PV_actualized)
     )
+
     return total_cost
 
 
@@ -277,15 +289,6 @@ def savings_using_implants(
         * common.ELECTRIC_ENERGY_PRICE
     )
     return savings
-
-
-def savings_in_a_period(savings: PositiveFloat, period: PositiveInt) -> PositiveFloat:
-    """Calculation of the savings over a period of time.
-    Attrs:
-        savings: PositiveFloat - savings in euro
-        period: PositiveInt - period in years"""
-    savings_period = actualization(savings, period, "Savings").sum()
-    return savings_period
 
 
 def cumulative_costs_savings(
@@ -385,12 +388,14 @@ def calculate_cogen_or_trigen_energy_coverage(
     electric_consumption = np.clip(
         electric_consumption - cogen_trigen_electric_production, 0, None
     )
+
     # thermal energy balance
     thermal_consumption_before_cogen_trigen = thermal_consumption.copy()
     ##update the thermal consumption subtracting the thermal energy produced by cogenerator/trigenerator
     thermal_consumption = np.clip(
         thermal_consumption - cogen_trigen_thermal_production, 0, None
     )
+
     # refrigeration energy balance
     refrigeration_consumption_before_cogen_trigen = refrigerator_consumption.copy()
     ##update the refrigeration consumption subtracting the refrigeration energy produced by cogenerator/trigenerator
@@ -403,6 +408,7 @@ def calculate_cogen_or_trigen_energy_coverage(
     self_consumption_electric_energy_from_cogen_trigen = (
         electric_consumption_before_cogen_trigen - electric_consumption
     )
+
     # thermal energy self-consumed
     self_consumption_thermal_energy_from_cogen_trigen = (
         thermal_consumption_before_cogen_trigen - thermal_consumption
@@ -477,7 +483,7 @@ def calculation_pv_production(pv_size) -> np.ndarray:
     Attrs:
         pv_size: PositiveInt - size of the PV plant in kW
     """
-    pv_production = common.pv_production_hourly * pv_size
+    pv_production: np.ndarray = common.pv_production_hourly * pv_size
     return pv_production
 
 
@@ -516,20 +522,17 @@ def determination_electric_coverage_year_PV_battery(
         available_battery_energy_from_cogen, 0, battery_size
     )
     available_battery_energy_from_pv = np.zeros_like(electric_consumption)
-
     # ENERGY BALANCE
     # from PV
     excess_energy_pv = np.maximum(pv_production - electric_consumption, 0)
     electric_consumption_before_pv = electric_consumption.copy()
     ##update electric consumption subtracting electric energy produced by PV
     electric_consumption = np.clip(electric_consumption - pv_production, 0, None)
-
     # SELF CONSUMPTION ELECTRIC ENERGY
     # from PV
     self_consumption_electric_energy_from_pv = (
         electric_consumption_before_pv - electric_consumption
     )
-
     # save of energy available for battery coming from PV
     available_battery_energy_before_pv = np.clip(excess_energy_pv, 0, battery_size)
     # Update battery energy with excess PV production
@@ -539,14 +542,12 @@ def determination_electric_coverage_year_PV_battery(
     available_battery_energy_from_pv = (
         available_battery_energy - available_battery_energy_before_pv
     )
-
     # Energy balance with battery storage
     electric_consumption_before_battery = electric_consumption.copy()
     ##update electric consumption subtracting energy from battery
     electric_consumption = np.clip(
         electric_consumption - available_battery_energy, 0, None
     )
-
     # Split battery consumption between PV and cogenerator sources to know which energy is from
     battery_usage_ratio = np.divide(
         available_battery_energy_from_pv,
@@ -562,10 +563,8 @@ def determination_electric_coverage_year_PV_battery(
     self_consumed_energy_battery_cogen = (
         electric_consumption_before_battery - electric_consumption
     ) * (1 - battery_usage_ratio)
-
     # ENERGY FROM GRID (energy not covered with PV or battery)
     energy_from_grid = electric_consumption
-
     return (
         energy_from_grid,
         self_consumed_energy_battery_pv,
@@ -633,6 +632,21 @@ def objective_function(
         battery_size,
     )
 
+    # savings
+    total_self_consumed_electric = (
+        np.nansum(self_consumption_electric_energy_from_cogen_trigen)
+        + np.nansum(electric_energy_from_pv)
+        + np.nansum(energy_battery_pv)
+        + np.nansum(energy_battery_cogen)
+    )
+
+    annual_savings = savings_using_implants(
+        total_self_consumed_electric,
+        np.nansum(self_consumption_thermal_energy_from_cogen_trigen),
+        np.nansum(self_consumption_refrigeration_energy_from_cogen_trigen),
+    )
+    savings_years = actualization(annual_savings, labelCostSaving="Savings")
+
     # COSTS
     # energy from grid
     ##electric (considering even refrigeration)
@@ -650,6 +664,7 @@ def objective_function(
             )  # per ogni kwh che un condizionartore consuma, produce N kWh di energia frigorifera
         )  # electric energy from grid after adding cogen/trigen for refrigeration
     )
+
     # thermal
     total_thermal_energy_from_grid = np.nansum(thermal_energy_from_grid)
 
@@ -659,10 +674,12 @@ def objective_function(
         thermal_production_cogen,
         refrigeration_production_cogen,
     ) = annual_production_cogen_trigen(cogen_or_trigen_size, labelCogTrigen)
+
     # number of hours in which the cogen works at full capacity
     working_hours = np.count_nonzero(electric_production_cogen)
     # quantity of gas in Smc used annyally by cogen
     annually_used_gas = cogen_trigen_usage_gas(cogen_or_trigen_size, working_hours)
+
     # total costs
     total_cost = total_economic_cost(
         total_electric_energy_from_grid,
@@ -674,7 +691,16 @@ def objective_function(
         labelCogTrigen,
     )
 
-    # Final objective function: balance between minimizing costs and maximizing coverage
+    # Calcolo del payback time
+    cumulativo_costi = np.cumsum(total_cost)  # Somma cumulativa dei costi
+    cumulativo_risparmi = np.cumsum(savings_years)  # Somma cumulativa dei risparmi
+
+    # Trova l'anno in cui i risparmi cumulativi superano i costi cumulativi
+    payback_time = np.argmax(cumulativo_risparmi >= cumulativo_costi) + 1
+
+    # Final objective function: balance between minimizing costs
+    total_cost = total_cost.sum()
+
     objective_function = total_cost
     return objective_function
 
@@ -704,6 +730,7 @@ def optimizer(
     initial_guess = (
         common.Optimizer().INITIAL_GUESS
     )  # Guess for PV size and battery size
+
     result = minimize(
         objective_function,
         initial_guess,

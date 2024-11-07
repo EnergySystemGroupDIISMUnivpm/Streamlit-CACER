@@ -41,7 +41,6 @@ def Simulator_Multivettore():
                 savings_C,
                 investment_costs_C,
                 total_costs_C,
-                percentage_energy_coverage_C,
                 cost_gas_C,
             ) = multivector_controller_wrapped_functions.sizes_energies_costs(
                 electric_consumption,
@@ -59,7 +58,6 @@ def Simulator_Multivettore():
                 savings_T,
                 investment_costs_T,
                 total_costs_T,
-                percentage_energy_coverage_T,
                 cost_gas_T,
             ) = multivector_controller_wrapped_functions.sizes_energies_costs(
                 electric_consumption,

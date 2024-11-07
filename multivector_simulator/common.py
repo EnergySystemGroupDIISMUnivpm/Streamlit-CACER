@@ -213,9 +213,6 @@ LabelEnergyType = Annotated[
 
 
 class Optimizer(BaseModel):
-    ALPHA: PositiveOrZeroFloat = (
-        0.5  # balance between minimizing costs and maximizing coverage
-    )
     INITIAL_GUESS: list[NonNegativeInt] = [
         10,
         0,

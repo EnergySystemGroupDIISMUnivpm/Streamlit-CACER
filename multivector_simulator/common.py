@@ -17,6 +17,7 @@ AVG_EMISSIONS_FACTOR_ELETRICITY = 0.309  # how much CO2 is emitted for each kWh 
 AVG_EMISSIONS_FACTOR_THERMAL = 0.2  # how much CO2 is emitted for each kWh produced by the italian traditional thermal grid (kg CO2/kWh)
 
 HOURS_OF_YEAR = 8760
+# HOURS_OF_YEAR = 24 * 5
 
 EFFICIENCY_CONDITIONER = 2  # efficiency of conditioner. In realtà per ongi kwh che un condizionartore consuma, produce 3 kWh di energia frigorifera. Ne consideriamo meno per tenere conto anche dei costi di installazione di in un condizionatore in maniera forfettaria
 
@@ -162,7 +163,7 @@ def validate_consumption_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 pv_production_hourly = pd.read_csv("././resources/PV_data.csv", header=None)[
     2
-].to_numpy()
+].to_numpy()[:HOURS_OF_YEAR]
 
 
 ConsumptionDataFrameType = Annotated[

@@ -8,6 +8,12 @@ import pandas as pd
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from numpy.typing import NDArray
+from pathlib import Path
+import matplotlib
+
+matplotlib.use("qt5agg")
+
+import matplotlib.pyplot as plt
 
 
 def calculate_mean_over_period(data: np.ndarray, hours: int) -> np.ndarray:
@@ -380,6 +386,7 @@ def calculate_cogen_or_trigen_energy_coverage(
 
     # ENERGY BALANCE
     # electric energy
+
     excess_electric_energy_cogen_trigen = np.maximum(
         cogen_trigen_electric_production - electric_consumption, 0
     )  ##excess of eletric energy produced by cogen/trigen that can be stored in a battery
@@ -777,3 +784,53 @@ def actualization(
             [annual_cost * ((1 + discount_rate) ** i) for i in range(1, years + 1)]
         )
     return actualized_cost
+
+
+if __name__ == "__main__":
+    p = Path(__file__).parents[2]
+    nday = common.HOURS_OF_YEAR
+    data = pd.read_excel(
+        p / "resources" / "Esempio_input_consumi_trigen.xlsx", engine="openpyxl"
+    )
+    electric_consumption = data.iloc[:, 1][:nday]
+    thermal_consumption = data.iloc[:, 2][:nday]
+    refrigerator_consumption = data.iloc[:, 3][:nday]
+
+    labelCogTrigen = "Trigen"  # Cogen or Trigen
+
+    result = optimizer(
+        electric_consumption,
+        thermal_consumption,
+        refrigerator_consumption,
+        labelCogTrigen,
+    )
+
+    PV_size, battery_size, cogen_trigen_size = result
+    print(f"PV_size: {PV_size} kW")
+    print(f"battery_size: {battery_size} kW")
+    print(f"cogen_trigen_size: {cogen_trigen_size} kW")
+
+    pv_prod = calculation_pv_production(PV_size)
+    (
+        cogen_electric_production,
+        cogen_thermal_production,
+        cogen_refrigerator_production,
+    ) = annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen)
+
+    total_production = pv_prod + cogen_electric_production
+
+    plt.figure()
+    plt.plot(electric_consumption, label="electric_consumption")
+    plt.plot(total_production, label="total_production")
+    plt.legend()
+
+    plt.figure()
+    plt.plot(thermal_consumption, label="thermal_consumption")
+    plt.plot(cogen_thermal_production, label="cogen_thermal_production")
+
+    plt.figure()
+    plt.plot(refrigerator_consumption, label="refrigerator_consumption")
+    plt.plot(cogen_refrigerator_production, label="cogen_refrigerator_production")
+    plt.legend()
+    plt.show()
+    pass

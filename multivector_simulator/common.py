@@ -59,7 +59,7 @@ class Trigen_Cogen(BaseModel):
     )
 
     MAINTENANCE_COST_PERCENTAGE: PositiveFloat = (
-        0.3  # cost of maintenance of cogenerator/trigenerator is 3% of the initial investment cost each year.
+        0.03  # cost of maintenance of cogenerator/trigenerator is 3% of the initial investment cost each year.
     )
 
     class Cogenerator(BaseModel):

@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 from pathlib import Path
 import matplotlib
 
-matplotlib.use("qt5agg")
+# matplotlib.use("qt5agg")
 
 import matplotlib.pyplot as plt
 

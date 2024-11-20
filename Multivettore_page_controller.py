@@ -22,6 +22,11 @@ def Simulator_Multivettore():
         thermal_consumption = consumption["Consumi Termici (kWh)"].to_numpy()
         refrigeration_consumption = consumption["Consumi Frigoriferi (kWh)"].to_numpy()
 
+        if (refrigeration_consumption != 0).any():
+            LabelCogTrigen = "Trigen"
+        else:
+            LabelCogTrigen = "Cogen"
+
         # Insert button results
         if "see_results" not in st.session_state:
             st.session_state["see_results"] = False
@@ -32,63 +37,27 @@ def Simulator_Multivettore():
 
         if st.session_state["see_results"]:
 
-            # calculation of the best size of cogen, pv, battery
+            # calculation of the best size of cogen/trigen, pv, battery
             (
-                PV_size_C,
-                cogen_size_C,
-                trigen_size_C,
-                battery_size_C,
-                savings_C,
-                investment_costs_C,
-                total_costs_C,
-                cost_gas_C,
+                PV_size,
+                cogen_size,
+                trigen_size,
+                battery_size,
+                savings,
+                investment_costs,
+                total_costs,
+                cost_gas,
             ) = multivector_controller_wrapped_functions.sizes_energies_costs(
                 electric_consumption,
                 thermal_consumption,
                 refrigeration_consumption,
-                "Cogen",
+                LabelCogTrigen,
             )
-
-            # calculation of the best size of trigen, pv, battery
-            (
-                PV_size_T,
-                cogen_size_T,
-                trigen_size_T,
-                battery_size_T,
-                savings_T,
-                investment_costs_T,
-                total_costs_T,
-                cost_gas_T,
-            ) = multivector_controller_wrapped_functions.sizes_energies_costs(
-                electric_consumption,
-                thermal_consumption,
-                refrigeration_consumption,
-                "Trigen",
-            )
-            # choose between cogen or trigen
-            if (
-                total_costs_C <= total_costs_T
-            ):  # the cost of cogen are less then trigen -> choose cogen
-                PV_size = PV_size_C
-                cogen_size = cogen_size_C
+            if LabelCogTrigen == "Cogen":
                 cogen_trigen_size = cogen_size
-                trigen_size = trigen_size_C
-                battery_size = battery_size_C
-                savings = savings_C
-                investment_costs = investment_costs_C
-                cost_gas = cost_gas_C
-                LabelCogTrigen = "Cogen"
-
-            else:  # the cost of trigen are less then cogen -> choose trigen
-                PV_size = PV_size_T
-                cogen_size = cogen_size_T
-                trigen_size = trigen_size_T
+            else:
                 cogen_trigen_size = trigen_size
-                battery_size = battery_size_T
-                savings = savings_T
-                investment_costs = investment_costs_T
-                cost_gas = cost_gas_T
-                LabelCogTrigen = "Trigen"
+
             # cost of maintenance of PV and cogen/trigen in a year
             annual_maintenance_cost = model.maintenance_cost_PV(
                 PV_size, battery_size
@@ -169,8 +138,3 @@ def Simulator_Multivettore():
                         "Frigorifera",
                         st.session_state["period_label"],
                     )
-                calcoli_validazione.validazione(
-                    electric_production_pv,
-                    electric_production_cogen,
-                    electric_consumption,
-                )

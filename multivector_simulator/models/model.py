@@ -131,6 +131,8 @@ def cogen_trigen_usage_gas(
         cogen_trigen_size: NonNegativeInt - size of the cogenerator or trigenerator in kW
         working_hours: NonNegativeInt - amount of hours working at full capacity
     """
+    if 35 < cogen_trigen_size < 45:
+        pass
     trigen_cogen = common.Trigen_Cogen()
     used_gas = working_hours * trigen_cogen.get_gas_quantity_cogen_trigen(
         cogen_trigen_size
@@ -312,10 +314,10 @@ def cumulative_costs_savings(
 
     years = common.Optimizer().YEARS
     annual_value = [-initial_investment]
-    annual_costs = -actualization(costs_in_year, labelCostSaving="Costs")
+    annual_costs = actualization(costs_in_year, labelCostSaving="Costs")
     annual_savings = actualization(savings_in_year, labelCostSaving="Savings")
     for i in range(1, years + 1):
-        value = annual_value[-1] + annual_costs[i - 1] + annual_savings[i - 1]
+        value = annual_value[-1] - annual_costs[i - 1] + annual_savings[i - 1]
         annual_value.append(value)
 
     df = pd.DataFrame(
@@ -775,14 +777,9 @@ def actualization(
         actualized_cost: np.ndarray - actualized costs/saving in euro. i-th element is the actualized cost/saving for the i-th year in euro.
     """
     discount_rate = common.Optimizer().DISCOUNT_RATE
-    if labelCostSaving == "Savings":
-        actualized_cost = np.array(
-            [annual_cost / ((1 + discount_rate) ** i) for i in range(1, years + 1)]
-        )
-    else:
-        actualized_cost = np.array(
-            [annual_cost * ((1 + discount_rate) ** i) for i in range(1, years + 1)]
-        )
+    actualized_cost = np.array(
+        [annual_cost / ((1 + discount_rate) ** i) for i in range(1, years + 1)]
+    )
     return actualized_cost
 
 
@@ -827,10 +824,10 @@ if __name__ == "__main__":
     plt.figure()
     plt.plot(thermal_consumption, label="thermal_consumption")
     plt.plot(cogen_thermal_production, label="cogen_thermal_production")
+    plt.legend()
 
     plt.figure()
     plt.plot(refrigerator_consumption, label="refrigerator_consumption")
     plt.plot(cogen_refrigerator_production, label="cogen_refrigerator_production")
     plt.legend()
     plt.show()
-    pass

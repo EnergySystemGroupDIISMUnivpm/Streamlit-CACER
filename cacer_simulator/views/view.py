@@ -325,9 +325,9 @@ class Results(BaseModel):
         energy_diff = produced_energy - consumed_energy
         df = pd.DataFrame(
             {
-                "Energia Consumata": [consumed_energy],
-                "Energia Prodotta": [produced_energy],
-                "Differenza": [energy_diff],
+                "Energia Consumata (kWh)": [consumed_energy],
+                "Energia Prodotta (kWh)": [produced_energy],
+                "Differenza (kWh)": [energy_diff],
             }
         )
 

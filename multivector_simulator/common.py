@@ -72,11 +72,11 @@ class Trigen_Cogen(BaseModel):
 
         # cost of 1kW of cogenerator in euro
         kw_cost_cogen: dict[tuple[float, float], int] = {
-            (0, 50): 1500,
-            (50, 100): 1000,
-            (100, 1000): 1500,
-            (1000, 2000): 800,
-            (2000, float("inf")): 400,
+            (0, 50): 1700,
+            (50, 100): 1500,
+            (100, 1000): 1100,
+            (1000, 2000): 1000,
+            (2000, float("inf")): 1000,
         }
 
         def get_kw_cost_cogen(
@@ -91,13 +91,13 @@ class Trigen_Cogen(BaseModel):
 
     class Trigenerator(BaseModel):
         ELECTRIC_EFFICIENCY_TRIGEN: PositiveFloat = (
-            0.33  # eletric efficiency of trigenerator. For 1kWh of energy of gas, 0.33kWh of eletricity are produced.
+            0.40  # eletric efficiency of trigenerator. For 1kWh of energy of gas, 0.33kWh of eletricity are produced.
         )
         THERMAL_EFFICIENCY_TRIGEN: PositiveFloat = (
-            0.34  # thermal efficiency of trigenerator. For 1kWh of energy of gas, 0.34kWh of thermal energy are produced.
+            0.42  # thermal efficiency of trigenerator. For 1kWh of energy of gas, 0.34kWh of thermal energy are produced.
         )
         REFRIGERATION_EFFICIENCY_TRIGEN: PositiveFloat = (
-            0.24  # refrigeration efficiency of trigenerator. For 1kWh of energy of gas, 0.24kWh of refrigeneration are produced.
+            0.31  # refrigeration efficiency of trigenerator.
         )
 
         kw_cost_trigen: dict[tuple[float, float], int] = {

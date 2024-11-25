@@ -275,7 +275,7 @@ class Results(BaseModel):
             st.write(
                 f"""Abbiamo stimato che in media produci più energia di quella di quella che consumi. Potresti condividere questa energia con altre persone.
                     Per esempio potresti valutare l'idea di partecipare a una Comunità Energetica Rinnovabile (CER).
-                    Potresti ricevere ulteriori incentivi statali e migliorersti il tuo impatto ambientale.
+                    Potresti ricevere ulteriori incentivi statali e miglioreresti il tuo impatto ambientale.
                     Per maggiori informazioni puoi provare la sezione CER di questo simulatore.
     """
             )
@@ -283,7 +283,7 @@ class Results(BaseModel):
             st.write(
                 f"""Abbiamo stimato che il tuo condominio produce più energia di quella che consuma. Potresti condividere l'energia in eccesso. 
                     Per esempio potresti valutare l'idea di far partecipare il tuo condominio a una Comunità Energetica Rinnovabile (CER).
-                    Potresti ricevere ulteriori incentivi statali e migliorersti il tuo impatto ambientale.
+                    Potresti ricevere ulteriori incentivi statali e miglioreresti il tuo impatto ambientale.
                     Per maggiori informazioni puoi provare la sezione CER di questo simulatore.
     """
             )

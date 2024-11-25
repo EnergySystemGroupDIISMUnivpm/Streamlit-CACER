@@ -1,4 +1,6 @@
+from cProfile import label
 from math import inf
+from re import U
 import numpy as np
 from pydantic import NonNegativeInt, PositiveFloat, validate_call, PositiveInt
 import multivector_simulator.common as common
@@ -786,30 +788,34 @@ def single_optimizer_run(args):
             refrigerator_consumption,
             labelCogTrigen,
         )
-        PV_size, battery_size, cogen_trigen_size = x
-        electric_PV_prod = np.nansum(calculation_pv_production(PV_size))
-        electric_cogen_trigen_prod, thermal_prod, refrigeration_prod = (
-            annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen)
-        )
-        electric_cogen_trigen_prod = np.nansum(electric_cogen_trigen_prod)
-        total_electric_production = electric_PV_prod + electric_cogen_trigen_prod
-        total_electric_consumption = np.nansum(electric_consumption)
-
-        # Penality if electric prod in one year is> electric consumption
-        if total_electric_production > total_electric_consumption:
-            penalty = 1e6 * (total_electric_production - total_electric_consumption)
-            obj_value += penalty
         return obj_value
+
+    if labelCogTrigen == "Trigen":
+        Upper_cogen_trigen = (
+            max(electric_consumption)
+            / common.Trigen_Cogen().Trigenerator().ELECTRIC_EFFICIENCY_TRIGEN
+        )
+    else:
+        Upper_cogen_trigen = (
+            max(electric_consumption)
+            / common.Trigen_Cogen().Cogenerator().ELECTRIC_EFFICIENCY_COGEN
+        )
+    UpperBound: list[PositiveInt] = [
+        max(electric_consumption),
+        max(electric_consumption),
+        Upper_cogen_trigen,
+    ]  # upper limits for PV, battery, cogen/trigen
 
     # PSO
     best_params, best_value = pso(
         wrapped_objective_function,
         common.Optimizer().LowerBound,
-        common.Optimizer().UpperBound,
+        UpperBound,
         swarmsize=200,
         maxiter=300,
         minfunc=1e-6,
     )
+    print(f"""Best params: {best_params} \n Best value: {best_value} """)
     return best_params, best_value
 
 
@@ -936,7 +942,6 @@ if __name__ == "__main__":
     electric_consumption = data.iloc[:, 1][:nday]
     thermal_consumption = data.iloc[:, 2][:nday]
     refrigerator_consumption = data.iloc[:, 3][:nday]
-
     labelCogTrigen = "Trigen"  # Cogen or Trigen
 
     result = optimizer_multiple_runs(

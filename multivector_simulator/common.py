@@ -229,11 +229,11 @@ class Optimizer(BaseModel):
         0,
         0,
     ]  # low limits for PV, battery, cogen/trigen
-    UpperBound: list[PositiveInt] = [
-        10000,
-        100,
-        1000,
-    ]  # upper limits for PV, battery, cogen/trigen
+    # UpperBound: list[PositiveInt] = [
+    #     10000,
+    #     100,
+    #     1000,
+    # ]  # upper limits for PV, battery, cogen/trigen
     YEARS: PositiveInt = 20  # years to be considered for the calculation of cost
     DISCOUNT_RATE: PositiveFloat = (
         0.05  # discount rate for calculating the return of the investment

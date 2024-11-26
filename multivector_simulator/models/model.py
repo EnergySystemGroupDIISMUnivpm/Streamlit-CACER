@@ -11,7 +11,7 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from numpy.typing import NDArray
 from pathlib import Path
-from pyswarm import pso
+from pyswarm import pso_search_among_integer
 import streamlit as st
 from multiprocessing import Pool
 
@@ -806,7 +806,7 @@ def single_optimizer_run(args):
     ]  # upper limits for PV, battery, cogen/trigen
 
     # PSO
-    best_params, best_value = pso(
+    best_params, best_value = pso_search_among_integer(
         wrapped_objective_function,
         common.Optimizer().LowerBound,
         UpperBound,
@@ -814,6 +814,7 @@ def single_optimizer_run(args):
         maxiter=100,
         minfunc=1e-6,
         debug=True,
+        omega=1,
     )
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
     return best_params, best_value

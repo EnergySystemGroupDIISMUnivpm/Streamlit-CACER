@@ -810,8 +810,8 @@ def single_optimizer_run(args):
         wrapped_objective_function,
         common.Optimizer().LowerBound,
         UpperBound,
-        swarmsize=100,
-        maxiter=50,
+        swarmsize=200,
+        maxiter=100,
         minfunc=1e-6,
         debug=True,
     )

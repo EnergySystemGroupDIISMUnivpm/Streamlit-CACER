@@ -814,7 +814,7 @@ def single_optimizer_run(args):
         maxiter=100,
         minfunc=1e-6,
         debug=True,
-        omega=1,
+        omega=0.5,
     )
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
     return best_params, best_value

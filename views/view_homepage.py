@@ -13,7 +13,7 @@ def homepage() -> MacroSelection | None:
     col1_title, col2_title, col3_title = st.columns([1, 5, 1])
 
     with col1_title:
-        st.image("./resources/logo_ENEA.png", use_column_width=True)
+        st.image("./resources/logo_ENEA.png", use_container_width=True)
 
     with col2_title:
         st.markdown(
@@ -22,7 +22,7 @@ def homepage() -> MacroSelection | None:
         )
 
     with col3_title:
-        st.image("./resources/logo_UNIVPM.png", use_column_width=True)
+        st.image("./resources/logo_UNIVPM.png", use_container_width=True)
 
     col1, col2 = st.columns(2)
 

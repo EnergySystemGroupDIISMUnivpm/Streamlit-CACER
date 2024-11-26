@@ -325,9 +325,9 @@ class Results(BaseModel):
         energy_diff = produced_energy - consumed_energy
         df = pd.DataFrame(
             {
-                "Energia Consumata (kWh)": [consumed_energy],
-                "Energia Prodotta (kWh)": [produced_energy],
-                "Differenza (kWh)": [energy_diff],
+                "Energia Rinnovabile Consumata (kWh)": [round(consumed_energy)],
+                "Energia Prodotta (kWh)": [round(produced_energy)],
+                "Differenza (kWh)": [round(energy_diff)],
             }
         )
 
@@ -340,7 +340,7 @@ class Results(BaseModel):
             fig.add_trace(
                 go.Bar(
                     x=[
-                        "Energia Consumata",
+                        "Energia Rinnovabile Consumata",
                         "Energia Prodotta",
                         "Differenza tra Produzione e Consumo",
                     ],
@@ -349,7 +349,9 @@ class Results(BaseModel):
                 )
             )
 
-            st.write(f"Confronto tra Energia Consumata e Prodotta in un anno:")
+            st.write(
+                f"Confronto tra Energia Rinnovabile Consumata e Prodotta in un anno:"
+            )
             fig.update_layout(
                 yaxis_title="Energia (kWh)",
                 yaxis_title_font_size=16,

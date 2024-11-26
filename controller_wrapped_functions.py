@@ -166,7 +166,9 @@ def benefit_results(
         results.see_computed_costs_plant(cost_plant, "Creazione")
     # both for area and PV plant already present
     results.see_production(production, label_pv_or_area)
-    results.bar_chart_consum_prod(consumption, production)
+    results.bar_chart_consum_prod(
+        consumption * percentage_daily_consumption, production
+    )
     results.visualize_economical_environmental_benefits()
     benefit_b = model.economical_benefit_b(
         power_pv,
@@ -224,7 +226,9 @@ def results_CER(
         results.see_computed_costs_plant(cost_plant, "Creazione")
 
     results.see_production(production, label_pv_or_area)
-    results.bar_chart_consum_prod(consumption, production)
+    results.bar_chart_consum_prod(
+        consumption * percentage_daily_consumption, production
+    )
 
     # case of Overproduction. So new possible members of CER are proposed with relative economical and environmental benefits.
     if overproduction_or_undeproduction == "Overproduction":

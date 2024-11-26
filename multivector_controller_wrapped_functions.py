@@ -4,7 +4,12 @@ import numpy as np
 
 
 def sizes_energies_costs(
-    electric_consumption, thermal_consumption, refrigeration_consumption, LabelCogTrigen
+    electric_consumption,
+    thermal_consumption,
+    refrigeration_consumption,
+    LabelCogTrigen,
+    start_winter_season,
+    end_winter_season,
 ):
     """
     Calculation of the best sizes of PV, battery and cogen/trigen and relative savings, investment costs, total costs, percentage of energy coverage.
@@ -13,6 +18,8 @@ def sizes_energies_costs(
     thermal_consumption: np.ndarray - thermal annual consumptions in kWh
     refrigerator_consumption: np.ndarray - refrigerator annual consumption in kWh
     LabelCogTrigen: str - indicating "Cogen" or "Trigen"
+    start_winter_season: NonNegativeInt - start month of the winter season (0=January)
+    end_winter_season: NonNegativeInt - end month of the winter season (0=January)
 
     Returns:
     Tuple cotaining:
@@ -31,6 +38,8 @@ def sizes_energies_costs(
         thermal_consumption,
         refrigeration_consumption,
         LabelCogTrigen,
+        start_winter_season,
+        end_winter_season,
     )
 
     if LabelCogTrigen == "Cogen":
@@ -56,6 +65,8 @@ def sizes_energies_costs(
         electric_consumption,
         cogen_trigen_size,
         LabelCogTrigen,
+        start_winter_season,
+        end_winter_season,
     )
     # from pv/battery
     (

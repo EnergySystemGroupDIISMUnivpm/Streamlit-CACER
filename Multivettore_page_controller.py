@@ -1,4 +1,5 @@
 from math import e
+from tracemalloc import start
 import streamlit as st
 import pandas as pd
 from multivector_simulator.views.view import UserInput, UserOuput, title_multivettore
@@ -13,6 +14,7 @@ def Simulator_Multivettore():
     title_multivettore()
 
     user_input = UserInput()
+    start_winter_season, end_winter_season = user_input.insert_winter_season()
     consumption = user_input.download_upload_consumption()
     user_output = UserOuput()
 
@@ -52,6 +54,8 @@ def Simulator_Multivettore():
                 thermal_consumption,
                 refrigeration_consumption,
                 LabelCogTrigen,
+                start_winter_season,
+                end_winter_season,
             )
             if LabelCogTrigen == "Cogen":
                 cogen_trigen_size = cogen_size
@@ -96,7 +100,10 @@ def Simulator_Multivettore():
                     thermal_production_cogen,
                     refrigeration_production_cogen,
                 ) = model.annual_production_cogen_trigen(
-                    cogen_trigen_size, LabelCogTrigen
+                    cogen_trigen_size,
+                    LabelCogTrigen,
+                    start_winter_season,
+                    end_winter_season,
                 )
                 electric_production_period = model.calculate_mean_over_period(
                     np.nansum(

@@ -27,6 +27,7 @@ class UserInput(BaseModel):
         Function that gives the possibility to user to download an excel file, complete it and upload it with its Electrical, Thermal and Refrigerator compsumptions.
         """
         df_uploaded = None
+        st.markdown("  ")
         st.markdown(
             """Scarica, Compila con i tuoi consumi energetici e Ricarica il File Excel. Il file deve contenere i consumi elettrici, caloriferi e frigoriferi orari riferiti ad un periodo di un anno.  \n Se inserisci consumi frigoriferi diversi da zero, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria e un impianto di trigenerazione.  \n Se inserisci consumi frigoriferi nulli, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria e un impianto di cogenerazione."""
         )
@@ -55,6 +56,47 @@ class UserInput(BaseModel):
             return df_uploaded
 
         return None
+
+    def insert_winter_season(self) -> tuple[PositiveInt, PositiveInt]:
+        """
+        Function that gives the possibility to user to insert the start and the end of the winter season.
+        Returns the start and the end months of the winter season in integers (0=January)
+        """
+        st.markdown("Quando inizia la stagione invernale?")
+        mese_to_num = {
+            "Gennaio": 0,
+            "Febbraio": 1,
+            "Marzo": 2,
+            "Aprile": 3,
+            "Maggio": 4,
+            "Giugno": 5,
+            "Luglio": 6,
+            "Agosto": 7,
+            "Settembre": 8,
+            "Ottobre": 9,
+            "Novembre": 10,
+            "Dicembre": 11,
+        }
+
+        # Ottieni i valori dai selectbox di Streamlit
+        start_winter_season = st.selectbox(
+            "Inserisci il mese di inizio della stagione invernale",
+            options=list(mese_to_num.keys()),
+            index=10,
+            key="inizio_stag_invernale",
+            label_visibility="visible",
+        )
+
+        end_winter_season = st.selectbox(
+            "Inserisci il mese di fine della stagione invernale",
+            options=list(mese_to_num.keys()),
+            index=3,
+            key="fine_stag_invernale",
+            label_visibility="visible",
+        )
+
+        mesi = list(mese_to_num.keys())
+        return mesi.index(start_winter_season), mesi.index(end_winter_season)
 
     def select_period_plot(self):
         st.markdown(" ")

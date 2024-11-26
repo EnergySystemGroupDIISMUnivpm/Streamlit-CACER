@@ -348,6 +348,8 @@ def calculate_cogen_or_trigen_energy_coverage(
     electric_consumption: np.ndarray,
     cogen_or_trigen_size: NonNegativeInt,
     labelCogTrigen: str,
+    start_winter_season: NonNegativeInt,
+    end_winter_season: NonNegativeInt,
 ) -> Tuple[
     np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
 ]:
@@ -360,6 +362,8 @@ def calculate_cogen_or_trigen_energy_coverage(
         electric_consumption: np.ndarray - annual electric consumption in kWh
         cogen_or_trigen_size: NonNegativeInt - size of the cogenerator or trigenerator in kW
         labelCogTrigen: str - indicating "Cogen" or "Trigen"
+        start_winter_season: NonNegativeInt - start month of the winter season (0=January)
+        end_winter_season: NonNegativeInt - end month of the winter season (0=January)
 
     Returns:
         electric_energy_from_grid: np.ndarray - annual electric energy from grid in kWh. Energy not covered by cogen/trigen
@@ -378,7 +382,9 @@ def calculate_cogen_or_trigen_energy_coverage(
         cogen_trigen_electric_production,
         cogen_trigen_thermal_production,
         cogen_trigen_refrigeration_production,
-    ) = annual_production_cogen_trigen(cogen_or_trigen_size, labelCogTrigen)
+    ) = annual_production_cogen_trigen(
+        cogen_or_trigen_size, labelCogTrigen, start_winter_season, end_winter_season
+    )
 
     # INITIALIZE ARRAYS
     electric_energy_from_grid = np.zeros_like(electric_consumption)
@@ -453,13 +459,18 @@ def calculate_cogen_or_trigen_energy_coverage(
 
 
 def annual_production_cogen_trigen(
-    size_cogen_trigen: NonNegativeInt, labelCogTrigen: str
+    size_cogen_trigen: NonNegativeInt,
+    labelCogTrigen: str,
+    start_winter_season: NonNegativeInt,
+    end_winter_season: NonNegativeInt,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculate the electric, thermal, refrigeration production (kWh) based on the size of the cogenerator/trigenerator. Production in one year.
     Attrs:
         size_cogen_trigen: NonNegativeInt - size of the cogenerator/trigenerator in kW
         labelCogTrigen: str - flag "Cogen" or "Trigen"
+        start_winter_season: NonNegativeInt - start month of the winter season (0=January)
+        end_winter_season: NonNegativeInt - end month of the winter season (0=January)
 
     Returns:
         electric_production: np.ndarray - annual electric production in kWh by cogen/trigen
@@ -471,17 +482,44 @@ def annual_production_cogen_trigen(
     thermal_production = np.zeros(common.HOURS_OF_YEAR)
     refrigerator_production = np.zeros(common.HOURS_OF_YEAR)
     # update vectors with actual production
+    # start and end hours of winter season (when the thermal production occurs)
+    start = int(start_winter_season) * 30 * 24  # type: ignore
+    end = int(end_winter_season) * 60 * 24  # type:ignore
+
     # cogenerator
     if labelCogTrigen == "Cogen":
         cogen = common.Trigen_Cogen().Cogenerator()
+        if int(start_winter_season) < int(end_winter_season):  # type:ignore
+            thermal_production[start:end] = (
+                size_cogen_trigen * cogen.THERMAL_EFFICIENCY_COGEN
+            )
+        else:
+            thermal_production[start:] = (
+                size_cogen_trigen * cogen.THERMAL_EFFICIENCY_COGEN
+            )
+            thermal_production[:end] = (
+                size_cogen_trigen * cogen.THERMAL_EFFICIENCY_COGEN
+            )
         electric_production[:] = size_cogen_trigen * cogen.ELECTRIC_EFFICIENCY_COGEN
-        thermal_production[:] = size_cogen_trigen * cogen.THERMAL_EFFICIENCY_COGEN
     # trigenerator
     elif labelCogTrigen == "Trigen":
         trigen = common.Trigen_Cogen().Trigenerator()
         electric_production[:] = size_cogen_trigen * trigen.ELECTRIC_EFFICIENCY_TRIGEN
-        thermal_production[:] = size_cogen_trigen * trigen.THERMAL_EFFICIENCY_TRIGEN
-        refrigerator_production[:] = (
+        if int(start_winter_season) < int(end_winter_season):  # type:ignore
+            thermal_production[start:end] = (
+                size_cogen_trigen * trigen.ELECTRIC_EFFICIENCY_TRIGEN
+            )
+        else:
+            thermal_production[start:] = (
+                size_cogen_trigen * trigen.ELECTRIC_EFFICIENCY_TRIGEN
+            )
+            thermal_production[:end] = (
+                size_cogen_trigen * trigen.ELECTRIC_EFFICIENCY_TRIGEN
+            )
+        mask_no_thermal = (thermal_production == 0) | np.isnan(
+            thermal_production
+        )  # refrigeration occures when thermal doesn't
+        refrigerator_production[mask_no_thermal] = (
             size_cogen_trigen * trigen.REFRIGERATION_EFFICIENCY_TRIGEN
         )
     return electric_production, thermal_production, refrigerator_production
@@ -588,6 +626,8 @@ def objective_function(
     thermal_consumption,
     refrigerator_consumption,
     labelCogTrigen,
+    start_winter_season: NonNegativeInt,
+    end_winter_season: NonNegativeInt,
 ):
     """
     Determination of the objective function to be minimized.
@@ -596,6 +636,8 @@ def objective_function(
     thermal_consumption: array - thermal yearly consumption in kWh
     refrigerator_consumption: array - refrigerator yearly consumption in kWh
     labelCogTrigen: str - indicating "Cogen" or "Trigen"
+    start_winter_season: NonNegativeInt - start month of winter season (0=January)
+    end_winter_season: NonNegativeInt - end month of winter season (0=January)
 
     Returns:
     objective_function - function to be minimized
@@ -619,6 +661,8 @@ def objective_function(
         electric_consumption,
         cogen_or_trigen_size,
         labelCogTrigen,
+        start_winter_season,
+        end_winter_season,
     )
 
     # UPDATE THE ELECTRIC CONSUMPTION BY SUBTRACTING THE ELECTRIC ENERGY PRODUCED BY COGEN/TRIGEN
@@ -682,7 +726,9 @@ def objective_function(
         electric_production_cogen,
         thermal_production_cogen,
         refrigeration_production_cogen,
-    ) = annual_production_cogen_trigen(cogen_or_trigen_size, labelCogTrigen)
+    ) = annual_production_cogen_trigen(
+        cogen_or_trigen_size, labelCogTrigen, start_winter_season, end_winter_season
+    )
 
     # number of hours in which the cogen works at full capacity
     working_hours = np.count_nonzero(electric_production_cogen)
@@ -719,6 +765,8 @@ def optimizer(
     thermal_consumption: np.ndarray,
     refrigerator_consumption: np.ndarray,
     labelCogTrigen: str,
+    start_winter_season: NonNegativeInt,
+    end_winter_season: NonNegativeInt,
 ) -> tuple[NonNegativeInt, NonNegativeInt, NonNegativeInt]:
     """Calculation of the best sizes of PV, battery and cogen/trigen
 
@@ -748,6 +796,8 @@ def optimizer(
             thermal_consumption,
             refrigerator_consumption,
             labelCogTrigen,
+            start_winter_season,
+            end_winter_season,
         ),
         method="trust-constr",
         bounds=common.Optimizer().BOUNDS,
@@ -796,10 +846,12 @@ if __name__ == "__main__":
     labelCogTrigen = "Trigen"  # Cogen or Trigen
 
     result = optimizer(
-        electric_consumption,
-        thermal_consumption,
-        refrigerator_consumption,
+        electric_consumption,  # type:ignore
+        thermal_consumption,  # type:ignore
+        refrigerator_consumption,  # type:ignore
         labelCogTrigen,
+        start_winter_season=10,
+        end_winter_season=2,
     )
 
     PV_size, battery_size, cogen_trigen_size = result
@@ -812,7 +864,7 @@ if __name__ == "__main__":
         cogen_electric_production,
         cogen_thermal_production,
         cogen_refrigerator_production,
-    ) = annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen)
+    ) = annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen, 10, 2)
 
     total_production = pv_prod + cogen_electric_production
 

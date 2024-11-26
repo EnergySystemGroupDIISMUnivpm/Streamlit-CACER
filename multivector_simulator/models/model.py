@@ -646,7 +646,6 @@ def objective_function(
     Returns:
     objective_function - function to be minimized
     """
-
     PV_size, battery_size, cogen_or_trigen_size = x  # parameters to be determined
 
     # calculation of the electric, thermal and refrigerator coverage per year covered by cogen/trigen
@@ -792,18 +791,18 @@ def single_optimizer_run(args):
 
     if labelCogTrigen == "Trigen":
         Upper_cogen_trigen = (
-            max(electric_consumption)
-            / common.Trigen_Cogen().Trigenerator().ELECTRIC_EFFICIENCY_TRIGEN
+            max(thermal_consumption)
+            / common.Trigen_Cogen().Trigenerator().THERMAL_EFFICIENCY_TRIGEN
         )
     else:
         Upper_cogen_trigen = (
-            max(electric_consumption)
-            / common.Trigen_Cogen().Cogenerator().ELECTRIC_EFFICIENCY_COGEN
+            max(thermal_consumption)
+            / common.Trigen_Cogen().Cogenerator().THERMAL_EFFICIENCY_COGEN
         )
     UpperBound: list[PositiveInt] = [
-        max(electric_consumption),
-        max(electric_consumption),
-        Upper_cogen_trigen,
+        max(electric_consumption) + 1,
+        max(electric_consumption) + 1,
+        Upper_cogen_trigen + 1,
     ]  # upper limits for PV, battery, cogen/trigen
 
     # PSO
@@ -811,9 +810,10 @@ def single_optimizer_run(args):
         wrapped_objective_function,
         common.Optimizer().LowerBound,
         UpperBound,
-        swarmsize=200,
-        maxiter=300,
+        swarmsize=100,
+        maxiter=50,
         minfunc=1e-6,
+        debug=True,
     )
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
     return best_params, best_value
@@ -937,12 +937,12 @@ if __name__ == "__main__":
     p = Path(__file__).parents[2]
     nday = common.HOURS_OF_YEAR
     data = pd.read_excel(
-        p / "resources" / "Esempio_input_consumi_trigen.xlsx", engine="openpyxl"
+        p / "resources" / "Prova_input_consumi_multienergetico.xlsx", engine="openpyxl"
     )
     electric_consumption = data.iloc[:, 1][:nday]
     thermal_consumption = data.iloc[:, 2][:nday]
     refrigerator_consumption = data.iloc[:, 3][:nday]
-    labelCogTrigen = "Trigen"  # Cogen or Trigen
+    labelCogTrigen = "Cogen"  # Cogen or Trigen
 
     result = optimizer_multiple_runs(
         electric_consumption,

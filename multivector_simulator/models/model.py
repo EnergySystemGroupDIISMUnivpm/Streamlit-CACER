@@ -832,6 +832,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         minfunc=pso_obj.minfunc,
         debug=True,
         f_ieqcons=constraint_function,
+        omega=0.7,
     )
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
     return best_params, best_value
@@ -908,8 +909,6 @@ def optimizer_multiple_runs(
             for params, value in results
             if constraint_function(params) >= 0
         ]
-        __import__("ipdb").set_trace()
-
         if feasible_results:
             # If feasible solutions exist, find the best one
             best_params, best_value = min(feasible_results, key=lambda x: x[1])

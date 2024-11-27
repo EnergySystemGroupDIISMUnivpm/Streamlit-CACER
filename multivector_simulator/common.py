@@ -219,11 +219,21 @@ class Optimizer(BaseModel):
         0,
         0,
     ]  # initial guess for PV and Battery and cogen/trigen sizes
-    BOUNDS: ClassVar[List[Tuple[Optional[int], Optional[int]]]] = [
-        (0, None),  # Bound per PV size
-        (0, None),  # Bound per Battery size
-        (0, None),  # Bound per cogen/trigen size
-    ]
+    # BOUNDS: ClassVar[List[Tuple[Optional[int], Optional[int]]]] = [
+    #     (0, None),  # Bound per PV size
+    #     (0, None),  # Bound per Battery size
+    #     (0, None),  # Bound per cogen/trigen size
+    # ]
+    LowerBound: list[PositiveInt] = [
+        0,
+        0,
+        0,
+    ]  # low limits for PV, battery, cogen/trigen
+    UpperBound: list[PositiveInt] = [
+        10000,
+        100,
+        1000,
+    ]  # upper limits for PV, battery, cogen/trigen
     YEARS: PositiveInt = 20  # years to be considered for the calculation of cost
     DISCOUNT_RATE: PositiveFloat = (
         0.05  # discount rate for calculating the return of the investment

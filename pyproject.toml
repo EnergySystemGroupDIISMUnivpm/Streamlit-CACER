@@ -19,6 +19,7 @@ scipy = "^1.14.1"
 matplotlib = "^3.9.2"
 plotly = "^5.24.1"
 pyqt5 = "^5.15.11"
+pyswarm = "^0.6"
 
 
 [tool.poetry.group.dev.dependencies]

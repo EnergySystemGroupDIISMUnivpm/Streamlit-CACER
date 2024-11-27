@@ -33,7 +33,7 @@ def sizes_energies_costs(
     -cost_gas: PositiveFloat - annual cost of gas in euro from cogen/trigen for 1 year
     """
     # OPTIMAL SIZES
-    (PV_size, battery_size, cogen_trigen_size) = model.optimizer(
+    (PV_size, battery_size, cogen_trigen_size) = model.optimizer_multiple_runs(
         electric_consumption,
         thermal_consumption,
         refrigeration_consumption,

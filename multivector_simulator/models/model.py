@@ -9,7 +9,9 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from numpy.typing import NDArray
 from pathlib import Path
-import matplotlib
+from pyswarm import pso
+import streamlit as st
+from multiprocessing import Pool
 
 # matplotlib.use("qt5agg")
 
@@ -760,56 +762,148 @@ def objective_function(
     return objective_function
 
 
-def optimizer(
-    electric_consumption: np.ndarray,
-    thermal_consumption: np.ndarray,
-    refrigerator_consumption: np.ndarray,
-    labelCogTrigen: str,
-    start_winter_season: NonNegativeInt,
-    end_winter_season: NonNegativeInt,
-) -> tuple[NonNegativeInt, NonNegativeInt, NonNegativeInt]:
-    """Calculation of the best sizes of PV, battery and cogen/trigen
-
-    Attrs:
-    electric_consumption: np.ndarray - electric annual consumptions in kWh
-    thermal_consumption: np.ndarray - thermal annual consumptions in kWh
-    refrigerator_consumption: np.ndarray - refrigerator annual consumption in kWh
-    labelCogTrigen: str - label indicating "Cogen" or "Trigen"
-
-    Returns:
-    Tuple cotaining:
-    -PV_size: NonNegativeInt - best pv size in KW
-    -battery_size: NonNegativeInt - best battery size in kW
-    -cogen_trigen_size : NonNegativeInt - best cogen/trigen size in kW
-
+# Funzione globale per eseguire una singola ottimizzazione
+def single_optimizer_run(args):
     """
+    Single PSO run.
+    Args:
+        args: Tuple with necessary parameters (electric_consumption, thermal_consumption, refrigerator_consumption, labelCogTrigen)
+    Returns:
+        Tuple: (best_params, best_value)
+    """
+    (
+        electric_consumption,
+        thermal_consumption,
+        refrigerator_consumption,
+        labelCogTrigen,
+    ) = args
 
-    initial_guess = (
-        common.Optimizer().INITIAL_GUESS
-    )  # Guess for PV size and battery size
-
-    result = minimize(
-        objective_function,
-        initial_guess,
-        args=(
+    def wrapped_objective_function(x):
+        obj_value = objective_function(
+            x,
             electric_consumption,
             thermal_consumption,
             refrigerator_consumption,
             labelCogTrigen,
-            start_winter_season,
-            end_winter_season,
-        ),
-        method="trust-constr",
-        bounds=common.Optimizer().BOUNDS,
+        )
+        PV_size, battery_size, cogen_trigen_size = x
+        electric_PV_prod = np.nansum(calculation_pv_production(PV_size))
+        electric_cogen_trigen_prod, thermal_prod, refrigeration_prod = (
+            annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen)
+        )
+        electric_cogen_trigen_prod = np.nansum(electric_cogen_trigen_prod)
+        total_electric_production = electric_PV_prod + electric_cogen_trigen_prod
+        total_electric_consumption = np.nansum(electric_consumption)
+
+        # Penality if electric prod in one year is> electric consumption
+        if total_electric_production > total_electric_consumption:
+            penalty = 1e6 * (total_electric_production - total_electric_consumption)
+            obj_value += penalty
+        return obj_value
+
+    # PSO
+    best_params, best_value = pso(
+        wrapped_objective_function,
+        common.Optimizer().LowerBound,
+        common.Optimizer().UpperBound,
+        swarmsize=200,
+        maxiter=300,
+        minfunc=1e-6,
     )
-    PV_size, battery_size, cogen_trigen_size = result.x
-    print("Optimization success:", result.success)
-    print("Optimization message:", result.message)
-    return (
-        round(PV_size),
-        round(battery_size),
-        round(cogen_trigen_size),
-    )
+    return best_params, best_value
+
+
+# Multiple runs of PSO
+@st.cache_data
+def optimizer_multiple_runs(
+    electric_consumption,
+    thermal_consumption,
+    refrigerator_consumption,
+    labelCogTrigen,
+    num_parallel_runs=5,  # Number of parallel runs
+):
+    """
+    Runs multiple optimizations in parallel and chooses the best solution.
+    Arguments:
+    electric_consumption: array - Annual electricity consumption in kWh.
+    thermal_consumption: array - Annual heating consumption in kWh.
+    refrigerator_consumption: array - Annual refrigerator consumption in kWh.
+    labelCogTrigen: str - Label for cogen/trigen ("Cogen" or "Trigen").
+    num_parallel_runs: int - Number of parallel runs.
+    Returns:
+    The best configuration of parameters (PV_size, battery_size, cogen_size).
+    """
+    # arguments for each run
+    args = [
+        (
+            electric_consumption,
+            thermal_consumption,
+            refrigerator_consumption,
+            labelCogTrigen,
+        )
+        for _ in range(num_parallel_runs)
+    ]
+
+    # Pool
+    with Pool(processes=num_parallel_runs) as pool:
+        results = pool.map(single_optimizer_run, args)
+
+    # Best solution
+    best_params, best_value = min(results, key=lambda x: x[1])
+
+    optimal_PV_size = round(best_params[0])
+    optimal_battery_size = round(best_params[1])
+    optimal_cogen_or_trigen_size = round(best_params[2])
+
+    return optimal_PV_size, optimal_battery_size, optimal_cogen_or_trigen_size
+
+
+# def optimizer(
+#     electric_consumption: np.ndarray,
+#     thermal_consumption: np.ndarray,
+#     refrigerator_consumption: np.ndarray,
+#     labelCogTrigen: str,
+# ) -> tuple[NonNegativeInt, NonNegativeInt, NonNegativeInt]:
+#     """Calculation of the best sizes of PV, battery and cogen/trigen
+
+#     Attrs:
+#     electric_consumption: np.ndarray - electric annual consumptions in kWh
+#     thermal_consumption: np.ndarray - thermal annual consumptions in kWh
+#     refrigerator_consumption: np.ndarray - refrigerator annual consumption in kWh
+#     labelCogTrigen: str - label indicating "Cogen" or "Trigen"
+
+#     Returns:
+#     Tuple cotaining:
+#     -PV_size: NonNegativeInt - best pv size in KW
+#     -battery_size: NonNegativeInt - best battery size in kW
+#     -cogen_trigen_size : NonNegativeInt - best cogen/trigen size in kW
+
+#     """
+
+#     initial_guess = (
+#         common.Optimizer().INITIAL_GUESS
+#     )  # Guess for PV size and battery size
+
+#     result = minimize(
+#         objective_function,
+#         initial_guess,
+#         args=(
+#             electric_consumption,
+#             thermal_consumption,
+#             refrigerator_consumption,
+#             labelCogTrigen,
+#         ),
+#         method="trust-constr",
+#         bounds=common.Optimizer().BOUNDS,
+#     )
+#     PV_size, battery_size, cogen_trigen_size = result.x
+#     print("Optimization success:", result.success)
+#     print("Optimization message:", result.message)
+#     return (
+#         round(PV_size),
+#         round(battery_size),
+#         round(cogen_trigen_size),
+#     )
 
 
 def actualization(
@@ -845,10 +939,10 @@ if __name__ == "__main__":
 
     labelCogTrigen = "Trigen"  # Cogen or Trigen
 
-    result = optimizer(
-        electric_consumption,  # type:ignore
-        thermal_consumption,  # type:ignore
-        refrigerator_consumption,  # type:ignore
+    result = optimizer_multiple_runs(
+        electric_consumption,
+        thermal_consumption,
+        refrigerator_consumption,
         labelCogTrigen,
         start_winter_season=10,
         end_winter_season=2,

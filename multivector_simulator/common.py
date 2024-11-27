@@ -1,6 +1,6 @@
 import pandas as pd
 
-from typing import ClassVar, List, Literal, Tuple, Optional, Annotated
+from typing import Annotated
 
 from pydantic import (
     AfterValidator,
@@ -228,3 +228,4 @@ class Optimizer(BaseModel):
         swarmsize: PositiveInt = 200
         maxiter: PositiveInt = 100
         minfunc: PositiveFloat = 1e-6
+        number_parallel_runs: PositiveInt = 5

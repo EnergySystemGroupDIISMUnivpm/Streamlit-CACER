@@ -1,23 +1,21 @@
-from cProfile import label
 from math import inf
 from re import U
 import numpy as np
-from pydantic import NonNegativeInt, PositiveFloat, validate_call, PositiveInt
+from pydantic import (
+    NonNegativeInt,
+    PositiveFloat,
+    PositiveInt,
+)
 import multivector_simulator.common as common
-from typing import Literal, Tuple
+from typing import Tuple
 from cacer_simulator.common import PositiveOrZeroFloat, get_kw_cost
 import pandas as pd
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from numpy.typing import NDArray
 from pathlib import Path
 from pyswarm import pso_search_among_integer
 import streamlit as st
 from multiprocessing import Pool
-
-# matplotlib.use("qt5agg")
-
-import matplotlib.pyplot as plt
 
 
 def calculate_mean_over_period(data: np.ndarray, hours: int) -> np.ndarray:
@@ -218,14 +216,14 @@ def total_economic_cost(
         annual_electric_energy_from_grid * common.ELECTRIC_ENERGY_PRICE
     )
     cost_electricity_from_grid_actualized = actualization(
-        cost_electricity_from_grid, labelCostSaving="Costs"
+        cost_electricity_from_grid
     )  # costi attualizzati dell'energia elettrica da rete considerando un periodo di 20 anni
 
     cost_thermal_from_grid = (
         annual_thermal_energy_from_grid * common.THERMAL_ENERGY_PRICE
     )
     cost_thermal_from_grid_actualized = actualization(
-        cost_thermal_from_grid, labelCostSaving="Costs"
+        cost_thermal_from_grid
     )  # costi attualizzati dell'energia termica da rete considerando un periodo di 20 anni
 
     # INSTALLATION COST
@@ -238,20 +236,20 @@ def total_economic_cost(
     # COST OF GAS USE
     annually_cost_gas = cost_gas_used_cogen_trigen(annually_used_gas)
     annually_cost_gas_actualized = actualization(
-        annually_cost_gas, labelCostSaving="Costs"
+        annually_cost_gas
     )  # costi attualizzati dell'uso del gas considerando un periodo di 20 anni
 
     # MAINTENANCE COST
     annually_cost_maintenance_PV = maintenance_cost_PV(PV_size, battery_size)
     cost_maintenance_PV_actualized = actualization(
-        annually_cost_maintenance_PV, labelCostSaving="Costs"
+        annually_cost_maintenance_PV
     )  # costi attualizzati del mantenimento di PV considerando un periodo di 20 anni
 
     annually_cost_maintenance_cogen_trigen = maintenance_cost_cogen_trigen(
         cogen_trigen_size, labelCogTrigen
     )
     cost_maintenance_cogen_trigen_actualized = actualization(
-        annually_cost_maintenance_cogen_trigen, labelCostSaving="Costs"
+        annually_cost_maintenance_cogen_trigen
     )  # costi attualizzati del mantenimento di cogen/trigen considerando un periodo di 20 anni
 
     null_array = np.zeros_like(cost_maintenance_cogen_trigen_actualized)
@@ -318,8 +316,8 @@ def cumulative_costs_savings(
 
     years = common.Optimizer().YEARS
     annual_value = [-initial_investment]
-    annual_costs = actualization(costs_in_year, labelCostSaving="Costs")
-    annual_savings = actualization(savings_in_year, labelCostSaving="Savings")
+    annual_costs = actualization(costs_in_year)
+    annual_savings = actualization(savings_in_year)
     for i in range(1, years + 1):
         value = annual_value[-1] - annual_costs[i - 1] + annual_savings[i - 1]
         annual_value.append(value)
@@ -701,7 +699,7 @@ def objective_function(
         np.nansum(self_consumption_thermal_energy_from_cogen_trigen),
         np.nansum(self_consumption_refrigeration_energy_from_cogen_trigen),
     )
-    savings_years = actualization(annual_savings, labelCostSaving="Savings")
+    savings_years = actualization(annual_savings)
 
     # COSTS
     # energy from grid
@@ -789,30 +787,29 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         )
         return obj_value
 
+    # UPPER BOUNDS
+    Efficiency = common.Trigen_Cogen().Cogenerator().THERMAL_EFFICIENCY_COGEN  # Cogen
     if labelCogTrigen == "Trigen":
-        Upper_cogen_trigen = (
-            max(thermal_consumption)
-            / common.Trigen_Cogen().Trigenerator().THERMAL_EFFICIENCY_TRIGEN
-        )
-    else:
-        Upper_cogen_trigen = (
-            max(thermal_consumption)
-            / common.Trigen_Cogen().Cogenerator().THERMAL_EFFICIENCY_COGEN
-        )
+        Efficiency = (
+            common.Trigen_Cogen().Trigenerator().THERMAL_EFFICIENCY_TRIGEN
+        )  # Trigen
+    # Upper limits for PV, battery, cogen/trigen
     UpperBound: list[PositiveInt] = [
         max(electric_consumption) + 1,
         max(electric_consumption) + 1,
-        Upper_cogen_trigen + 1,
-    ]  # upper limits for PV, battery, cogen/trigen
+        max(thermal_consumption) / Efficiency
+        + 1,  # +1 because the upper must be always greater than the lower, even when consumptions=0
+    ]
 
     # PSO
+    pso_obj = common.Optimizer().PSO()
     best_params, best_value = pso_search_among_integer(
         wrapped_objective_function,
         common.Optimizer().LowerBound,
         UpperBound,
-        swarmsize=common.Optimizer().PSO().swarmsize,
-        maxiter=common.Optimizer().PSO().maxiter,
-        minfunc=common.Optimizer().PSO().minfunc,
+        swarmsize=pso_obj.swarmsize,
+        maxiter=pso_obj.maxiter,
+        minfunc=pso_obj.minfunc,
         debug=True,
     )
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
@@ -822,12 +819,18 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
 # Multiple runs of PSO
 @st.cache_data
 def optimizer_multiple_runs(
-    electric_consumption,
-    thermal_consumption,
-    refrigerator_consumption,
-    labelCogTrigen,
-    num_parallel_runs=5,  # Number of parallel runs
-):
+    electric_consumption: np.ndarray,
+    thermal_consumption: np.ndarray,
+    refrigerator_consumption: np.ndarray,
+    labelCogTrigen: str,
+    num_parallel_runs: PositiveInt = common.Optimizer()
+    .PSO()
+    .number_parallel_runs,  # Number of parallel runs
+) -> Tuple[
+    NonNegativeInt,
+    NonNegativeInt,
+    NonNegativeInt,
+]:
     """
     Runs multiple optimizations in parallel and chooses the best solution.
     Arguments:
@@ -864,64 +867,14 @@ def optimizer_multiple_runs(
     return optimal_PV_size, optimal_battery_size, optimal_cogen_or_trigen_size
 
 
-# def optimizer(
-#     electric_consumption: np.ndarray,
-#     thermal_consumption: np.ndarray,
-#     refrigerator_consumption: np.ndarray,
-#     labelCogTrigen: str,
-# ) -> tuple[NonNegativeInt, NonNegativeInt, NonNegativeInt]:
-#     """Calculation of the best sizes of PV, battery and cogen/trigen
-
-#     Attrs:
-#     electric_consumption: np.ndarray - electric annual consumptions in kWh
-#     thermal_consumption: np.ndarray - thermal annual consumptions in kWh
-#     refrigerator_consumption: np.ndarray - refrigerator annual consumption in kWh
-#     labelCogTrigen: str - label indicating "Cogen" or "Trigen"
-
-#     Returns:
-#     Tuple cotaining:
-#     -PV_size: NonNegativeInt - best pv size in KW
-#     -battery_size: NonNegativeInt - best battery size in kW
-#     -cogen_trigen_size : NonNegativeInt - best cogen/trigen size in kW
-
-#     """
-
-#     initial_guess = (
-#         common.Optimizer().INITIAL_GUESS
-#     )  # Guess for PV size and battery size
-
-#     result = minimize(
-#         objective_function,
-#         initial_guess,
-#         args=(
-#             electric_consumption,
-#             thermal_consumption,
-#             refrigerator_consumption,
-#             labelCogTrigen,
-#         ),
-#         method="trust-constr",
-#         bounds=common.Optimizer().BOUNDS,
-#     )
-#     PV_size, battery_size, cogen_trigen_size = result.x
-#     print("Optimization success:", result.success)
-#     print("Optimization message:", result.message)
-#     return (
-#         round(PV_size),
-#         round(battery_size),
-#         round(cogen_trigen_size),
-#     )
-
-
 def actualization(
     annual_cost: PositiveFloat,
     years=common.Optimizer().YEARS,
-    labelCostSaving: str = "Costs",
 ) -> np.ndarray:
     """
     Calculation of the value of a cost or of a saving over a period of time (years) based on "formula del valore attuale", in euro.
     Attrs:
         annual_cost: PositiveFloat - annual cost in euro
-        labelCostSaving: str - label indicating "Savings" or "Costs"
 
     Returns:
         actualized_cost: np.ndarray - actualized costs/saving in euro. i-th element is the actualized cost/saving for the i-th year in euro.

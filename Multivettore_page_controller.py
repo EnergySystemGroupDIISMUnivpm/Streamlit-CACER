@@ -105,9 +105,6 @@ def Simulator_Multivettore():
                     start_winter_season,
                     end_winter_season,
                 )
-                print(np.nansum(electric_consumption))
-                print(np.nansum(electric_production_pv + electric_production_cogen))  # type: ignore
-                __import__("ipdb").set_trace()
                 electric_production_period = model.calculate_mean_over_period(
                     np.nansum(
                         [electric_production_cogen, electric_production_pv], axis=0

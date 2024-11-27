@@ -28,7 +28,6 @@ def Simulator_Multivettore():
             LabelCogTrigen = "Trigen"
         else:
             LabelCogTrigen = "Cogen"
-
         # Insert button results
         if "see_results" not in st.session_state:
             st.session_state["see_results"] = False
@@ -95,6 +94,7 @@ def Simulator_Multivettore():
                     electric_consumption, period_to_be_plot
                 )
                 electric_production_pv = model.calculation_pv_production(PV_size)
+
                 (
                     electric_production_cogen,
                     thermal_production_cogen,
@@ -105,6 +105,9 @@ def Simulator_Multivettore():
                     start_winter_season,
                     end_winter_season,
                 )
+                print(np.nansum(electric_consumption))
+                print(np.nansum(electric_production_pv + electric_production_cogen))  # type: ignore
+                __import__("ipdb").set_trace()
                 electric_production_period = model.calculate_mean_over_period(
                     np.nansum(
                         [electric_production_cogen, electric_production_pv], axis=0

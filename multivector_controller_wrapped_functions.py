@@ -41,7 +41,6 @@ def sizes_energies_costs(
         start_winter_season,
         end_winter_season,
     )
-
     if LabelCogTrigen == "Cogen":
         trigen_size = 0
         cogen_size = cogen_trigen_size

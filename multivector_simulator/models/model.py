@@ -1,5 +1,6 @@
 from math import inf
 from re import U
+from tracemalloc import start
 import numpy as np
 from pydantic import (
     NonNegativeInt,
@@ -755,7 +756,7 @@ def objective_function(
     payback_time = np.argmax(cumulativo_risparmi >= cumulativo_costi) + 1
 
     # Final objective function: balance between minimizing costs
-    total_cost = total_cost.sum()
+    total_cost = round(total_cost.sum())
 
     objective_function = total_cost
     return objective_function
@@ -775,6 +776,8 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         thermal_consumption,
         refrigerator_consumption,
         labelCogTrigen,
+        start_winter_season,
+        end_winter_season,
     ) = args
 
     def wrapped_objective_function(x):
@@ -784,8 +787,25 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
             thermal_consumption,
             refrigerator_consumption,
             labelCogTrigen,
+            start_winter_season,
+            end_winter_season,
         )
         return obj_value
+
+    def constraint_function(x):
+        """
+        Constraint to ensure the total annual electricity production does not exceed total consumption.
+        This function must return a value >= 0 when the constraint is satisfied.
+        """
+        electrc_prod_pv = np.nansum(calculation_pv_production(x[0]))
+        electrc_prod_cogen_trigen, thermal_prod, refrig_prod = (
+            annual_production_cogen_trigen(
+                x[2], labelCogTrigen, start_winter_season, end_winter_season
+            )
+        )
+        electrc_prod_cogen_trigen = np.nansum(electrc_prod_cogen_trigen)
+        total_production = electrc_prod_pv + electrc_prod_cogen_trigen
+        return np.nansum(electric_consumption) - total_production
 
     # UPPER BOUNDS
     Efficiency = common.Trigen_Cogen().Cogenerator().THERMAL_EFFICIENCY_COGEN  # Cogen
@@ -811,6 +831,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         maxiter=pso_obj.maxiter,
         minfunc=pso_obj.minfunc,
         debug=True,
+        f_ieqcons=constraint_function,
     )
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
     return best_params, best_value
@@ -823,48 +844,92 @@ def optimizer_multiple_runs(
     thermal_consumption: np.ndarray,
     refrigerator_consumption: np.ndarray,
     labelCogTrigen: str,
+    start_winter_season: NonNegativeInt,
+    end_winter_season: NonNegativeInt,
     num_parallel_runs: PositiveInt = common.Optimizer()
     .PSO()
     .number_parallel_runs,  # Number of parallel runs
-) -> Tuple[
-    NonNegativeInt,
-    NonNegativeInt,
-    NonNegativeInt,
-]:
+    max_retries: int = 10,  # Maximum number of retries
+) -> Tuple[NonNegativeInt, NonNegativeInt, NonNegativeInt]:
     """
-    Runs multiple optimizations in parallel and chooses the best solution.
+    Runs multiple optimizations in parallel and chooses the best feasible solution.
+    Retries up to max_retries if no feasible solution is found.
     Arguments:
     electric_consumption: array - Annual electricity consumption in kWh.
     thermal_consumption: array - Annual heating consumption in kWh.
     refrigerator_consumption: array - Annual refrigerator consumption in kWh.
     labelCogTrigen: str - Label for cogen/trigen ("Cogen" or "Trigen").
+    start_winter_season: NonNegativeInt - Start month of the winter season (0=January).
+    end_winter_season: NonNegativeInt - End month of the winter season (0=January).
     num_parallel_runs: int - Number of parallel runs.
+    max_retries: int - Maximum number of retries if no feasible solution is found.
     Returns:
     The best configuration of parameters (PV_size, battery_size, cogen_size).
     """
-    # arguments for each run
-    args = [
-        (
-            electric_consumption,
-            thermal_consumption,
-            refrigerator_consumption,
-            labelCogTrigen,
+
+    def constraint_function(x):
+        electrc_prod_pv = np.nansum(calculation_pv_production(x[0]))
+        electrc_prod_cogen_trigen, thermal_prod, refrig_prod = (
+            annual_production_cogen_trigen(
+                x[2], labelCogTrigen, start_winter_season, end_winter_season
+            )
         )
-        for _ in range(num_parallel_runs)
-    ]
+        electrc_prod_cogen_trigen = electrc_prod_cogen_trigen.sum()
+        total_production = electrc_prod_pv + electrc_prod_cogen_trigen
+        constraint_value = np.nansum(electric_consumption) - total_production
+        return constraint_value
 
-    # Pool
-    with Pool(processes=num_parallel_runs) as pool:
-        results = pool.map(single_optimizer_run, args)
+    attempt = 0
+    best_feasible_solution = None
 
-    # Best solution
-    best_params, best_value = min(results, key=lambda x: x[1])
+    while attempt < max_retries:
+        print(f"[DEBUG] Attempt {attempt + 1} of {max_retries}")
 
-    optimal_PV_size = round(best_params[0])
-    optimal_battery_size = round(best_params[1])
-    optimal_cogen_or_trigen_size = round(best_params[2])
+        # Arguments for each run
+        args = [
+            (
+                electric_consumption,
+                thermal_consumption,
+                refrigerator_consumption,
+                labelCogTrigen,
+                start_winter_season,
+                end_winter_season,
+            )
+            for _ in range(num_parallel_runs)
+        ]
 
-    return optimal_PV_size, optimal_battery_size, optimal_cogen_or_trigen_size
+        # Parallel optimization
+        with Pool(processes=num_parallel_runs) as pool:
+            results = pool.map(single_optimizer_run, args)
+
+        # Filter feasible solutions
+        feasible_results = [
+            (params, value)
+            for params, value in results
+            if constraint_function(params) >= 0
+        ]
+        __import__("ipdb").set_trace()
+
+        if feasible_results:
+            # If feasible solutions exist, find the best one
+            best_params, best_value = min(feasible_results, key=lambda x: x[1])
+            optimal_PV_size = round(best_params[0])
+            optimal_battery_size = round(best_params[1])
+            optimal_cogen_or_trigen_size = round(best_params[2])
+            best_feasible_solution = (
+                optimal_PV_size,
+                optimal_battery_size,
+                optimal_cogen_or_trigen_size,
+            )
+            break
+
+        attempt += 1
+        maxiter = maxiter + attempt * 50
+
+    if best_feasible_solution is None:
+        raise RuntimeError("No feasible solution found after maximum retries.")
+
+    return best_feasible_solution
 
 
 def actualization(
@@ -890,12 +955,12 @@ if __name__ == "__main__":
     p = Path(__file__).parents[2]
     nday = common.HOURS_OF_YEAR
     data = pd.read_excel(
-        p / "resources" / "Prova_input_consumi_multienergetico.xlsx", engine="openpyxl"
+        p / "resources" / "Esempio_input_consumi_trigen.xlsx", engine="openpyxl"
     )
     electric_consumption = data.iloc[:, 1][:nday]
     thermal_consumption = data.iloc[:, 2][:nday]
     refrigerator_consumption = data.iloc[:, 3][:nday]
-    labelCogTrigen = "Cogen"  # Cogen or Trigen
+    labelCogTrigen = "Trigen"  # Cogen or Trigen
 
     result = optimizer_multiple_runs(
         electric_consumption,
@@ -903,7 +968,7 @@ if __name__ == "__main__":
         refrigerator_consumption,
         labelCogTrigen,
         start_winter_season=10,
-        end_winter_season=2,
+        end_winter_season=3,
     )
 
     PV_size, battery_size, cogen_trigen_size = result
@@ -916,7 +981,7 @@ if __name__ == "__main__":
         cogen_electric_production,
         cogen_thermal_production,
         cogen_refrigerator_production,
-    ) = annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen, 10, 2)
+    ) = annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen, 10, 3)
 
     total_production = pv_prod + cogen_electric_production
 

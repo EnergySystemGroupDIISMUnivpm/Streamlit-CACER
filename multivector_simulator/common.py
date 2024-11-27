@@ -1,6 +1,6 @@
 import pandas as pd
 
-from typing import ClassVar, List, Tuple, Optional, Annotated
+from typing import ClassVar, List, Literal, Tuple, Optional, Annotated
 
 from pydantic import (
     AfterValidator,
@@ -214,27 +214,17 @@ LabelEnergyType = Annotated[
 
 
 class Optimizer(BaseModel):
-    INITIAL_GUESS: list[NonNegativeInt] = [
-        10,
-        0,
-        0,
-    ]  # initial guess for PV and Battery and cogen/trigen sizes
-    # BOUNDS: ClassVar[List[Tuple[Optional[int], Optional[int]]]] = [
-    #     (0, None),  # Bound per PV size
-    #     (0, None),  # Bound per Battery size
-    #     (0, None),  # Bound per cogen/trigen size
-    # ]
     LowerBound: list[PositiveInt] = [
         0,
         0,
         0,
-    ]  # low limits for PV, battery, cogen/trigen
-    # UpperBound: list[PositiveInt] = [
-    #     10000,
-    #     100,
-    #     1000,
-    # ]  # upper limits for PV, battery, cogen/trigen
+    ]  # low limits for PV, battery, cogen/trigen in kWp
     YEARS: PositiveInt = 20  # years to be considered for the calculation of cost
     DISCOUNT_RATE: PositiveFloat = (
         0.05  # discount rate for calculating the return of the investment
     )
+
+    class PSO(BaseModel):
+        swarmsize: PositiveInt = 200
+        maxiter: PositiveInt = 100
+        minfunc: PositiveFloat = 1e-6

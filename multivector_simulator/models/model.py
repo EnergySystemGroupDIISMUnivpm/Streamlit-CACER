@@ -764,7 +764,7 @@ def objective_function(
 
 
 # Funzione globale per eseguire una singola ottimizzazione
-def single_optimizer_run(args):
+def single_optimizer_run(args) -> tuple[np.ndarray, float]:
     """
     Single PSO run.
     Args:
@@ -810,11 +810,10 @@ def single_optimizer_run(args):
         wrapped_objective_function,
         common.Optimizer().LowerBound,
         UpperBound,
-        swarmsize=200,
-        maxiter=100,
-        minfunc=1e-6,
+        swarmsize=common.Optimizer().PSO().swarmsize,
+        maxiter=common.Optimizer().PSO().maxiter,
+        minfunc=common.Optimizer().PSO().minfunc,
         debug=True,
-        omega=0.5,
     )
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
     return best_params, best_value

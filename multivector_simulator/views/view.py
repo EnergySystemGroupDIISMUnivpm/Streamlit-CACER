@@ -165,15 +165,19 @@ class UserOuput(BaseModel):
         self, costs: PositiveFloat, recovery_time: PositiveInt | float
     ):
         trigen_cogen = common.Trigen_Cogen()
-        if recovery_time > 0:
+        if recovery_time > 0 and recovery_time < 21:
             st.markdown(
                 f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in circa {recovery_time} anni.",
                 help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {trigen_cogen.COST_GAS_FOR_GEN}€/Smc.",
             )
-        else:
+        elif recovery_time < 0:
             st.markdown(
                 f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in meno di un anno.",
                 help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {trigen_cogen.COST_GAS_FOR_GEN}€/Smc.",
+            )
+        else:
+            st.markdown(
+                f"Il costo previsto per l'installazione degli impianti è di circa {costs}€."
             )
 
     def see_environmental_benefit(self, reduced_CO2: PositiveFloat):

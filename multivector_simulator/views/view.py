@@ -153,10 +153,16 @@ class UserOuput(BaseModel):
         st.markdown(f"- un **impianto fotovoltaico** da {pv_size} kW")
 
     def see_cogen_size(self, cogen_size: NonNegativeInt):
-        st.markdown(f"- un **impianto di cogenerazione** da {cogen_size} kW")
+        st.markdown(
+            f"- un **impianto di cogenerazione** da {cogen_size} kW",
+            help=common.Trigen_Cogen().info_biomass,
+        )
 
     def see_trigen_size(self, trigen_size: NonNegativeInt):
-        st.markdown(f"- un **impianto di trigenerazione** da {trigen_size} kW")
+        st.markdown(
+            f"- un **impianto di trigenerazione** da {trigen_size} kW",
+            help=common.Trigen_Cogen().info_biomass,
+        )
 
     def see_battery_size(self, battery_size: NonNegativeInt):
         st.markdown(f"- un **impianto di accumulo** da {battery_size} kW")

@@ -35,7 +35,7 @@ def homepage() -> MacroSelection | None:
         st.header("Sezione CACER")
         st.markdown(
             """
-Questo servizio ti consente di simulare scenari di autoconsumo collettivo con energie rinnovabili  autandoti a comprendere l'impatto ambientale ed economico delle tue scelte energetiche.
+Questo servizio ti consente di simulare scenari di autoconsumo collettivo con energie rinnovabili  aiutandoti a comprendere l'impatto ambientale ed economico delle tue scelte energetiche.
 
 Le **CACER** (Configurazioni di Autoconsumo Collettivo per l'Energia Rinnovabile) sono soluzioni che permettono la condivisione dell'energia elettrica generata da fonti rinnovabili tra più utenti, ottimizzando l'uso delle risorse e riducendo l'impatto ambientale. Utilizzano la rete elettrica esistente per distribuire l'energia prodotta in modo efficiente, con l'obiettivo di ridurre le emissioni di gas serra e offrire benefici economici agli utenti.
 

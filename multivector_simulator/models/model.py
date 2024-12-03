@@ -96,20 +96,23 @@ def total_cost_investment(
     battery_size: NonNegativeInt,
     cogen_trigen_size: NonNegativeInt,
     labelCogTrigen: str,
+    heat_pump_size: NonNegativeInt,
 ) -> PositiveFloat:
     """
-    Calculation of cost of installation of battery, PV, cogen/trigen in euro.
+    Calculation of cost of installation of battery, PV, cogen/trigen, heat pump in euro.
 
     Attrs:
         PV_size: NonNegativeInt - size of the PV plant in kW
         battery_size: NonNegativeInt - size of the battery in kW
         cogen_trigen_size: NonNegativeInt - size of the cogenerator or trigenerator in kW
         labelCogTrigen: str - indicating "Cogen" or "Trigen"
+        heat_pump_size: NonNegativeInt - size of the heat pump in kW
     """
     total_cost = (
         cost_PV_installation(PV_size)
         + cost_battery_installation(battery_size)
         + cost_cogen_trigen_installation(cogen_trigen_size, labelCogTrigen)
+        + cost_heat_pump_installation(heat_pump_size)
     )
     return total_cost
 
@@ -179,6 +182,35 @@ def maintenance_cost_cogen_trigen(
     return annually_maintenance_cost_cogen_trigen
 
 
+def cost_heat_pump_installation(heat_pump_size: NonNegativeInt) -> PositiveOrZeroFloat:
+    """
+    Calculation of the cost of the installation of the heat pump in euro.
+    Attrs:
+        heat_pump_size: NonNegativeInt - size of the heat pump in kW
+
+    Returns:
+        cost_heat_pump: PositiveOrZeroFloat. cost of initial investment of installing heat pump in euro.
+    """
+    cost_heat_pump = (
+        common.Heat_pump().cost_for_kw * heat_pump_size
+        + common.Heat_pump().installation_cost
+    )
+    return cost_heat_pump
+
+
+def maintenance_cost_heat_pump(heat_pump_size: NonNegativeInt) -> PositiveOrZeroFloat:
+    """
+    Calculation of the annual cost of the maintenance of the heat pump in euro.
+    Attrs:
+        heat_pump_size: NonNegativeInt - size of the heat pump in kW
+    """
+    installation_cost_heat_pump = cost_heat_pump_installation(heat_pump_size)
+    annually_maintenance_cost_heat_pump = (
+        common.Heat_pump().maintenance_cost * installation_cost_heat_pump
+    )
+    return annually_maintenance_cost_heat_pump
+
+
 def total_economic_cost(
     annual_electric_energy_from_grid: PositiveOrZeroFloat,
     annual_thermal_energy_from_grid: PositiveOrZeroFloat,
@@ -187,6 +219,7 @@ def total_economic_cost(
     battery_size: NonNegativeInt,
     cogen_trigen_size: NonNegativeInt,
     labelCogTrigen: str,
+    heat_pump_size: NonNegativeInt,
 ) -> np.ndarray:
     """
     Calculation of total costs over 20years, sum of:
@@ -206,6 +239,7 @@ def total_economic_cost(
         battery_size: NonNegativeInt - size of the battery in kW
         cogen_trigen_size: NonNegativeInt - size of the cogenerator or trigenerator in kW
         labelCogTrigen: str - indicating "Cogen" or "Trigen"
+        heat_pump_size: NonNegativeInt - size of the heat pump in kW
 
     Returns:
         np.ndarray - total costs over 20 years in euro
@@ -232,6 +266,7 @@ def total_economic_cost(
     cost_installation_trigen_cogen = cost_cogen_trigen_installation(
         cogen_trigen_size, labelCogTrigen
     )
+    cost_installation_heat_pump = cost_heat_pump_installation(heat_pump_size)
 
     # COST OF GAS USE
     annually_cost_gas = cost_gas_used_cogen_trigen(annually_used_gas)
@@ -251,6 +286,10 @@ def total_economic_cost(
     cost_maintenance_cogen_trigen_actualized = actualization(
         annually_cost_maintenance_cogen_trigen
     )  # costi attualizzati del mantenimento di cogen/trigen considerando un periodo di 20 anni
+    annually_cost_maintenance_heat_pump = maintenance_cost_heat_pump(heat_pump_size)
+    cost_maintenance_heat_pump_actualized = actualization(
+        annually_cost_maintenance_heat_pump
+    )
 
     null_array = np.zeros_like(cost_maintenance_cogen_trigen_actualized)
     null_array[0] = cost_installation_PV
@@ -262,16 +301,21 @@ def total_economic_cost(
     null_array[0] = cost_installation_trigen_cogen
     cost_installation_trigen_cogen = null_array
 
+    null_array[0] = cost_installation_heat_pump
+    cost_installation_heat_pump = null_array
+
     # TOTAL COST
     total_cost = (
         cost_installation_PV
         + cost_installation_battery
         + cost_installation_trigen_cogen
+        + cost_installation_heat_pump
         + (cost_electricity_from_grid_actualized)
         + (cost_thermal_from_grid_actualized)
         + (annually_cost_gas_actualized)
         + (cost_maintenance_cogen_trigen_actualized)
         + (cost_maintenance_PV_actualized)
+        + (cost_maintenance_heat_pump_actualized)
     )
 
     return total_cost
@@ -342,6 +386,46 @@ def calc_payback_time(df: pd.DataFrame) -> NonNegativeInt | float:
     else:
         payback_time = float(inf)
     return payback_time
+
+
+def annual_production_heat_pump(
+    size_heat_pump: NonNegativeInt,
+    start_winter_season: NonNegativeInt,
+    end_winter_season: NonNegativeInt,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Calculate the thermal, refrigeration production (kWh) based on the size of the heat pump. Production in one year.
+    Attrs:
+        size_heat_pump: NonNegativeInt - size of the heat pump in kW
+        start_winter_season: NonNegativeInt - start month of the winter season (0=January)
+        end_winter_season: NonNegativeInt - end month of the winter season (0=January)
+
+    Returns:
+        thermal_production: np.ndarray - annual thermal production in kWh
+        refrigerator_production: np.ndarray - annual refrigerator production in kWh
+
+    """
+    thermal_hourly_production = size_heat_pump * common.Heat_pump().COP
+    refrigerator_houry_production = size_heat_pump * common.Heat_pump().EER
+
+    # intialize vectors containing all zeros
+    thermal_production = np.zeros(common.HOURS_OF_YEAR)
+    refrigerator_production = np.zeros(common.HOURS_OF_YEAR)
+    # update vectors with actual production
+    # start and end hours of winter season (when the thermal production occurs)
+    start = int(start_winter_season) * 30 * 24  # type: ignore
+    end = int(end_winter_season) * 60 * 24  # type:ignore
+
+    if int(start_winter_season) < int(end_winter_season):  # type:ignore
+        thermal_production[start:end] = thermal_hourly_production
+    else:
+        thermal_production[start:] = thermal_hourly_production
+        thermal_production[:end] = thermal_hourly_production
+        mask_no_thermal = (thermal_production == 0) | np.isnan(
+            thermal_production
+        )  # refrigeration occures when thermal doesn't
+        refrigerator_production[mask_no_thermal] = refrigerator_houry_production
+    return thermal_production, refrigerator_production
 
 
 def calculate_cogen_or_trigen_energy_coverage(
@@ -491,6 +575,7 @@ def annual_production_cogen_trigen(
     # cogenerator
     if labelCogTrigen == "Cogen":
         cogen = common.Trigen_Cogen().Cogenerator()
+        electric_production[:] = size_cogen_trigen * cogen.ELECTRIC_EFFICIENCY_COGEN
         if int(start_winter_season) < int(end_winter_season):  # type:ignore
             thermal_production[start:end] = (
                 size_cogen_trigen * cogen.THERMAL_EFFICIENCY_COGEN
@@ -502,7 +587,6 @@ def annual_production_cogen_trigen(
             thermal_production[:end] = (
                 size_cogen_trigen * cogen.THERMAL_EFFICIENCY_COGEN
             )
-        electric_production[:] = size_cogen_trigen * cogen.ELECTRIC_EFFICIENCY_COGEN
     # trigenerator
     elif labelCogTrigen == "Trigen":
         trigen = common.Trigen_Cogen().Trigenerator()
@@ -525,6 +609,76 @@ def annual_production_cogen_trigen(
             size_cogen_trigen * trigen.REFRIGERATION_EFFICIENCY_TRIGEN
         )
     return electric_production, thermal_production, refrigerator_production
+
+
+def calculate_heat_pump_energy_coverage(
+    thermal_consumption: np.ndarray,
+    refrigerator_consumption: np.ndarray,
+    heat_pump_size: NonNegativeInt,
+    start_winter_season: NonNegativeInt,
+    end_winter_season: NonNegativeInt,
+) -> Tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
+
+    # Calculate the total HEAT PUMP PRODUCTION scaled by its size
+    (
+        heat_pump_thermal_production,
+        heat_pump_refrigeration_production,
+    ) = annual_production_heat_pump(
+        heat_pump_size, start_winter_season, end_winter_season
+    )
+
+    # INITIALIZE ARRAYS
+    thermal_energy_from_grid = np.zeros_like(thermal_consumption)
+    refrigeration_energy_from_grid = np.zeros_like(refrigerator_consumption)
+    electric_energy_from_grid = np.zeros_like(thermal_consumption)
+
+    # ENERGY BALANCE
+
+    # thermal energy balance
+    thermal_consumption_before_heat_pump = thermal_consumption.copy()
+    ##update the thermal consumption subtracting the thermal energy produced by heat pump
+    thermal_consumption = np.clip(
+        thermal_consumption - heat_pump_thermal_production, 0, None
+    )
+
+    # refrigeration energy balance
+    refrigeration_consumption_before_heat_pump = refrigerator_consumption.copy()
+    ##update the refrigeration consumption subtracting the refrigeration energy produced by heat pump
+    refrigerator_consumption = np.clip(
+        refrigerator_consumption - heat_pump_refrigeration_production, 0, None
+    )
+
+    # SELF CONSUMPTION
+    # thermal energy self-consumed
+    self_consumption_thermal_energy_from_heat_pump = (
+        thermal_consumption_before_heat_pump - thermal_consumption
+    )
+    # refrigeration energy self-consumed
+    self_consumption_refrigeration_energy_from_heat_pump = (
+        refrigeration_consumption_before_heat_pump - refrigerator_consumption
+    )
+
+    # ENERGY FROM GRID
+    # electric energy taken from the grid (to enable the heat pump to work)
+    electric_energy_from_grid[:] = heat_pump_size * common.HOURS_OF_YEAR
+    # thermal energy taken from the grid (what ramins not covered by heat pump)
+    thermal_energy_from_grid = thermal_consumption
+    # refrigeration energy taken from grid (what ramins not covered by heat pump)
+    refrigeration_energy_from_grid = refrigerator_consumption
+
+    return (
+        electric_energy_from_grid,
+        thermal_energy_from_grid,
+        refrigeration_energy_from_grid,
+        self_consumption_thermal_energy_from_heat_pump,
+        self_consumption_refrigeration_energy_from_heat_pump,
+    )
 
 
 def calculation_pv_production(pv_size) -> np.ndarray:
@@ -676,14 +830,43 @@ def objective_function(
     Returns:
     objective_function - function to be minimized
     """
-    PV_size, battery_size, cogen_or_trigen_size = x  # parameters to be determined
+    PV_size, battery_size, cogen_or_trigen_size, heat_pump_size = (
+        x  # parameters to be determined
+    )
+
+    # calculation fo thermal and refrigerator coverage per year covedere by heat pump
+    (
+        electric_energy_consumed_pump,
+        thermal_energy_from_grid_pump,
+        refrigeration_energy_from_grid_pump,
+        self_consumption_thermal_energy_from_pump,
+        self_consumption_refrigeration_energy_from_pump,
+    ) = calculate_heat_pump_energy_coverage(
+        thermal_consumption,
+        refrigerator_consumption,
+        heat_pump_size,
+        start_winter_season,
+        end_winter_season,
+    )
+    # update electric, thermal and refrigeraion consumption
+    electric_consumption = electric_consumption + electric_energy_consumed_pump
+    thermal_consumption = np.clip(
+        thermal_consumption - self_consumption_thermal_energy_from_pump,
+        0,
+        None,
+    )
+    refrigerator_consumption = np.clip(
+        refrigerator_consumption - self_consumption_refrigeration_energy_from_pump,
+        0,
+        None,
+    )
 
     # calculation of the electric, thermal and refrigerator coverage per year covered by cogen/trigen
 
     (
         electric_energy_from_grid_cogen,
-        thermal_energy_from_grid,
-        refrigeration_energy_from_grid,
+        thermal_energy_from_grid_cogen,
+        refrigeration_energy_from_grid_cogen,
         self_consumption_electric_energy_from_cogen_trigen,
         self_consumption_thermal_energy_from_cogen_trigen,
         self_consumption_refrigeration_energy_from_cogen_trigen,
@@ -728,8 +911,10 @@ def objective_function(
 
     annual_savings = savings_using_implants(
         total_self_consumed_electric,
-        np.nansum(self_consumption_thermal_energy_from_cogen_trigen),
-        np.nansum(self_consumption_refrigeration_energy_from_cogen_trigen),
+        np.nansum(self_consumption_thermal_energy_from_cogen_trigen)
+        + np.nansum(self_consumption_thermal_energy_from_pump),
+        np.nansum(self_consumption_refrigeration_energy_from_cogen_trigen)
+        + np.nansum(self_consumption_refrigeration_energy_from_pump),
     )
     savings_years = actualization(annual_savings)
 
@@ -744,15 +929,17 @@ def objective_function(
             electric_energy_from_grid_cogen
         )  # electric energy from grid after adding cogen/trigen
         + np.nansum(
-            refrigeration_energy_from_grid
+            (refrigeration_energy_from_grid_cogen + refrigeration_energy_from_grid_pump)
             * (
                 1 / common.EFFICIENCY_CONDITIONER
             )  # per ogni kwh che un condizionartore consuma, produce N kWh di energia frigorifera
-        )  # electric energy from grid after adding cogen/trigen for refrigeration
+        )  # electric energy from grid after adding cogen/trigen for refrigeration and heat pump
     )
 
     # thermal
-    total_thermal_energy_from_grid = np.nansum(thermal_energy_from_grid)
+    total_thermal_energy_from_grid = np.nansum(
+        thermal_energy_from_grid_cogen
+    ) + np.nansum(thermal_energy_from_grid_pump)
 
     # electric production by cogen/trigen
     (
@@ -777,6 +964,7 @@ def objective_function(
         battery_size,
         cogen_or_trigen_size,
         labelCogTrigen,
+        heat_pump_size,
     )
 
     # Final objective function: balance between minimizing costs
@@ -791,7 +979,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
     """
     Single PSO run.
     Args:
-        args: Tuple with necessary parameters (electric_consumption, thermal_consumption, refrigerator_consumption, labelCogTrigen,maxiter)
+        args: Tuple with necessary parameters (electric_consumption, thermal_consumption, refrigerator_consumption, labelCogTrigen, number of max iterations, swarm size)
     Returns:
         Tuple: (best_params, best_value)
     """
@@ -803,6 +991,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         start_winter_season,
         end_winter_season,
         maxiter,
+        swarm_size,
     ) = args
 
     # UPPER BOUNDS
@@ -871,6 +1060,9 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         common.Optimizer().LowerBound,
         UpperBound_normalized,
         swarmsize=pso_obj.swarmsize,
+        UpperBound,
+        swarmsize=swarm_size,
+        maxiter=maxiter,
         minfunc=pso_obj.minfunc,
         debug=True,
         f_ieqcons=constraint_function,
@@ -880,6 +1072,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
     best_params = denormalization(best_params, max(UpperBound), limit_normalization)
     best_value = denormalization(best_value, max(UpperBound), limit_normalization)
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
+
     return best_params, best_value
 
 
@@ -895,8 +1088,8 @@ def optimizer_multiple_runs(
     num_parallel_runs: PositiveInt = common.Optimizer()
     .PSO()
     .number_parallel_runs,  # Number of parallel runs
-    max_retries: int = 1,  # Maximum number of retries
-) -> Tuple[NonNegativeInt, NonNegativeInt, NonNegativeInt]:
+    max_retries: int = 3,  # Maximum number of retries
+) -> Tuple[NonNegativeInt, NonNegativeInt, NonNegativeInt, NonNegativeInt]:
     """
     Runs multiple optimizations in parallel and chooses the best feasible solution.
     Retries up to max_retries if no feasible solution is found.
@@ -910,7 +1103,7 @@ def optimizer_multiple_runs(
     num_parallel_runs: int - Number of parallel runs.
     max_retries: int - Maximum number of retries if no feasible solution is found.
     Returns:
-    The best configuration of parameters (PV_size, battery_size, cogen_size).
+    The best configuration of parameters (PV_size, battery_size, cogen_size, trigen_size, heat_pump_size).
     """
 
     def constraint_function(x):
@@ -928,6 +1121,8 @@ def optimizer_multiple_runs(
     attempt = 0
     best_feasible_solution = None
     maxiter = common.Optimizer().PSO().maxiter
+    swarm_size = common.Optimizer().PSO().swarmsize
+    solution = list()
     while attempt < max_retries:
         print(f"[DEBUG] Attempt {attempt + 1} of {max_retries}")
 
@@ -941,6 +1136,7 @@ def optimizer_multiple_runs(
                 start_winter_season,
                 end_winter_season,
                 maxiter,
+                swarm_size,
             )
             for _ in range(num_parallel_runs)
         ]
@@ -963,26 +1159,41 @@ def optimizer_multiple_runs(
             for params, value in results
             if constraint_function(params) >= 0
         ]
+
         if feasible_results:
-            # If feasible solutions exist, find the best one
             best_params, best_value = min(feasible_results, key=lambda x: x[1])
+            # If feasible solutions exist, find the best one
             optimal_PV_size = round(best_params[0])
             optimal_battery_size = round(best_params[1])
             optimal_cogen_or_trigen_size = round(best_params[2])
+            optimal_heat_pump_size = round(best_params[3])
             best_feasible_solution = (
                 optimal_PV_size,
                 optimal_battery_size,
                 optimal_cogen_or_trigen_size,
+                optimal_heat_pump_size,
             )
             break
 
         attempt += 1
         maxiter = maxiter + attempt * 20
-
+        swarm_size = swarm_size + attempt * 50
     if best_feasible_solution is None:
-        raise RuntimeError("No feasible solution found after maximum retries.")
+        print(solution)
+        sol = min(solution, key=lambda x: x[1])
+        optimal_PV_size = int(sol[0][0])
+        optimal_battery_size = int(sol[0][1])
+        optimal_cogen_or_trigen_size = int(sol[0][2])
+        optimal_heat_pump_size = int(sol[0][3])
+        return (
+            optimal_PV_size,
+            optimal_battery_size,
+            optimal_cogen_or_trigen_size,
+            optimal_heat_pump_size,
+        )
 
-    return best_feasible_solution
+    else:
+        return best_feasible_solution
 
 
 def actualization(
@@ -1022,10 +1233,11 @@ if __name__ == "__main__":
         end_winter_season=2,
     )
 
-    PV_size, battery_size, cogen_trigen_size = result
+    PV_size, battery_size, cogen_trigen_size, heat_pump_size = result
     print(f"PV_size: {PV_size} kW")
     print(f"battery_size: {battery_size} kW")
     print(f"cogen_trigen_size: {cogen_trigen_size} kW")
+    print(f"heat_pump_size: {heat_pump_size} kW")
 
     pv_prod = calculation_pv_production(PV_size)
     (
@@ -1034,8 +1246,13 @@ if __name__ == "__main__":
         cogen_refrigerator_production,
     ) = annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen, 10, 2)
 
-    total_production = pv_prod + cogen_electric_production
+    heat_pump_thermal_prod, heat_pump_refrigeration_pump = annual_production_heat_pump(
+        heat_pump_size, 10, 3
+    )
 
+    total_production = pv_prod + cogen_electric_production
+    print(f"total electric prod {cogen_electric_production.sum()}")
+    print(f"total electric consumption: {electric_consumption.sum()}")
     plt.figure()
     plt.plot(electric_consumption, label="electric_consumption")
     plt.plot(total_production, label="total_production")
@@ -1043,11 +1260,17 @@ if __name__ == "__main__":
 
     plt.figure()
     plt.plot(thermal_consumption, label="thermal_consumption")
-    plt.plot(cogen_thermal_production, label="cogen_thermal_production")
+    plt.plot(
+        cogen_thermal_production + heat_pump_thermal_prod,
+        label="cogen_thermal_production",
+    )
     plt.legend()
 
     plt.figure()
     plt.plot(refrigerator_consumption, label="refrigerator_consumption")
-    plt.plot(cogen_refrigerator_production, label="cogen_refrigerator_production")
+    plt.plot(
+        cogen_refrigerator_production + heat_pump_refrigeration_pump,
+        label="cogen_refrigerator_production",
+    )
     plt.legend()
     plt.show()

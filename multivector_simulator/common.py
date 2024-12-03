@@ -27,6 +27,16 @@ MAINTENANCE_COST_PV: dict[str, int] = {
 }  # annual maintenance cost for PV for kWp. Varies according presence of battery.
 
 
+class Heat_pump(BaseModel):
+    COP: PositiveFloat = 5.0  # Electric energy= Thermal produced energy / COP
+    EER: PositiveFloat = 3.5  # Electric energy= Refrigeration produced energy / EER
+    installation_cost: PositiveFloat = 5000  # euro, cost of first installation
+    cost_for_kw: PositiveFloat = 600  # euro,costo for kW
+    maintenance_cost: PositiveFloat = (
+        0.015  # annual maintenance cost (euro) expressed as percentage of initial investment (considering even installation)
+    )
+
+
 # cogenerator/trigenerator
 class Trigen_Cogen(BaseModel):
     info_biomass: str = """L'impianto considerato è un impiano a gas. Potresti valutare anche la possibilità di instalare un impianto a biomassa. 
@@ -221,7 +231,8 @@ class Optimizer(BaseModel):
         0,
         0,
         0,
-    ]  # low limits for PV, battery, cogen/trigen in kWp
+        0,
+    ]  # low limits for PV, battery, cogen/trigen, heat pump in kWp
     YEARS: PositiveInt = 20  # years to be considered for the calculation of cost
     DISCOUNT_RATE: PositiveFloat = (
         0.05  # discount rate for calculating the return of the investment

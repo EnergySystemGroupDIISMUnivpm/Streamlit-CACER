@@ -1,17 +1,28 @@
 import pandas as pd
 import numpy as np
-from multivector_simulator import common
+import matplotlib.pyplot as plt
 
-file_esempio = pd.read_excel(
-    "resources/Prova_input_consumi_multienergetico.xlsx", engine="openpyxl"
+file_esempio = pd.read_csv(
+    "resources/PV_data.csv",
+    delimiter=",",
+    header=None,
 )
-consumi_elettrici = np.nansum(file_esempio["Consumi Elettrici (kWh)"])
-consumi_termici = np.nansum(file_esempio["Consumi Termici (kWh)"])
-consumi_frigo = np.nansum(file_esempio["Consumi Frigoriferi (kWh)"])
+pv_data = file_esempio[2]
+# estate [3600:5760]
+print(f"""media in estate {np.mean(pv_data[3600:5760])}""")
+max_estate = max(pv_data[3600:5760])
+print(f""" media Gennaio-Maggio {np.mean(pv_data[0:3600])}""")
+print(f""" media Settembre-Dicembre {np.mean(pv_data[5760:])}""")
+x1 = 3600
+x2 = 5760
+# Plot della funzione pv_data
+plt.plot(pv_data, label="pv_data", color="blue")
 
-costo_annuale_energia = (
-    consumi_elettrici * common.ELECTRIC_ENERGY_PRICE
-    + consumi_termici * common.THERMAL_ENERGY_PRICE
-)
+# Linea verticale a x = 3600
+plt.axvline(x=3600, color="red", linestyle="--", label="x = 3600")
 
-print(costo_annuale_energia)
+# Linea verticale a x = 5760
+plt.axvline(x=5760, color="green", linestyle="--", label="x = 5760")
+
+plt.axhline(y=max_estate)  # type: ignore
+plt.show()

@@ -767,7 +767,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
     """
     Single PSO run.
     Args:
-        args: Tuple with necessary parameters (electric_consumption, thermal_consumption, refrigerator_consumption, labelCogTrigen)
+        args: Tuple with necessary parameters (electric_consumption, thermal_consumption, refrigerator_consumption, labelCogTrigen,maxiter)
     Returns:
         Tuple: (best_params, best_value)
     """
@@ -778,6 +778,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         labelCogTrigen,
         start_winter_season,
         end_winter_season,
+        maxiter,
     ) = args
 
     def wrapped_objective_function(x):
@@ -828,11 +829,11 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         common.Optimizer().LowerBound,
         UpperBound,
         swarmsize=pso_obj.swarmsize,
-        maxiter=pso_obj.maxiter,
         minfunc=pso_obj.minfunc,
         debug=True,
         f_ieqcons=constraint_function,
         omega=0.7,
+        maxiter=maxiter,
     )
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
     return best_params, best_value
@@ -882,7 +883,7 @@ def optimizer_multiple_runs(
 
     attempt = 0
     best_feasible_solution = None
-
+    maxiter = common.Optimizer().PSO().maxiter
     while attempt < max_retries:
         print(f"[DEBUG] Attempt {attempt + 1} of {max_retries}")
 
@@ -895,6 +896,7 @@ def optimizer_multiple_runs(
                 labelCogTrigen,
                 start_winter_season,
                 end_winter_season,
+                maxiter,
             )
             for _ in range(num_parallel_runs)
         ]
@@ -923,7 +925,7 @@ def optimizer_multiple_runs(
             break
 
         attempt += 1
-        maxiter = maxiter + attempt * 50
+        maxiter = maxiter + attempt * 20
 
     if best_feasible_solution is None:
         raise RuntimeError("No feasible solution found after maximum retries.")

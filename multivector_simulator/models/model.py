@@ -11,10 +11,9 @@ import multivector_simulator.common as common
 from typing import Tuple
 from cacer_simulator.common import PositiveOrZeroFloat, get_kw_cost
 import pandas as pd
-from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from pathlib import Path
-from pyswarm import pso_search_among_integer
+import multivector_simulator.models.optimizer as optimizer
 import streamlit as st
 from multiprocessing import Pool
 
@@ -824,7 +823,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
 
     # PSO
     pso_obj = common.Optimizer().PSO()
-    best_params, best_value = pso_search_among_integer(
+    best_params, best_value = optimizer.pso_search_among_integer(
         wrapped_objective_function,
         common.Optimizer().LowerBound,
         UpperBound,

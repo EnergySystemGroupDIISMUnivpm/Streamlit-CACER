@@ -1,10 +1,6 @@
 import streamlit as st
 
 from Multivettore_page_controller import Simulator_Multivettore
-from cacer_simulator.views.macro_selection import (
-    MacroGroup,
-    show_macro_group_selector,
-)
 from views.view_homepage import homepage, MacroSelection
 from CACER_page_controller import Simulator_CACER
 
@@ -21,4 +17,7 @@ def main():
 
 
 if __name__ == "__main__":
+    if "cache_cleared" not in st.session_state:
+        st.cache_data.clear()  # Clear cache on page refresh
+        st.session_state.cache_cleared = True  # Mark cache as cleared
     main()

@@ -108,7 +108,7 @@ class UserInput(BaseModel):
         period_label = st.radio(
             "Per prima cosa, seleziona la durata del periodo in cui vuoi visualizzare l'andamento della tua energia",
             options=list(common.PERIOD_TO_BE_PLOTTED.keys()),
-            index=None,
+            index=0,
             key="select label of period",
         )
         return period_label

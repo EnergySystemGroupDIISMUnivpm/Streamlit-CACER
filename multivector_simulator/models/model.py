@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import multivector_simulator.models.optimizer as optimizer
 import streamlit as st
-from multiprocessing import Pool
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def calculate_mean_over_period(data: np.ndarray, hours: int) -> np.ndarray:
@@ -901,8 +901,16 @@ def optimizer_multiple_runs(
         ]
 
         # Parallel optimization
-        with Pool(processes=num_parallel_runs) as pool:
-            results = pool.map(single_optimizer_run, args)
+        results = []
+        with ThreadPoolExecutor(max_workers=num_parallel_runs) as executor:
+            future_to_args = {
+                executor.submit(single_optimizer_run, arg): arg for arg in args
+            }
+            for future in as_completed(future_to_args):
+                try:
+                    results.append(future.result())
+                except Exception as e:
+                    print(f"Error during optimization: {e}")
 
         # Filter feasible solutions
         feasible_results = [

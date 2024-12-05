@@ -243,3 +243,12 @@ class Optimizer(BaseModel):
         maxiter: PositiveInt = 200
         minfunc: PositiveFloat = 10
         number_parallel_runs: PositiveInt = 5
+        max_retries: NonNegativeInt = (
+            3  # max number of retries when the feasible solution is not found
+        )
+        maxiter_increment: NonNegativeInt = (
+            20  # how much to increase maxiter when feasible solution is not found
+        )
+        swarmsize_increment: NonNegativeInt = (
+            50  # how much to increase swarmsize when feasible solution is not found
+        )

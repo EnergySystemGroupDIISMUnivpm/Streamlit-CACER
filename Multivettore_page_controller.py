@@ -45,7 +45,6 @@ def Simulator_Multivettore():
                 battery_size,
                 savings,
                 investment_costs,
-                total_costs,
                 cost_gas,
             ) = multivector_controller_wrapped_functions.sizes_energies_costs(
                 electric_consumption,

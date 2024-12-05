@@ -3,6 +3,7 @@ from re import U
 from tracemalloc import start
 import numpy as np
 from pydantic import (
+    NonNegativeFloat,
     NonNegativeInt,
     PositiveFloat,
     PositiveInt,
@@ -395,6 +396,7 @@ def annual_production_heat_pump(
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calculate the thermal, refrigeration production (kWh) based on the size of the heat pump. Production in one year.
+
     Attrs:
         size_heat_pump: NonNegativeInt - size of the heat pump in kW
         start_winter_season: NonNegativeInt - start month of the winter season (0=January)
@@ -624,7 +626,24 @@ def calculate_heat_pump_energy_coverage(
     np.ndarray,
     np.ndarray,
 ]:
+    """
+    Calculate annual thermal and refrigeration energy coverage given by heat pump and its eletric consumption.
 
+    Attrs:
+        thermal_consumption: np.ndarray - annual thermal consumption in kWh
+        refrigerator_consumption: np.ndarray - annual refrigerator consumption in kWh
+        heat_pump_size: NonNegativeInt - size of the heat pump in kW
+        start_winter_season: NonNegativeInt - start month of the winter season (0=January)
+        end_winter_season: NonNegativeInt - end month of the winter season (0=January)
+
+    Returns:
+        Tuple:
+            - electric_energy_from_grid: np.ndarray- electric consumption by heat pump in kWh
+            - thermal_energy_from_grid: np.ndarray- thermal energy taken from the grid in kWh (not covered by heat pump production)
+            - refrigeration_energy_from_grid: np.ndarray- refrigeration energy taken from the grid in kWh (not covered by heat pump production)
+            - self_consumption_thermal_energy_from_heat_pump: np.ndarray- thermal energy consumpion covered by heat pump production in kWh
+            - self_consumption_refrigeration_energy_from_heat_pump: np.ndarray- refrigeration energy consumpion covered by heat pump production in kWh
+    """
     # Calculate the total HEAT PUMP PRODUCTION scaled by its size
     (
         heat_pump_thermal_production,
@@ -818,7 +837,8 @@ def objective_function(
     end_winter_season: NonNegativeInt,
 ):
     """
-    Determination of the objective function to be minimized.
+    Objective function to be minimized.
+
     Attrs:
     electric_consumption: array - electric yearly consumption in kWh
     thermal_consumption: array - thermal yearly consumption in kWh
@@ -833,7 +853,57 @@ def objective_function(
     PV_size, battery_size, cogen_or_trigen_size, heat_pump_size = (
         x  # parameters to be determined
     )
+    total_cost = self_consum_costs_savings(
+        electric_consumption,
+        thermal_consumption,
+        refrigerator_consumption,
+        labelCogTrigen,
+        start_winter_season,
+        end_winter_season,
+        PV_size,
+        battery_size,
+        cogen_or_trigen_size,
+        heat_pump_size,
+    )[0]
+    objective_funct = total_cost
+    return objective_funct
 
+
+def self_consum_costs_savings(
+    electric_consumption,
+    thermal_consumption,
+    refrigerator_consumption,
+    labelCogTrigen,
+    start_winter_season: NonNegativeInt,
+    end_winter_season: NonNegativeInt,
+    PV_size: NonNegativeInt,
+    battery_size: NonNegativeInt,
+    cogen_or_trigen_size: NonNegativeInt,
+    heat_pump_size: NonNegativeInt,
+) -> tuple[PositiveInt, PositiveFloat, NonNegativeFloat]:
+    """
+    Determination of total costs, savings and quantity of gas used from the usage of implants
+
+    Attrs:
+        electric_consumption: array - electric yearly consumption in kWh
+        thermal_consumption: array - thermal yearly consumption in kWh
+        refrigerator_consumption: array - refrigerator yearly consumption in kWh
+        labelCogTrigen: str - indicating "Cogen" or "Trigen"
+        start_winter_season: NonNegativeInt - start month of winter season (0=January)
+        end_winter_season: NonNegativeInt - end month of winter season (0=January)
+        PV_size: NonNegativeInt - in kW
+        battery_size: NonNegativeInt - in kW
+        cogen_or_trigen_size: NonNegativeInt - in kW
+        heat_pump_size: NonNegativeInt - in kW
+
+    Returns:
+        Tuple:
+            -total_cost: PositiveInt - euro
+            -annual_savings: PositiveFloat - euro
+            -annually_used_gas: NonNegativeFloat - in mc
+
+    """
+    # HEAT PUMP
     # calculation fo thermal and refrigerator coverage per year covedere by heat pump
     (
         electric_energy_consumed_pump,
@@ -849,6 +919,7 @@ def objective_function(
         end_winter_season,
     )
     # update electric, thermal and refrigeraion consumption
+    # electric consumption by heat pump is added to the total electric load so that it can be considered by cogen/trigen and PV as a load to cover
     electric_consumption = electric_consumption + electric_energy_consumed_pump
     thermal_consumption = np.clip(
         thermal_consumption - self_consumption_thermal_energy_from_pump,
@@ -861,6 +932,7 @@ def objective_function(
         None,
     )
 
+    # COGEN/TRIGEN
     # calculation of the electric, thermal and refrigerator coverage per year covered by cogen/trigen
 
     (
@@ -888,6 +960,7 @@ def objective_function(
         None,
     )
 
+    # PV AND BATTERY
     # CALCULATION OF THE ELECTRIC COVERAGE PER YEAR COVERED BY PV AND BATTERY
     (
         energy_from_grid_PV_battery,
@@ -916,7 +989,6 @@ def objective_function(
         np.nansum(self_consumption_refrigeration_energy_from_cogen_trigen)
         + np.nansum(self_consumption_refrigeration_energy_from_pump),
     )
-    savings_years = actualization(annual_savings)
 
     # COSTS
     # energy from grid
@@ -967,11 +1039,9 @@ def objective_function(
         heat_pump_size,
     )
 
-    # Final objective function: balance between minimizing costs
     total_cost = round(total_cost.sum())
 
-    objective_function = total_cost
-    return objective_function
+    return total_cost, annual_savings, annually_used_gas
 
 
 # Funzione globale per eseguire una singola ottimizzazione
@@ -1088,7 +1158,9 @@ def optimizer_multiple_runs(
     num_parallel_runs: PositiveInt = common.Optimizer()
     .PSO()
     .number_parallel_runs,  # Number of parallel runs
-    max_retries: int = 3,  # Maximum number of retries
+    max_retries: NonNegativeInt = common.Optimizer()
+    .PSO()
+    .max_retries,  # Maximum number of retries
 ) -> Tuple[NonNegativeInt, NonNegativeInt, NonNegativeInt, NonNegativeInt]:
     """
     Runs multiple optimizations in parallel and chooses the best feasible solution.
@@ -1103,7 +1175,7 @@ def optimizer_multiple_runs(
     num_parallel_runs: int - Number of parallel runs.
     max_retries: int - Maximum number of retries if no feasible solution is found.
     Returns:
-    The best configuration of parameters (PV_size, battery_size, cogen_size, trigen_size, heat_pump_size).
+    The best configuration of parameters (PV_size, battery_size, cogen_size/trigen_size, heat_pump_size).
     """
 
     def constraint_function(x):
@@ -1176,10 +1248,15 @@ def optimizer_multiple_runs(
             break
 
         attempt += 1
-        maxiter = maxiter + attempt * 20
-        swarm_size = swarm_size + attempt * 50
+        maxiter = (
+            maxiter + attempt * common.Optimizer().PSO().maxiter_increment
+        )  # increase maxiteration when feasible solution is not found
+        swarm_size = (
+            swarm_size + attempt * common.Optimizer().PSO().swarmsize_increment
+        )  # increase max swarm size when feasible solution is not found
     if best_feasible_solution is None:
-        print(solution)
+        # if there is no feasible solution after all the attempts, the best solution from the non feasible ones is taken
+        print(f"No feasible soluzion. The available solutions are {solution}")
         sol = min(solution, key=lambda x: x[1])
         optimal_PV_size = int(sol[0][0])
         optimal_battery_size = int(sol[0][1])

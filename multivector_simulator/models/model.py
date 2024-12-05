@@ -1324,7 +1324,7 @@ if __name__ == "__main__":
     ) = annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen, 10, 2)
 
     heat_pump_thermal_prod, heat_pump_refrigeration_pump = annual_production_heat_pump(
-        heat_pump_size, 10, 3
+        heat_pump_size, 10, 2
     )
 
     total_production = pv_prod + cogen_electric_production

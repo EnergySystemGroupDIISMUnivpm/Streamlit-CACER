@@ -622,6 +622,38 @@ def determination_electric_coverage_year_PV_battery(
     )
 
 
+def normalization(term_to_be_normalized, normalizator, limit_normalization):
+    """
+    Normalization of a term between 0 and limit_normalization.
+
+    Args:
+        term_to_be_normalized : Term to be normalized.
+        normalizator : Normalization factor.
+        limit_normalization : Limit of normalization. Normalization is between 0 and this limit.
+
+    Returns:
+        Normalized term.
+    """
+    normalized_term = (term_to_be_normalized / normalizator) * limit_normalization
+    return normalized_term
+
+
+def denormalization(term_to_be_denormalized, normalizator, limit_normalization):
+    """
+    Denormalization of a term between 0 and limit_normalization.
+
+    Args:
+        term_to_be_denormalized : Term to be denormalized.
+        normalizator : Normalization factor.
+        limit_normalization : Limit of normalization. Normalization is between 0 and this limit.
+
+    Returns:
+        Denormalized term.
+    """
+    denormalized_term = (term_to_be_denormalized / limit_normalization) * normalizator
+    return denormalized_term
+
+
 def objective_function(
     x,
     electric_consumption,
@@ -747,13 +779,6 @@ def objective_function(
         labelCogTrigen,
     )
 
-    # Calcolo del payback time
-    cumulativo_costi = np.cumsum(total_cost)  # Somma cumulativa dei costi
-    cumulativo_risparmi = np.cumsum(savings_years)  # Somma cumulativa dei risparmi
-
-    # Trova l'anno in cui i risparmi cumulativi superano i costi cumulativi
-    payback_time = np.argmax(cumulativo_risparmi >= cumulativo_costi) + 1
-
     # Final objective function: balance between minimizing costs
     total_cost = round(total_cost.sum())
 
@@ -780,6 +805,30 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         maxiter,
     ) = args
 
+    # UPPER BOUNDS
+    Efficiency = common.Trigen_Cogen().Cogenerator().THERMAL_EFFICIENCY_COGEN  # Cogen
+    if labelCogTrigen == "Trigen":
+        Efficiency = (
+            common.Trigen_Cogen().Trigenerator().THERMAL_EFFICIENCY_TRIGEN
+        )  # Trigen
+    # Upper limits for PV, battery, cogen/trigen
+    UpperBound: list[PositiveInt] = [
+        np.percentile(electric_consumption, 99) + 1,
+        np.percentile(electric_consumption, 99) + 1,
+        np.percentile(thermal_consumption, 99) / Efficiency
+        + 1,  # +1 because the upper must be always greater than the lower, even when consumptions=0
+    ]
+    limit_normalization = 50
+    electric_consumption = normalization(
+        electric_consumption, max(UpperBound), limit_normalization
+    )
+    thermal_consumption = normalization(
+        thermal_consumption, max(UpperBound), limit_normalization
+    )
+    refrigerator_consumption = normalization(
+        refrigerator_consumption, max(UpperBound), limit_normalization
+    )
+
     def wrapped_objective_function(x):
         obj_value = objective_function(
             x,
@@ -805,28 +854,22 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         )
         electrc_prod_cogen_trigen = np.nansum(electrc_prod_cogen_trigen)
         total_production = electrc_prod_pv + electrc_prod_cogen_trigen
-        return np.nansum(electric_consumption) - total_production
+        return normalization(
+            np.nansum(electric_consumption) - total_production,
+            max(UpperBound),
+            limit_normalization,
+        )
 
-    # UPPER BOUNDS
-    Efficiency = common.Trigen_Cogen().Cogenerator().THERMAL_EFFICIENCY_COGEN  # Cogen
-    if labelCogTrigen == "Trigen":
-        Efficiency = (
-            common.Trigen_Cogen().Trigenerator().THERMAL_EFFICIENCY_TRIGEN
-        )  # Trigen
-    # Upper limits for PV, battery, cogen/trigen
-    UpperBound: list[PositiveInt] = [
-        max(electric_consumption) + 1,
-        max(electric_consumption) + 1,
-        max(thermal_consumption) / Efficiency
-        + 1,  # +1 because the upper must be always greater than the lower, even when consumptions=0
-    ]
+        # PSO
 
-    # PSO
+    UpperBound_normalized = normalization(
+        UpperBound, max(UpperBound), limit_normalization
+    )
     pso_obj = common.Optimizer().PSO()
     best_params, best_value = optimizer.pso_search_among_integer(
         wrapped_objective_function,
         common.Optimizer().LowerBound,
-        UpperBound,
+        UpperBound_normalized,
         swarmsize=pso_obj.swarmsize,
         minfunc=pso_obj.minfunc,
         debug=True,
@@ -834,6 +877,8 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         omega=0.7,
         maxiter=maxiter,
     )
+    best_params = denormalization(best_params, max(UpperBound), limit_normalization)
+    best_value = denormalization(best_value, max(UpperBound), limit_normalization)
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
     return best_params, best_value
 
@@ -850,7 +895,7 @@ def optimizer_multiple_runs(
     num_parallel_runs: PositiveInt = common.Optimizer()
     .PSO()
     .number_parallel_runs,  # Number of parallel runs
-    max_retries: int = 10,  # Maximum number of retries
+    max_retries: int = 1,  # Maximum number of retries
 ) -> Tuple[NonNegativeInt, NonNegativeInt, NonNegativeInt]:
     """
     Runs multiple optimizations in parallel and chooses the best feasible solution.
@@ -962,13 +1007,11 @@ def actualization(
 if __name__ == "__main__":
     p = Path(__file__).parents[2]
     nday = common.HOURS_OF_YEAR
-    data = pd.read_excel(
-        p / "resources" / "Esempio_input_consumi_trigen.xlsx", engine="openpyxl"
-    )
+    data = pd.read_excel(p / "resources" / "UNIVPM.xlsx", engine="openpyxl")
     electric_consumption = data.iloc[:, 1][:nday]
     thermal_consumption = data.iloc[:, 2][:nday]
     refrigerator_consumption = data.iloc[:, 3][:nday]
-    labelCogTrigen = "Trigen"  # Cogen or Trigen
+    labelCogTrigen = "Cogen"  # Cogen or Trigen
 
     result = optimizer_multiple_runs(
         electric_consumption,
@@ -976,7 +1019,7 @@ if __name__ == "__main__":
         refrigerator_consumption,
         labelCogTrigen,
         start_winter_season=10,
-        end_winter_season=3,
+        end_winter_season=2,
     )
 
     PV_size, battery_size, cogen_trigen_size = result
@@ -989,7 +1032,7 @@ if __name__ == "__main__":
         cogen_electric_production,
         cogen_thermal_production,
         cogen_refrigerator_production,
-    ) = annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen, 10, 3)
+    ) = annual_production_cogen_trigen(cogen_trigen_size, labelCogTrigen, 10, 2)
 
     total_production = pv_prod + cogen_electric_production
 

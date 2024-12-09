@@ -228,7 +228,7 @@ class Optimizer(BaseModel):
     )
 
     class PSO(BaseModel):
-        swarmsize: PositiveInt = 300
-        maxiter: PositiveInt = 100
-        minfunc: PositiveFloat = 1e-6
+        swarmsize: PositiveInt = 200
+        maxiter: PositiveInt = 200
+        minfunc: PositiveFloat = 10
         number_parallel_runs: PositiveInt = 5

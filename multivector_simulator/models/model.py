@@ -1065,6 +1065,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
     ) = args
 
     # UPPER BOUNDS
+    COP_pump = common.Heat_pump().COP
     Efficiency = common.Trigen_Cogen().Cogenerator().THERMAL_EFFICIENCY_COGEN  # Cogen
     if labelCogTrigen == "Trigen":
         Efficiency = (
@@ -1076,8 +1077,9 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         np.percentile(electric_consumption, 99) + 1,
         np.percentile(thermal_consumption, 99) / Efficiency
         + 1,  # +1 because the upper must be always greater than the lower, even when consumptions=0
+        np.percentile(thermal_consumption, 99) / COP_pump + 1,
     ]
-    limit_normalization = 50
+    limit_normalization = 100
     electric_consumption = normalization(
         electric_consumption, max(UpperBound), limit_normalization
     )
@@ -1129,15 +1131,12 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         wrapped_objective_function,
         common.Optimizer().LowerBound,
         UpperBound_normalized,
-        swarmsize=pso_obj.swarmsize,
-        UpperBound,
         swarmsize=swarm_size,
         maxiter=maxiter,
         minfunc=pso_obj.minfunc,
         debug=True,
         f_ieqcons=constraint_function,
         omega=0.7,
-        maxiter=maxiter,
     )
     best_params = denormalization(best_params, max(UpperBound), limit_normalization)
     best_value = denormalization(best_value, max(UpperBound), limit_normalization)
@@ -1328,7 +1327,7 @@ if __name__ == "__main__":
     )
 
     total_production = pv_prod + cogen_electric_production
-    print(f"total electric prod {cogen_electric_production.sum()}")
+    print(f"total electric prod {total_production.sum()}")
     print(f"total electric consumption: {electric_consumption.sum()}")
     plt.figure()
     plt.plot(electric_consumption, label="electric_consumption")

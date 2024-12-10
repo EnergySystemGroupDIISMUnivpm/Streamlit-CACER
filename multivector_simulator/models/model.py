@@ -1,6 +1,4 @@
 from math import inf
-from re import U
-from tracemalloc import start
 import numpy as np
 from pydantic import (
     NonNegativeFloat,
@@ -885,22 +883,22 @@ def self_consum_costs_savings(
     Determination of total costs, savings and quantity of gas used from the usage of implants
 
     Attrs:
-        electric_consumption: array - electric yearly consumption in kWh
-        thermal_consumption: array - thermal yearly consumption in kWh
-        refrigerator_consumption: array - refrigerator yearly consumption in kWh
-        labelCogTrigen: str - indicating "Cogen" or "Trigen"
-        start_winter_season: NonNegativeInt - start month of winter season (0=January)
-        end_winter_season: NonNegativeInt - end month of winter season (0=January)
-        PV_size: NonNegativeInt - in kW
-        battery_size: NonNegativeInt - in kW
-        cogen_or_trigen_size: NonNegativeInt - in kW
-        heat_pump_size: NonNegativeInt - in kW
+        - electric_consumption: array - electric yearly consumption in kWh
+        - thermal_consumption: array - thermal yearly consumption in kWh
+        - refrigerator_consumption: array - refrigerator yearly consumption in kWh
+        - labelCogTrigen: str - indicating "Cogen" or "Trigen"
+        - start_winter_season: NonNegativeInt - start month of winter season (0=January)
+        - end_winter_season: NonNegativeInt - end month of winter season (0=January)
+        - PV_size: NonNegativeInt - in kW
+        - battery_size: NonNegativeInt - in kW
+        - cogen_or_trigen_size: NonNegativeInt - in kW
+        - heat_pump_size: NonNegativeInt - in kW
 
     Returns:
         Tuple:
-            -total_cost: PositiveInt - euro
-            -annual_savings: PositiveFloat - euro
-            -annually_used_gas: NonNegativeFloat - in mc
+            - total_cost: PositiveInt; euro
+            - annual_savings: PositiveFloat; euro
+            - annually_used_gas: NonNegativeFloat; in mc
 
     """
     # HEAT PUMP
@@ -1075,11 +1073,11 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
     UpperBound: list[PositiveInt] = [
         np.percentile(electric_consumption, 99) + 1,
         np.percentile(electric_consumption, 99) + 1,
-        np.percentile(thermal_consumption, 99) / Efficiency
+        (np.percentile(thermal_consumption, 99) / Efficiency)
         + 1,  # +1 because the upper must be always greater than the lower, even when consumptions=0
-        np.percentile(thermal_consumption, 99) / COP_pump + 1,
+        (np.percentile(thermal_consumption, 99) / COP_pump) + 1,
     ]
-    limit_normalization = 100
+    limit_normalization = 100  # max of interval in which the normalized bounds vary
     electric_consumption = normalization(
         electric_consumption, max(UpperBound), limit_normalization
     )
@@ -1114,12 +1112,15 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
             )
         )
         electrc_prod_cogen_trigen = np.nansum(electrc_prod_cogen_trigen)
-        total_production = electrc_prod_pv + electrc_prod_cogen_trigen
-        return normalization(
-            np.nansum(electric_consumption) - total_production,
+        total_production = normalization(
+            electrc_prod_pv + electrc_prod_cogen_trigen,
             max(UpperBound),
             limit_normalization,
         )
+        consump = normalization(
+            np.nansum(electric_consumption), max(UpperBound), limit_normalization
+        )
+        return (consump - total_production,)
 
         # PSO
 

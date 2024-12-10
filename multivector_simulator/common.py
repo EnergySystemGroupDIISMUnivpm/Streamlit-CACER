@@ -241,8 +241,10 @@ class Optimizer(BaseModel):
     class PSO(BaseModel):
         swarmsize: PositiveInt = 200
         maxiter: PositiveInt = 200
-        minfunc: PositiveFloat = 10
-        number_parallel_runs: PositiveInt = 5
+        minfunc: PositiveFloat = (
+            1  # indica che l'algoritmo PSO si fermerà quando la differenza tra il valore migliore della funzione obiettivo trovato in un'iterazione e quello trovato nella successiva è inferiore a 1
+        )
+        number_parallel_runs: PositiveInt = 8
         max_retries: NonNegativeInt = (
             3  # max number of retries when the feasible solution is not found
         )

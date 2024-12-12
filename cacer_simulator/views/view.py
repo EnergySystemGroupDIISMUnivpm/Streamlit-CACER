@@ -22,7 +22,10 @@ class UserInput(BaseModel):
     # Region
     def insert_region(self) -> common.RegionType | None:
         region: str | None = st.selectbox(
-            "Seleziona la tua regione", common.REGIONS, index=None
+            "Seleziona la tua regione",
+            common.REGIONS,
+            index=None,
+            placeholder="Seleziona un'opzione",
         )
         return region
 
@@ -66,6 +69,7 @@ class UserInput(BaseModel):
             options=list(consumption_options.keys()),
             index=None,
             key="daytime_consump",
+            placeholder="Seleziona un'opzione",
         )
 
         if option is None:

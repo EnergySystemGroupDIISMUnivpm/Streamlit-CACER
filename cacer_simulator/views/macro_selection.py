@@ -16,6 +16,7 @@ def show_macro_group_selector() -> MacroGroup | None:
         macro_groups,
         index=None,
         key="Type CACER selection",
+        placeholder="Seleziona un'opzione",
     )
 
     if choice is None:

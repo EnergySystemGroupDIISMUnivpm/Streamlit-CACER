@@ -85,6 +85,7 @@ class UserInput(BaseModel):
             index=10,
             key="inizio_stag_invernale",
             label_visibility="visible",
+            placeholder="Seleziona un'opzione",
         )
 
         end_winter_season = st.selectbox(
@@ -93,6 +94,7 @@ class UserInput(BaseModel):
             index=3,
             key="fine_stag_invernale",
             label_visibility="visible",
+            placeholder="Seleziona un'opzione",
         )
 
         mesi = list(mese_to_num.keys())

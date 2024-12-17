@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 
 # Mod. to search only in the integer space and with tuned parameters
@@ -11,9 +12,9 @@ def pso_search_among_integer(
     args=(),
     kwargs={},
     swarmsize=100,
-    omega=0.5,
-    phip=0.5,
-    phig=0.5,
+    omega=0.8,
+    phip=0.3,
+    phig=0.6,
     maxiter=100,
     minstep=1e-8,
     minfunc=1e-8,
@@ -113,10 +114,15 @@ def pso_search_among_integer(
     x = np.random.randint(lb, ub + 1, size=(S, D))
     v = np.zeros_like(x, dtype=int)
     p = x.copy()
+    t1 = time.time()
     fp = np.array([obj(xi) for xi in x])
+    # fp = np.vectorize(obj, otypes=[np.ndarray])
+    # fp = fp(x)
+    t2 = time.time()
+    print(f"Time for list comprehension: {t2-t1}")
+    __import__("ipdb").set_trace()
     g = x[np.argmin(fp), :]
     fg = np.min(fp)
-
     if debug:
         print(f"Initial global best: {g}, Objective: {fg}")
 

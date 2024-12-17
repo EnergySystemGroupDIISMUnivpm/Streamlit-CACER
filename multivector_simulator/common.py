@@ -1,6 +1,7 @@
 import pandas as pd
 
 from typing import Annotated
+import multiprocessing
 
 from pydantic import (
     AfterValidator,
@@ -239,18 +240,18 @@ class Optimizer(BaseModel):
     )
 
     class PSO(BaseModel):
-        swarmsize: PositiveInt = 200
-        maxiter: PositiveInt = 200
+        swarmsize: PositiveInt = 3000
+        maxiter: PositiveInt = 700
         minfunc: PositiveFloat = (
             1  # indica che l'algoritmo PSO si fermerà quando la differenza tra il valore migliore della funzione obiettivo trovato in un'iterazione e quello trovato nella successiva è inferiore a 1
         )
-        number_parallel_runs: PositiveInt = 8
+        number_parallel_runs: PositiveInt = multiprocessing.cpu_count() - 1
         max_retries: NonNegativeInt = (
-            3  # max number of retries when the feasible solution is not found
+            5  # max number of retries when the feasible solution is not found
         )
         maxiter_increment: NonNegativeInt = (
-            20  # how much to increase maxiter when feasible solution is not found
+            100  # how much to increase maxiter when feasible solution is not found
         )
         swarmsize_increment: NonNegativeInt = (
-            50  # how much to increase swarmsize when feasible solution is not found
+            1000  # how much to increase swarmsize when feasible solution is not found
         )

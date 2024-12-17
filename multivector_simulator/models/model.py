@@ -135,8 +135,6 @@ def cogen_trigen_usage_gas(
         cogen_trigen_size: NonNegativeInt - size of the cogenerator or trigenerator in kW
         working_hours: NonNegativeInt - amount of hours working at full capacity
     """
-    if 35 < cogen_trigen_size < 45:
-        pass
     trigen_cogen = common.Trigen_Cogen()
     used_gas = working_hours * trigen_cogen.get_gas_quantity_cogen_trigen(
         cogen_trigen_size
@@ -1078,15 +1076,9 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         (np.percentile(thermal_consumption, 99) / COP_pump) + 1,
     ]
     limit_normalization = 100  # max of interval in which the normalized bounds vary
-    electric_consumption = normalization(
-        electric_consumption, max(UpperBound), limit_normalization
-    )
-    thermal_consumption = normalization(
-        thermal_consumption, max(UpperBound), limit_normalization
-    )
-    refrigerator_consumption = normalization(
-        refrigerator_consumption, max(UpperBound), limit_normalization
-    )
+    # electric_consumption = normalization(electric_consumption, 1, 1)
+    # thermal_consumption = normalization(thermal_consumption, 1, 1)
+    # refrigerator_consumption = normalization(refrigerator_consumption, 1, 1)
 
     def wrapped_objective_function(x):
         obj_value = objective_function(
@@ -1112,26 +1104,24 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
             )
         )
         electrc_prod_cogen_trigen = np.nansum(electrc_prod_cogen_trigen)
-        total_production = normalization(
-            electrc_prod_pv + electrc_prod_cogen_trigen,
-            max(UpperBound),
-            limit_normalization,
-        )
-        consump = normalization(
-            np.nansum(electric_consumption), max(UpperBound), limit_normalization
-        )
-        return (consump - total_production,)
+        # total_production = normalization(
+        #     electrc_prod_pv + electrc_prod_cogen_trigen,
+        #     1,
+        #     1,
+        # )
+        total_production = electrc_prod_pv + electrc_prod_cogen_trigen
+        # consump = normalization(np.nansum(electric_consumption), 1, 1)
+        consump = np.nansum(electric_consumption)
+        return consump - total_production
 
         # PSO
 
-    UpperBound_normalized = normalization(
-        UpperBound, max(UpperBound), limit_normalization
-    )
+    # UpperBound_normalized = normalization(UpperBound, 1, 1)
     pso_obj = common.Optimizer().PSO()
     best_params, best_value = optimizer.pso_search_among_integer(
         wrapped_objective_function,
         common.Optimizer().LowerBound,
-        UpperBound_normalized,
+        UpperBound,
         swarmsize=swarm_size,
         maxiter=maxiter,
         minfunc=pso_obj.minfunc,
@@ -1139,8 +1129,8 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         f_ieqcons=constraint_function,
         omega=0.7,
     )
-    best_params = denormalization(best_params, max(UpperBound), limit_normalization)
-    best_value = denormalization(best_value, max(UpperBound), limit_normalization)
+    # best_params = denormalization(best_params, max(UpperBound), limit_normalization)
+    # best_value = denormalization(best_value, max(UpperBound), limit_normalization)
     print(f"""Best params: {best_params} \n Best value: {best_value} """)
 
     return best_params, best_value

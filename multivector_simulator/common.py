@@ -234,6 +234,9 @@ class Optimizer(BaseModel):
         0,
         0,
     ]  # low limits for PV, battery, cogen/trigen, heat pump in kWp
+    ATTEMPTS: NonNegativeInt = (
+        5  # maximum number of times the simulator is run if no result is found for which ROI<20 years
+    )
     YEARS: PositiveInt = 20  # years to be considered for the calculation of cost
     DISCOUNT_RATE: PositiveFloat = (
         0.05  # discount rate for calculating the return of the investment

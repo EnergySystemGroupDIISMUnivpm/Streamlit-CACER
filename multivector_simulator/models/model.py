@@ -1069,13 +1069,13 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         )  # Trigen
     # Upper limits for PV, battery, cogen/trigen
     UpperBound: list[PositiveInt] = [
-        np.percentile(electric_consumption, 99) + 1,
-        np.percentile(electric_consumption, 99) + 1,
-        (np.percentile(thermal_consumption, 99) / Efficiency)
+        np.percentile(electric_consumption, 90) + 1,
+        np.percentile(electric_consumption, 45) + 1,
+        (np.percentile(thermal_consumption, 90) / Efficiency)
         + 1,  # +1 because the upper must be always greater than the lower, even when consumptions=0
-        (np.percentile(thermal_consumption, 99) / COP_pump) + 1,
+        (np.percentile(thermal_consumption, 90) / COP_pump) + 1,
     ]
-    limit_normalization = 100  # max of interval in which the normalized bounds vary
+    # limit_normalization = 100  # max of interval in which the normalized bounds vary
     # electric_consumption = normalization(electric_consumption, 1, 1)
     # thermal_consumption = normalization(thermal_consumption, 1, 1)
     # refrigerator_consumption = normalization(refrigerator_consumption, 1, 1)
@@ -1125,7 +1125,7 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
         swarmsize=swarm_size,
         maxiter=maxiter,
         minfunc=pso_obj.minfunc,
-        debug=True,
+        debug=False,
         f_ieqcons=constraint_function,
         omega=0.7,
     )

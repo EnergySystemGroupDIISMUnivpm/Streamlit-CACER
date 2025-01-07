@@ -114,13 +114,12 @@ def pso_search_among_integer(
     x = np.random.randint(lb, ub + 1, size=(S, D))
     v = np.zeros_like(x, dtype=int)
     p = x.copy()
-    t1 = time.time()
+    # t1 = time.time()
     fp = np.array([obj(xi) for xi in x])
     # fp = np.vectorize(obj, otypes=[np.ndarray])
     # fp = fp(x)
-    t2 = time.time()
-    print(f"Time for list comprehension: {t2-t1}")
-    __import__("ipdb").set_trace()
+    # t2 = time.time()
+    # print(f"Time for list comprehension: {t2-t1}")
     g = x[np.argmin(fp), :]
     fg = np.min(fp)
     if debug:

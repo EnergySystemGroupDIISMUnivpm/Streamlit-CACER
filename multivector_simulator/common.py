@@ -240,7 +240,7 @@ class Optimizer(BaseModel):
     )
 
     class PSO(BaseModel):
-        swarmsize: PositiveInt = 3000
+        swarmsize: PositiveInt = 100  # 3000
         maxiter: PositiveInt = 700
         minfunc: PositiveFloat = (
             1  # indica che l'algoritmo PSO si fermerà quando la differenza tra il valore migliore della funzione obiettivo trovato in un'iterazione e quello trovato nella successiva è inferiore a 1

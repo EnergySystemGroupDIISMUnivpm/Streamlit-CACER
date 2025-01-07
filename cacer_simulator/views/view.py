@@ -142,20 +142,44 @@ class UserInput(BaseModel):
         return members_info
 
     # both for CER and Group
-    def insert_members(self, label: str) -> common.MembersWithValues:
+    def insert_members(
+        self, label: str
+    ) -> tuple[common.MembersWithValues, common.MembersWithValues]:
+        charges_dict = common.MembersWithValues(
+            bar=0, appartamenti=0, pmi=0, hotel=0, ristoranti=0
+        )
         if label == "CER":
-            st.markdown(
-                "Inserisci il numero di membri della tua CER per ogni categoria"
-            )
-            member_dict = common.MembersWithValues(
-                bar=0, appartamenti=0, pmi=0, hotel=0, ristoranti=0
-            )
-            for member in member_dict.keys():
-                number = st.number_input(
-                    str(member), min_value=0, step=1, key=f"cer_member_{member}"
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(
+                    "Inserisci il numero di membri della tua CER per ogni categoria"
                 )
-                number = int(number)
-                member_dict[member] = number
+                member_dict = common.MembersWithValues(
+                    bar=0, appartamenti=0, pmi=0, hotel=0, ristoranti=0
+                )
+                for member in member_dict.keys():
+                    number = st.number_input(
+                        str(member), min_value=0, step=1, key=f"cer_member_{member}"
+                    )
+                    number = int(number)
+                    member_dict[member] = number
+            with col2:
+                st.markdown(
+                    "Per ogni categoria, inserisci il numero di colonnine di ricarica, se presenti"
+                )
+                charges_dict = common.MembersWithValues(
+                    bar=0, appartamenti=0, pmi=0, hotel=0, ristoranti=0
+                )
+                for member in charges_dict.keys():
+                    number = st.number_input(
+                        str(member),
+                        min_value=0,
+                        step=1,
+                        key=f"chargers_member_{member}",
+                    )
+                    number = int(number)
+                    charges_dict[member] = number
+
         elif label == "Group":
             appartments = st.number_input(
                 "Inserisci il numero di appartamenti presenti nel tuo condominio",
@@ -167,7 +191,7 @@ class UserInput(BaseModel):
             member_dict = common.MembersWithValues(
                 bar=0, appartamenti=appartments, pmi=0, hotel=0, ristoranti=0
             )
-        return member_dict  # type: ignore
+        return member_dict, charges_dict  # type: ignore
 
     def know_members_consumption(self, label: str) -> str | None:
         if label == "CER":

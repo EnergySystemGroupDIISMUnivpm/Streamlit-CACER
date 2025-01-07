@@ -75,7 +75,7 @@ def Simulator_CACER():
                 knowledge_cer_consumption = user_input.know_members_consumption("CER")
                 # case in which user does not know the consumption of the members
                 if knowledge_cer_consumption == "No" and region:
-                    members = user_input.insert_members("CER")
+                    members, chargers = user_input.insert_members("CER")
                     if any(value != 0 for value in members.values()):
                         percentage_daily_consumption = (
                             model.percentage_daytime_consumption_estimation(members)
@@ -267,7 +267,7 @@ def Simulator_CACER():
             knowledge_group_consumption = user_input.know_members_consumption("Group")
             # user doesn't know members consumption
             if knowledge_group_consumption == "No" and region:
-                members = user_input.insert_members("Group")
+                members, chargers = user_input.insert_members("Group")
                 if any(members[chiave] != 0 for chiave in ["appartamenti"]):
                     area, year_pv, power_pv, add_power = (
                         controller_wrapped_functions.info_pv_or_area(user_input)

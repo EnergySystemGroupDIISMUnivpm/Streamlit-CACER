@@ -13,7 +13,8 @@ import calcoli_validazione
 def Simulator_Multivettore():
     title_multivettore()
     user_input = UserInput()
-    start_winter_season, end_winter_season = user_input.insert_winter_season()
+    start_winter_season = 10  # Nov
+    end_winter_season = 2  # March
     consumption = user_input.download_upload_consumption()
     user_output = UserOuput()
 

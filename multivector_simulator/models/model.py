@@ -17,6 +17,52 @@ import streamlit as st
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
+def simulation_consumption_profile(
+    tot_consumption: NonNegativeInt, model_profile: np.ndarray
+) -> np.ndarray:
+    """
+    Simulates the consumption profile given the total consumption and the profile to be used as reference model.
+    """
+    consumption_profile = model_profile * (tot_consumption / (model_profile.sum()))
+    return consumption_profile
+
+
+def simulation_electric_themal_refrig_consumption_profile(
+    electric_tot_consumption: NonNegativeInt,
+    thermal_tot_consumption: NonNegativeInt,
+    refrigeration_tot_consumption: NonNegativeInt,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Simulation of the electric, thermal and refrigeration hourly consumption profiles.
+
+    Returns:
+    - electric profile
+    - thermal profile
+    - refrigeration profile
+    """
+    file_path_UNIVPM = Path(__file__).parent.parent.parent / "resources" / "UNIVPM.xlsx"
+    data_electric_thermal = pd.read_excel(file_path_UNIVPM)
+    file_path_refrig = (
+        Path(__file__).parent.parent.parent
+        / "resources"
+        / "consumi_frigoriferi_renewable_ninja.csv"
+    )
+    data_refrigeration = pd.read_csv(file_path_refrig, sep=";")
+    model_electric_profile = data_electric_thermal["Consumi Elettrici (kWh)"].to_numpy()
+    model_thermal_profile = data_electric_thermal["Consumi Termici (kWh)"].to_numpy()
+    model_refrigeration_profile = data_refrigeration["cooling_demand"].to_numpy()
+    electric_profile = simulation_consumption_profile(
+        electric_tot_consumption, model_electric_profile
+    )
+    thermal_profile = simulation_consumption_profile(
+        thermal_tot_consumption, model_thermal_profile
+    )
+    refrigeration_profile = simulation_consumption_profile(
+        refrigeration_tot_consumption, model_refrigeration_profile
+    )
+    return electric_profile, thermal_profile, refrigeration_profile
+
+
 def calculate_mean_over_period(data: np.ndarray, hours: int) -> np.ndarray:
     """
     Calculate the mean value of production or consumption over a period of time.

@@ -2,6 +2,7 @@ import streamlit as st
 from pydantic import BaseModel, validate_call
 import pandas as pd
 import numpy as np
+from traitlets import default
 import multivector_simulator.common as common
 from pydantic import PositiveFloat, validate_call, PositiveInt, NonNegativeInt
 
@@ -56,6 +57,30 @@ class UserInput(BaseModel):
             return df_uploaded
 
         return None
+
+    def unknown_consumption_profile(self):
+        st.markdown(" ")
+        st.markdown("##### Non hai a disposizione i consumi orari?")
+        unknown_profiles = st.button(label="Inserisci solo i consumi totali annui")
+        return unknown_profiles
+
+    def insert_annual_consumption(self) -> tuple[int | None, int | None, int | None]:
+        """
+        Insert total annual consumption.
+        """
+        st.markdown(" ")
+        st.markdown(
+            "##### Non conosci i consumi orari? Inserisci solo i consumi totali annui qui sotto"
+        )
+        with st.form(key="input_form", border=False):
+            electric = st.number_input("Inserisci i consumi elettrici in kWh", step=1)
+            thermal = st.number_input("Inserisci i consumi termici in kWh", step=1)
+            refrig = st.number_input("Inserisci i consumi frigoriferi in kWh", step=1)
+            submit_button = st.form_submit_button(label="Invia i dati")
+            if submit_button:
+                return int(electric), int(thermal), int(refrig)
+            else:
+                return None, None, None
 
     def select_period_plot(self):
         st.markdown(" ")

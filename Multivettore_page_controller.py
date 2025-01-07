@@ -15,16 +15,62 @@ def Simulator_Multivettore():
     user_input = UserInput()
     start_winter_season = 10  # Nov
     end_winter_season = 2  # March
+    electric_consumption = None
+    thermal_consumption = None
+    refrigeration_consumption = None
     consumption = user_input.download_upload_consumption()
     user_output = UserOuput()
+    if "electric_consumption" not in st.session_state:
+        st.session_state["electric_consumption"] = None
+    if "thermal_consumption" not in st.session_state:
+        st.session_state["thermal_consumption"] = None
+    if "refrigeration_consumption" not in st.session_state:
+        st.session_state["refrigeration_consumption"] = None
 
-    # Load consumption type
-    if consumption is not None:
-        electric_consumption = consumption["Consumi Elettrici (kWh)"].to_numpy()
-        thermal_consumption = consumption["Consumi Termici (kWh)"].to_numpy()
-        refrigeration_consumption = consumption["Consumi Frigoriferi (kWh)"].to_numpy()
+    tot_electric_consum = None
+    tot_thermal_consum = None
+    tot_refrig_consum = None
+    tot_electric_consum, tot_thermal_consum, tot_refrig_consum = (
+        UserInput().insert_annual_consumption()
+    )
+    if all(
+        x is not None
+        for x in (tot_electric_consum, tot_thermal_consum, tot_refrig_consum)
+    ):  # type:ignore
+        (
+            st.session_state["electric_consumption"],
+            st.session_state["thermal_consumption"],
+            st.session_state["refrigeration_consumption"],
+        ) = model.simulation_electric_themal_refrig_consumption_profile(
+            tot_electric_consum,  # type: ignore
+            tot_thermal_consum,  # type:ignore
+            tot_refrig_consum,  # type:ignore
+        )
 
-        if (refrigeration_consumption != 0).any():
+    # Load consumption
+    elif consumption is not None:
+        st.session_state["electric_consumption"] = consumption[
+            "Consumi Elettrici (kWh)"
+        ].to_numpy()
+        st.session_state["thermal_consumption"] = consumption[
+            "Consumi Termici (kWh)"
+        ].to_numpy()
+        st.session_state["refrigeration_consumption"] = consumption[
+            "Consumi Frigoriferi (kWh)"
+        ].to_numpy()
+
+    if all(
+        x is not None
+        for x in (
+            st.session_state["electric_consumption"],
+            st.session_state["thermal_consumption"],
+            st.session_state["refrigeration_consumption"],
+        )
+    ):  # type:ignore
+        electric_consumption = st.session_state["electric_consumption"]
+        thermal_consumption = st.session_state["thermal_consumption"]
+        refrigeration_consumption = st.session_state["refrigeration_consumption"]
+        if refrigeration_consumption.any() != 0:  # type:ignore
             LabelCogTrigen = "Trigen"
         else:
             LabelCogTrigen = "Cogen"
@@ -37,7 +83,6 @@ def Simulator_Multivettore():
                 st.session_state["see_results"] = True
 
         if st.session_state["see_results"]:
-
             # calculation of the best size of cogen/trigen, pv, battery
             (
                 PV_size,

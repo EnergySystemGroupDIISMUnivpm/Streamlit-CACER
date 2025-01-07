@@ -307,6 +307,13 @@ class ConsumptionByMember(BaseModel):
         "hotel": 700000,
         "ristoranti": 30000,
     }
+    CONSUMPTION_RATES_CHARGING_STATION: MembersWithValues = {
+        "bar": 22000,
+        "appartamenti": 2000,
+        "pmi": 25000,
+        "hotel": 700000,
+        "ristoranti": 30000,
+    }  # TODO:aggiornali sulla base di valori reali
 
     CONSUMPTION_PERCENTAGE: MembersWithValues = {
         "bar": 70,
@@ -338,6 +345,9 @@ class ConsumptionByMember(BaseModel):
         if diurnal:
             return self.CONSUMPTION_RATES_DIURNAL_HOURS.get(member, 0)
         return self.CONSUMPTION_RATES.get(member, 0)
+
+    def get_consumption_charging_station_value(self, member: str) -> int:
+        return self.CONSUMPTION_RATES_CHARGING_STATION.get(member, 0)
 
     def get_consumption_percentage(self, member: str) -> int:
         return self.CONSUMPTION_PERCENTAGE.get(member, 0)

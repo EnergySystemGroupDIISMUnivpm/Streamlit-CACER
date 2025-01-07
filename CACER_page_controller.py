@@ -83,7 +83,13 @@ def Simulator_CACER():
                         area, year_pv, power_pv, add_power = (
                             controller_wrapped_functions.info_pv_or_area(user_input)
                         )
-                        consumption = model.consumption_estimation(members)
+                        consumption_members = model.consumption_estimation(members)
+                        consumption_charging_stations = (
+                            model.consumption_charging_station_estimation(chargers)
+                        )
+                        consumption = (
+                            consumption_members + consumption_charging_stations
+                        )
 
                         # case in which user has the PV plant
                         if power_pv and year_pv:

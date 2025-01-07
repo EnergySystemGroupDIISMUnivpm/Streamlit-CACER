@@ -353,8 +353,8 @@ class Results(BaseModel):
         energy_diff = produced_energy - consumed_energy
         df = pd.DataFrame(
             {
-                "Energia Rinnovabile Consumata (kWh)": [round(consumed_energy)],
-                "Energia Prodotta (kWh)": [round(produced_energy)],
+                "Energia Consumata nelle ore diurne (kWh)": [round(consumed_energy)],
+                "Energia Rinnovabile Prodotta (kWh)": [round(produced_energy)],
                 "Differenza (kWh)": [round(energy_diff)],
             }
         )
@@ -368,8 +368,8 @@ class Results(BaseModel):
             fig.add_trace(
                 go.Bar(
                     x=[
-                        "Energia Rinnovabile Consumata",
-                        "Energia Prodotta",
+                        "Energia Consumata nelle ore diurne",
+                        "Energia Rinnovabile Prodotta",
                         "Differenza tra Produzione e Consumo",
                     ],
                     y=[consumed_energy, produced_energy, energy_diff],

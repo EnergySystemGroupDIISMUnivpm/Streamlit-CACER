@@ -278,6 +278,23 @@ def consumption_estimation(members: common.MembersWithValues) -> int:
     return total_consumption
 
 
+@validate_call
+def consumption_charging_station_estimation(members: common.MembersWithValues) -> int:
+    """
+    Estimation of the annual consumption of the charging stations starting from the number charging station for each member.
+
+    """
+    total_consumption = 0
+    for member_type, member_count in members.items():
+        total_consumption += (  # type: ignore
+            member_count
+            * common.ConsumptionByMember().get_consumption_charging_station_value(
+                member_type
+            )
+        )
+    return total_consumption
+
+
 def compute_cost_plant(power_pv: PositiveFloat) -> PositiveFloat:
     """
     Computation of costs pv_plant

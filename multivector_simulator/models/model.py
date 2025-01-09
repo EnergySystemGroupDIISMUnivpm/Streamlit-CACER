@@ -27,6 +27,7 @@ def simulation_consumption_profile(
     return consumption_profile
 
 
+@st.cache_data
 def simulation_electric_themal_refrig_consumption_profile(
     electric_tot_consumption: NonNegativeInt,
     thermal_tot_consumption: NonNegativeInt,

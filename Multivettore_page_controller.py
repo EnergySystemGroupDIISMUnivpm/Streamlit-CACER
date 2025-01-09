@@ -1,5 +1,6 @@
 from math import e
 from tracemalloc import start
+from requests import session
 import streamlit as st
 import pandas as pd
 from multivector_simulator.views.view import UserInput, UserOuput, title_multivettore
@@ -82,6 +83,17 @@ def Simulator_Multivettore():
             if user_output.see_results():
                 st.session_state["see_results"] = True
 
+        if "PV_size" not in st.session_state:
+            st.session_state["PV_size"] = None
+        if "cogen_size" not in st.session_state:
+            st.session_state["cogen_size"] = None
+        if "trigen_size" not in st.session_state:
+            st.session_state["trigen_size"] = None
+        if "battery_size" not in st.session_state:
+            st.session_state["battery_size"] = None
+        if "cogen_trigen_size" not in st.session_state:
+            st.session_state["cogen_trigen_size"] = None
+
         if st.session_state["see_results"]:
             recovery_time = common.Optimizer().YEARS + 1
             attempts = 0
@@ -92,10 +104,10 @@ def Simulator_Multivettore():
                     break
                 # calculation of the best size of cogen/trigen, pv, battery
                 (
-                    PV_size,
-                    cogen_size,
-                    trigen_size,
-                    battery_size,
+                    st.session_state["PV_size"],
+                    st.session_state["cogen_size"],
+                    st.session_state["trigen_size"],
+                    st.session_state["battery_size"],
                     savings,
                     investment_costs,
                     cost_gas,
@@ -108,15 +120,19 @@ def Simulator_Multivettore():
                     end_winter_season,
                 )
                 if LabelCogTrigen == "Cogen":
-                    cogen_trigen_size = cogen_size
+                    st.session_state["cogen_trigen_size"] = st.session_state[
+                        "cogen_size"
+                    ]
                 else:
-                    cogen_trigen_size = trigen_size
+                    st.session_state["cogen_trigen_size"] = st.session_state[
+                        "trigen_size"
+                    ]
 
                 # cost of maintenance of PV and cogen/trigen in a year
                 annual_maintenance_cost = model.maintenance_cost_PV(
-                    PV_size, battery_size
+                    st.session_state["PV_size"], st.session_state["battery_size"]
                 ) + model.maintenance_cost_cogen_trigen(
-                    cogen_trigen_size, LabelCogTrigen
+                    st.session_state["cogen_trigen_size"], LabelCogTrigen
                 )
 
                 # calculation of recovery time
@@ -132,7 +148,10 @@ def Simulator_Multivettore():
             # SEE RESULTS
             if found_result == True:
                 user_output.see_optimal_sizes(
-                    PV_size, cogen_size, trigen_size, battery_size
+                    st.session_state["PV_size"],
+                    st.session_state["cogen_size"],
+                    st.session_state["trigen_size"],
+                    st.session_state["battery_size"],
                 )
 
                 user_output.see_costs_investment_recovery(
@@ -155,14 +174,16 @@ def Simulator_Multivettore():
                     electric_consumption_period = model.calculate_mean_over_period(
                         electric_consumption, period_to_be_plot
                     )
-                    electric_production_pv = model.calculation_pv_production(PV_size)
+                    electric_production_pv = model.calculation_pv_production(
+                        st.session_state["PV_size"]
+                    )
 
                     (
                         electric_production_cogen,
                         thermal_production_cogen,
                         refrigeration_production_cogen,
                     ) = model.annual_production_cogen_trigen(
-                        cogen_trigen_size,
+                        st.session_state["cogen_trigen_size"],
                         LabelCogTrigen,
                         start_winter_season,
                         end_winter_season,

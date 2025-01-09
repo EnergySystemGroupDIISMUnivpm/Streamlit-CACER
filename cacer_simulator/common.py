@@ -308,11 +308,15 @@ class ConsumptionByMember(BaseModel):
         "ristoranti": 30000,
     }
     CONSUMPTION_RATES_CHARGING_STATION: MembersWithValues = {
-        "bar": 22000,
-        "appartamenti": 2000,
-        "pmi": 25000,
-        "hotel": 700000,
-        "ristoranti": 30000,
+        "bar": 46 * 24,
+        "appartamenti": 3
+        * 8
+        * 146,  # 24kWh (considering charging stations of 3kW used for 8hours) each 2.5 days
+        "pmi": 22
+        * 8
+        * 300,  # (charging statitions of 22kW used for 8hours for 300days)
+        "hotel": 22 * 8 * 300,
+        "ristoranti": 22 * 4 * 300,
     }  # TODO:aggiornali sulla base di valori reali
 
     CONSUMPTION_PERCENTAGE: MembersWithValues = {

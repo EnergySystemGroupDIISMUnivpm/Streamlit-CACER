@@ -194,7 +194,7 @@ class UserOuput(BaseModel):
         consumed_energy: np.ndarray,
         produced_energy: np.ndarray,
         energy_type: common.LabelEnergyType,
-        period_label=common.LabelPeriodLabelsList,
+        period_label: str,
     ):
         """
         Plot graph showing the trend of energy consumed and produced over a period of time (hours)

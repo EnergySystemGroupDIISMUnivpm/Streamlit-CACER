@@ -1,8 +1,10 @@
 from pydantic import PositiveFloat
 from multivector_simulator.models import model
 import numpy as np
+import streamlit as st
 
 
+@st.cache_data
 def sizes_energies_costs(
     electric_consumption,
     thermal_consumption,

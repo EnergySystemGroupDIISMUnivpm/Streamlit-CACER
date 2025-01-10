@@ -163,8 +163,14 @@ def Simulator_Multivettore():
 
                 # GRAPH WITH ENERGY PRODUCTION AND CONSUMPTION
 
-                for period in common.PERIOD_TO_BE_PLOTTED.keys():
-                    period_to_be_plot = common.PERIOD_TO_BE_PLOTTED[period]
+                if "period_label" not in st.session_state:
+                    st.session_state["period_label"] = None
+                st.session_state["period_label"] = user_input.select_period_plot()
+
+                if st.session_state["period_label"] is not None:
+                    period_to_be_plot = user_output.extract_period_from_period_label(
+                        st.session_state["period_label"]
+                    )
                     electric_consumption_period = model.calculate_mean_over_period(
                         electric_consumption, period_to_be_plot
                     )
@@ -192,7 +198,7 @@ def Simulator_Multivettore():
                         electric_consumption_period,
                         electric_production_period,
                         "Elettrica",
-                        period,
+                        st.session_state["period_label"],
                     )
 
                     if np.nansum(thermal_production_cogen) > 0:
@@ -208,7 +214,7 @@ def Simulator_Multivettore():
                             thermal_consumption_period,
                             thermal_production_cogen_period,
                             "Termica",
-                            period,
+                            st.session_state["period_label"],
                         )
 
                     if np.nansum(refrigeration_production_cogen) > 0:
@@ -226,5 +232,5 @@ def Simulator_Multivettore():
                             refrigeration_consumption_period,
                             refrigeration_production_period,
                             "Frigorifera",
-                            period,
+                            st.session_state["period_label"],
                         )

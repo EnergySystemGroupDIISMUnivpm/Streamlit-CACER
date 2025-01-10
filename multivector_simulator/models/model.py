@@ -1184,7 +1184,8 @@ def single_optimizer_run(args) -> tuple[np.ndarray, float]:
 
 
 # Multiple runs of PSO
-@st.cache_data
+# @st.cache_data
+@st.cache_resource
 def optimizer_multiple_runs(
     electric_consumption: np.ndarray,
     thermal_consumption: np.ndarray,

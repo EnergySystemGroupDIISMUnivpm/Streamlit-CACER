@@ -1370,15 +1370,15 @@ if __name__ == "__main__":
     print(f"total electric consumption: {electric_consumption.sum()}")
     plt.figure()
     plt.plot(electric_consumption, label="electric_consumption")
-    plt.plot(total_production, label="total_production")
+    # plt.plot(total_production, label="total_production")
     plt.legend()
 
     plt.figure()
     plt.plot(thermal_consumption, label="thermal_consumption")
-    plt.plot(
-        cogen_thermal_production + heat_pump_thermal_prod,
-        label="cogen_thermal_production",
-    )
+    # plt.plot(
+    # cogen_thermal_production + heat_pump_thermal_prod,
+    # label="cogen_thermal_production",
+    # )
     plt.legend()
 
     plt.figure()

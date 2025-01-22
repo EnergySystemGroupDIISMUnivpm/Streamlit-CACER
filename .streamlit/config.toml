@@ -10,4 +10,5 @@ fileWatcherType = "none"
 
 [client]
 toolbarMode="viewer"
+showUserMenu = false
 

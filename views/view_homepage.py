@@ -9,21 +9,7 @@ class MacroSelection(StrEnum):
 
 
 def homepage() -> MacroSelection | None:
-    # st.set_page_config(page_icon=":sun_small_cloud:", layout="wide")
-    hide_footer_style = """
-    <style>
-    footer {visibility: hidden;}
-    footer:after {
-        content:''; 
-        visibility: visible;
-        display: block;
-        position: relative;
-        padding: 5px;
-        top: 2px;
-    }
-    </style>
-"""
-    st.markdown(hide_footer_style, unsafe_allow_html=True)
+    st.set_page_config(page_icon=":sun_small_cloud:", layout="wide")
     col1_title, col2_title, col3_title = st.columns([1, 5, 1])
 
     with col1_title:

@@ -106,7 +106,7 @@ class UserInput(BaseModel):
 class UserOuput(BaseModel):
     def no_result_found(self):
         st.markdown(
-            "Siamo spiacenti. Il simulatore non è stato in grado di trovare un risultato per i dati forniti. Ti invitiamo a provare di nuovo."
+            "La simulazione non ha prodotto una soluzione ottimale questa volta. Ritentando potrebbe esplorare nuove possibilità e trovare un risultato: prova ad effettuare nuovamente la simulazione."
         )
 
     def see_results(self) -> bool:

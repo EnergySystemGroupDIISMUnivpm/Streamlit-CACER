@@ -80,8 +80,11 @@ class UserInput(BaseModel):
             refrig = st.number_input(
                 "Inserisci i consumi frigoriferi in kWh termici", step=1
             )
-            submit_button = st.form_submit_button(label="Invia i dati")
+            submit_button = st.form_submit_button(label="Carica i dati")
             if submit_button:
+                st.success(
+                    "Dati caricati con successo! Premi il pulsante qui sotto per visualizzare i risultati della simulazione."
+                )
                 return int(electric), int(thermal), int(refrig)
             else:
                 return None, None, None

@@ -250,7 +250,7 @@ class Optimizer(BaseModel):
         )
         number_parallel_runs: PositiveInt = multiprocessing.cpu_count() - 1
         max_retries: NonNegativeInt = (
-            3  # max number of retries when the feasible solution is not found
+            2  # max number of retries when the feasible solution is not found
         )
         maxiter_increment: NonNegativeInt = (
             100  # how much to increase maxiter when feasible solution is not found

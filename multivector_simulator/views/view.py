@@ -21,7 +21,6 @@ def read_excel_file(file_path):
 
 
 class UserInput(BaseModel):
-
     @validate_call
     def download_upload_consumption(self) -> common.ConsumptionDataFrameType | None:
         """
@@ -33,12 +32,13 @@ class UserInput(BaseModel):
             """Scarica, compila con i tuoi consumi energetici e ricarica il File Excel. Il file deve contenere i consumi elettrici (kWh), caloriferi (kWh termici) e frigoriferi (kWh termici) orari riferiti ad un periodo di un anno.  \n Se inserisci consumi frigoriferi diversi da zero, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di trigenerazione.  \n Se inserisci consumi frigoriferi nulli, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di cogenerazione."""
         )
         file_path = "./resources/Esempio_input_consumi_multienergetico.xlsx"
-        st.download_button(
+        if st.download_button(
             label="Scarica il file Excel",
             data=read_excel_file(file_path),
             file_name="Esempio_input_consumi_multienergetico.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+        ):
+            st.success("File scaricato! Controlla tra i tuoi download.")
         uploaded_file = st.file_uploader(
             "Carica il file Excel compilato", type=["xlsx"]
         )

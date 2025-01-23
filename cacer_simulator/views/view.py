@@ -248,7 +248,7 @@ class Results(BaseModel):
     def see_economical_benefit_b(self, benefit_b_pres, benefit_b_new=None):
         benefit_b_pres = common.round_data(benefit_b_pres)
         st.markdown(
-            f"Potresti ottenere fino a {benefit_b_pres}€ all'anno di incetivi economici.",
+            f"Potresti ottenere fino a {benefit_b_pres}€ all'anno di incentivi economici.",
             help="Valori calcolati sulla base del decreto Decreto MASE n. 414 del 7 dicembre 2023 e del TIAD.",
         )
 

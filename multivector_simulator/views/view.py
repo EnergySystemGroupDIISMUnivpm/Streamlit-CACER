@@ -30,7 +30,7 @@ class UserInput(BaseModel):
         df_uploaded = None
         st.markdown("  ")
         st.markdown(
-            """Scarica, Compila con i tuoi consumi energetici e Ricarica il File Excel. Il file deve contenere i consumi elettrici, caloriferi e frigoriferi orari riferiti ad un periodo di un anno.  \n Se inserisci consumi frigoriferi diversi da zero, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di trigenerazione.  \n Se inserisci consumi frigoriferi nulli, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di cogenerazione."""
+            """Scarica, compila con i tuoi consumi energetici e ricarica il File Excel. Il file deve contenere i consumi elettrici (kWh), caloriferi (kWh termici) e frigoriferi (kWh termici) orari riferiti ad un periodo di un anno.  \n Se inserisci consumi frigoriferi diversi da zero, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di trigenerazione.  \n Se inserisci consumi frigoriferi nulli, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di cogenerazione."""
         )
         file_path = "./resources/Esempio_input_consumi_multienergetico.xlsx"
         st.download_button(
@@ -74,8 +74,12 @@ class UserInput(BaseModel):
         )
         with st.form(key="input_form", border=False):
             electric = st.number_input("Inserisci i consumi elettrici in kWh", step=1)
-            thermal = st.number_input("Inserisci i consumi termici in kWh", step=1)
-            refrig = st.number_input("Inserisci i consumi frigoriferi in kWh", step=1)
+            thermal = st.number_input(
+                "Inserisci i consumi termici in kWh termici", step=1
+            )
+            refrig = st.number_input(
+                "Inserisci i consumi frigoriferi in kWh termici", step=1
+            )
             submit_button = st.form_submit_button(label="Invia i dati")
             if submit_button:
                 return int(electric), int(thermal), int(refrig)

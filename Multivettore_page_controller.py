@@ -103,22 +103,25 @@ def Simulator_Multivettore():
                     user_output.no_result_found()
                     break
                 # calculation of the best size of cogen/trigen, pv, battery
-                (
-                    st.session_state["PV_size"],
-                    st.session_state["cogen_size"],
-                    st.session_state["trigen_size"],
-                    st.session_state["battery_size"],
-                    savings,
-                    investment_costs,
-                    cost_gas,
-                ) = multivector_controller_wrapped_functions.sizes_energies_costs(
-                    electric_consumption,
-                    thermal_consumption,
-                    refrigeration_consumption,
-                    LabelCogTrigen,
-                    start_winter_season,
-                    end_winter_season,
-                )
+                with st.spinner(
+                    "Elaborazione in corso... Il processo potrebbe richiedere alcuni minuti. Non chiudere la pagina."
+                ):
+                    (
+                        st.session_state["PV_size"],
+                        st.session_state["cogen_size"],
+                        st.session_state["trigen_size"],
+                        st.session_state["battery_size"],
+                        savings,
+                        investment_costs,
+                        cost_gas,
+                    ) = multivector_controller_wrapped_functions.sizes_energies_costs(
+                        electric_consumption,
+                        thermal_consumption,
+                        refrigeration_consumption,
+                        LabelCogTrigen,
+                        start_winter_season,
+                        end_winter_season,
+                    )
                 if LabelCogTrigen == "Cogen":
                     st.session_state["cogen_trigen_size"] = st.session_state[
                         "cogen_size"

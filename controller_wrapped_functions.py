@@ -102,6 +102,7 @@ def results_from_PV_power(
                 percentage_daily_consumption,
                 power_pv,
                 add_power,
+                label_pv_or_area,
             )
 
 
@@ -115,6 +116,7 @@ def presence_overproduction_or_undeproduction(
     percentage_daily_consumption: common.PercentageType,
     power_pv: PositiveFloat,
     add_power: NonNegativeFloat,
+    label_area_PV: common.LabelPVAreaType,
 ):
     """
     determitaion of overproduction or undeproduction and visualization of relative results. For Self_consumer and Group.
@@ -123,15 +125,16 @@ def presence_overproduction_or_undeproduction(
     production = model.production_estimate(power_pv + add_power, region)
     if overproduction_or_undeproduction == "Overproduction":
         results.visualize_advices()
-        results.see_CER_info(label_use_case)
-        optimal_PV_size = model.optimal_sizing(
-            consumption,
-            region,
-            percentage_daily_consumption,
-        )
-        cost = model.compute_cost_plant(optimal_PV_size)
-        cost = common.round_data(cost)
-        results.see_needed_power(optimal_PV_size, cost)
+        results.see_CER_info(label_use_case, label_area_PV)
+        if label_area_PV == "area":
+            optimal_PV_size = model.optimal_sizing(
+                consumption,
+                region,
+                percentage_daily_consumption,
+            )
+            cost = model.compute_cost_plant(optimal_PV_size)
+            cost = common.round_data(cost)
+            results.see_needed_power(optimal_PV_size, cost)
 
     # case of underproduction, so there is visualization of advice for boosting PV plant.
     elif overproduction_or_undeproduction == "Underproduction":

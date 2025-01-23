@@ -305,23 +305,26 @@ class Results(BaseModel):
             help="Questi dati sono stati calcolati usando come riferimento le caratteristiche medie di un pannello fotovoltaico in silicio monocristallino.",
         )
 
-    def see_CER_info(self, label: str) -> None:
-        if label == "Self_consumer":
-            st.write(
-                f"""Abbiamo stimato che in media produci più energia di quella di quella che consumi. Potresti condividere questa energia con altre persone.
+    def see_CER_info(
+        self, label: common.LabelUseCaseType, label_PV_area: common.LabelPVAreaType
+    ) -> None:
+        first_sentence = ""
+        if label == "Group":
+            if label_PV_area == "PV":
+                first_sentence = "Abbiamo stimato che con l'impianto che hai inserito produci più energia di quella che il tuo condominio consuma."
+            elif label_PV_area == "area":
+                first_sentence = "Abbiamo stimato che l'impianto che potresti costruire nell'area da te inserita, produrrebbe più energia di quella che il tuo condominio consuma."
+        elif label == "Self_consumer":
+            if label_PV_area == "PV":
+                first_sentence = "Abbiamo stimato che con l'impianto che hai inserito produci più energia di quella che consumi."
+            elif label_PV_area == "area":
+                first_sentence = "Abbiamo stimato che l'impianto che potresti costruire nell'area da te inserita, produrrebbe più energia di quella che consumi."
+        second_sentence = """Potresti condividere l'energia in eccesso.
                     Per esempio potresti valutare l'idea di partecipare a una Comunità Energetica Rinnovabile (CER).
-                    Potresti ricevere ulteriori incentivi statali e miglioreresti il tuo impatto ambientale.
-                    Per maggiori informazioni puoi provare la sezione CER di questo simulatore.
-    """
-            )
-        elif label == "Group":
-            st.write(
-                f"""Abbiamo stimato che il tuo condominio produce più energia di quella che consuma. Potresti condividere l'energia in eccesso. 
-                    Per esempio potresti valutare l'idea di far partecipare il tuo condominio a una Comunità Energetica Rinnovabile (CER).
-                    Potresti ricevere ulteriori incentivi statali e miglioreresti il tuo impatto ambientale.
-                    Per maggiori informazioni puoi provare la sezione CER di questo simulatore.
-    """
-            )
+                    Potresti ricevere ulteriori incentivi statali e miglioreresti l'impatto ambientale.
+                    Per maggiori informazioni puoi provare la sezione CER di questo simulatore."""
+        messaggio = str(first_sentence + " " + second_sentence)
+        st.write(f"{messaggio}")
 
     @validate_call
     def see_computed_costs_plant(

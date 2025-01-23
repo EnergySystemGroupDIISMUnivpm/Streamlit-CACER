@@ -124,6 +124,14 @@ def presence_overproduction_or_undeproduction(
     if overproduction_or_undeproduction == "Overproduction":
         results.visualize_advices()
         results.see_CER_info(label_use_case)
+        optimal_PV_size = model.optimal_sizing(
+            consumption,
+            region,
+            percentage_daily_consumption,
+        )
+        cost = model.compute_cost_plant(optimal_PV_size)
+        cost = common.round_data(cost)
+        results.see_needed_power(optimal_PV_size, cost)
 
     # case of underproduction, so there is visualization of advice for boosting PV plant.
     elif overproduction_or_undeproduction == "Underproduction":

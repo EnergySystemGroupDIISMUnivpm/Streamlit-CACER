@@ -225,7 +225,7 @@ class Results(BaseModel):
             )
         elif label == "area":
             st.write(
-                f"""Abbiamo stimato che nell'area che hai inserito, l'impianto fotovoltaico che potresti costruirci produrrebbe circa {production} kWh in un anno"""
+                f"""Abbiamo stimato che nell'area che hai inserito, l'impianto fotovoltaico che potresti costruirci produrrebbe circa {production} kWh in un anno."""
             )
 
     def see_optimal_members(
@@ -295,6 +295,13 @@ class Results(BaseModel):
 
         st.markdown(
             f"""Nell'area che hai fornito potresti costruire un impianto fotovoltaico fino a {power_pv} kW.""",
+            help="Questi dati sono stati calcolati usando come riferimento le caratteristiche medie di un pannello fotovoltaico in silicio monocristallino.",
+        )
+
+    def see_needed_power(self, needed_power, cost):
+        needed_power = common.round_data(needed_power)
+        st.markdown(
+            f"Altrimenti puoi valutare l'idea di costruire un impianto che non sfrutti tutta l'area a dispozione ma che copra solo i consumi. In questo caso, la dimensione ottimale dell'impianto sarebbe di {needed_power} kW e installarlo costerebbe circa {cost} € .",
             help="Questi dati sono stati calcolati usando come riferimento le caratteristiche medie di un pannello fotovoltaico in silicio monocristallino.",
         )
 

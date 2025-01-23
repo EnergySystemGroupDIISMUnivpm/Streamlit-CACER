@@ -35,7 +35,6 @@ def optimal_sizing(
 
     """
     required_PV_energy = annual_consumption * percentage_daytime_consum
-    regional_irradiance = computation_regional_irradiance(region)
     optimal_PV_size = required_PV_energy / common.PRODUCTION[region]
 
     return optimal_PV_size

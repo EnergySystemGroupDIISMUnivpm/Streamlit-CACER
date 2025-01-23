@@ -235,7 +235,7 @@ class Optimizer(BaseModel):
         0,
     ]  # low limits for PV, battery, cogen/trigen, heat pump in kWp
     ATTEMPTS: NonNegativeInt = (
-        5  # maximum number of times the simulator is run if no result is found for which ROI<20 years
+        1  # maximum number of times the simulator is run if no result is found for which ROI<20 years
     )
     YEARS: PositiveInt = 20  # years to be considered for the calculation of cost
     DISCOUNT_RATE: PositiveFloat = (
@@ -250,7 +250,7 @@ class Optimizer(BaseModel):
         )
         number_parallel_runs: PositiveInt = multiprocessing.cpu_count() - 1
         max_retries: NonNegativeInt = (
-            5  # max number of retries when the feasible solution is not found
+            3  # max number of retries when the feasible solution is not found
         )
         maxiter_increment: NonNegativeInt = (
             100  # how much to increase maxiter when feasible solution is not found

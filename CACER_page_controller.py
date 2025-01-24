@@ -182,7 +182,9 @@ def Simulator_CACER():
                         production = model.production_estimate(
                             power_pv + add_power, region
                         )
-                        optimal_members = model.optimal_members(production)
+                        optimal_members = model.optimal_members(production, "all")
+                        optimal_members_2 = model.optimal_members(production, "no_pmi")
+                        optimal_members_3 = model.optimal_members(production, "random")
                         result_view = results.see_results()
                         if result_view:
                             results.visualize_useful_information()
@@ -199,7 +201,10 @@ def Simulator_CACER():
                             )
                             results.visualize_advices()
                             results.see_optimal_members(
-                                optimal_members, "membri non presenti"
+                                optimal_members,
+                                optimal_members_2,
+                                optimal_members_3,
+                                "membri non presenti",
                             )
                             results.visualize_economical_environmental_benefits()
                             if inhabitants == "Si" and add_power > 0:
@@ -227,7 +232,9 @@ def Simulator_CACER():
                     )
                     result_view = results.see_results()
                     if result_view:
-                        optimal_members = model.optimal_members(production)
+                        optimal_members = model.optimal_members(production, "all")
+                        optimal_members_2 = model.optimal_members(production, "no_pmi")
+                        optimal_members_3 = model.optimal_members(production, "random")
                         results.visualize_useful_information()
                         results.see_installable_power(installable_power)
                         cost_plant = model.compute_cost_plant(installable_power)
@@ -245,7 +252,10 @@ def Simulator_CACER():
                         )
                         results.visualize_advices()
                         results.see_optimal_members(
-                            optimal_members, "membri non presenti"
+                            optimal_members,
+                            optimal_members_2,
+                            optimal_members_3,
+                            "membri non presenti",
                         )
                         results.visualize_economical_environmental_benefits()
                         if inhabitants == "Si":

@@ -341,12 +341,13 @@ def percentage_daytime_consumption_estimation(
 
 
 @validate_call(validate_return=True)
-def optimal_members(energy_year: PositiveFloat) -> common.MembersWithValues:
+def optimal_members(energy_year: PositiveFloat, type: str) -> common.MembersWithValues:
     """
     Estimation of the optimal members of a CER based on the annual production of energy in kWh.
 
     Attrs:
         energy_year: PositiveFloat - annual production in kWh.
+        type: str - "all" if you want to seach between all the members, starting from the ones that consume the most. "no_pmi" if you want to exclude PMI. "random" if you want to search between all the members without sorting from the highest consumption to the lowest.
 
     This function starts by assigning members with the highest consumption and proceeds to the lower-consuming ones
     until the energy is exhausted. If there's leftover energy that doesn't cover a full member's consumption,
@@ -357,9 +358,13 @@ def optimal_members(energy_year: PositiveFloat) -> common.MembersWithValues:
     energy_55percent = remaining_energy * 0.55
     # Get sorted consumption rates by member type (from highest to lowest)
     sorted_consumption = common.ConsumptionByMember().get_sorted_diurnal(reverse=True)
+    if type == "random":
+        sorted_consumption = common.ConsumptionByMember().get_consump_random()
     members_legal: dict[str, float] = {
         key: value for key, value in sorted_consumption if key != "appartamenti"
     }
+    if type == "no_pmi":
+        del members_legal["pmi"]
     consumption = 0
     for member_type, consumption_rate in members_legal.items():
         consumption_rate = float(consumption_rate)

@@ -3,6 +3,7 @@ from typing import Annotated, NotRequired
 
 from pydantic import AfterValidator, BaseModel, Field
 from typing_extensions import TypedDict
+import random
 
 REGIONS = [
     "Abruzzo",
@@ -330,6 +331,12 @@ class ConsumptionByMember(BaseModel):
     @property
     def members(self) -> list[str]:
         return MEMBERS
+
+    def get_consump_random(self) -> list[tuple[str, int]]:
+        return sorted(  # type: ignore
+            self.CONSUMPTION_RATES_DIURNAL_HOURS.items(),
+            key=lambda _: random.random(),  # type: ignore
+        )
 
     def get_sorted_diurnal(self, reverse: bool = False) -> list[tuple[str, int]]:
         return sorted(  # type: ignore

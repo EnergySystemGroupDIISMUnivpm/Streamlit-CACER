@@ -1,5 +1,6 @@
 from cProfile import label
 import datetime
+from unittest import result
 
 import streamlit as st
 from pydantic import PositiveFloat, validate_call, BaseModel
@@ -228,20 +229,38 @@ class Results(BaseModel):
                 f"""Abbiamo stimato che nell'area che hai inserito, l'impianto fotovoltaico che potresti costruirci produrrebbe circa {production} kWh in un anno."""
             )
 
+    def compose_optimal_members_string(self, optimal_memebers):
+        filtered_data = {k: v for k, v in optimal_memebers.items() if v > 0}  # type: ignore
+        result_list = [f"{v} {k}" for k, v in filtered_data.items()]
+        result_string = ", ".join(result_list)
+        return result_string
+
     def see_optimal_members(
-        self, optimal_members: common.MembersWithValues, label: str
+        self,
+        optimal_members: common.MembersWithValues,
+        optimal_members2: common.MembersWithValues,
+        optimal_members3: common.MembersWithValues,
+        label: str,
     ):
         messages = {
-            "membri non presenti": "I membri ideali con cui potresti costituire la CER per ottimizzare l'energia autoconsumata sono:",
-            "membri già presenti": "Ai membri della tua CER, potresti aggiungere i seguenti membri per ottimizzare l'energia autoconsumata :",
+            "membri non presenti": "I membri ideali con cui potresti costituire la CER per ottimizzare l'energia autoconsumata sono",
+            "membri già presenti": "Ai membri della tua CER, potresti aggiungere i seguenti membri per ottimizzare l'energia autoconsumata",
         }
 
         message = messages.get(label, None)
-        filtered_data = {k: v for k, v in optimal_members.items() if v > 0}  # type: ignore
-        result_list = [f"{v} {k}" for k, v in filtered_data.items()]
-        result_string = ", ".join(result_list)
+
+        result_string1 = self.compose_optimal_members_string(optimal_members)
+        result_string2 = self.compose_optimal_members_string(optimal_members2)
+        result_string3 = self.compose_optimal_members_string(optimal_members3)
         if message:
-            st.write(f"{message} {result_string}")
+            st.write(
+                f"""
+                    {message}:
+                    - {result_string1}; oppure
+                    - {result_string2}; oppure
+                    - {result_string3}
+                    """
+            )
         else:
             st.write("Label non riconosciuto.")
 

@@ -243,9 +243,20 @@ def results_CER(
 
     # case of Overproduction. So new possible members of CER are proposed with relative economical and environmental benefits.
     if overproduction_or_undeproduction == "Overproduction":
-        optimal_members = model.optimal_members(energy_difference_produc_consum)
+        optimal_members = model.optimal_members(energy_difference_produc_consum, "all")
+        optimal_members_2 = model.optimal_members(
+            energy_difference_produc_consum, "no_pmi"
+        )
+        optimal_members_3 = model.optimal_members(
+            energy_difference_produc_consum, "random"
+        )
         results.visualize_advices()
-        results.see_optimal_members(optimal_members, "membri già presenti")
+        results.see_optimal_members(
+            optimal_members,
+            optimal_members_2,
+            optimal_members_3,
+            label="membri già presenti",
+        )
 
         benefit_b_present_members = model.economical_benefit_b(
             power_pv,

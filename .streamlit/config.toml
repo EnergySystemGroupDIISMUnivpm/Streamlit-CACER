@@ -7,8 +7,13 @@ font = "sans serif"
 
 [server]
 fileWatcherType = "none"
+headless = true
+port = 8502
+enableCORS = false
 
 [client]
 toolbarMode="viewer"
 showUserMenu = false
 
+[global]
+developmentMode = false

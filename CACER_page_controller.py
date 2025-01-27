@@ -1,4 +1,3 @@
-from django import views
 import streamlit as st
 import datetime
 from cacer_simulator.views.macro_selection import (

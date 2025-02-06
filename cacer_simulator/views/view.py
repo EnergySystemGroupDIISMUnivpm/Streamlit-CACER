@@ -61,10 +61,11 @@ class UserInput(BaseModel):
     # Daytime percentage consumption
     def insert_percentage_daytime_consumption(self) -> float | None:
         consumption_options = {
-            "più bassi": 0.25,
-            "all'incirca uguali": 0.5,
-            "più alti": 0.75,
+            "Di giorno sono più bassi": 0.25,
+            "sono all'incirca uguali": 0.5,
+            "Di giorno sono più alti": 0.75,
         }
+
         option = st.selectbox(
             "In una giornata tipo, come sono i consumi diurni rispetto ai consumi notturni?",
             options=list(consumption_options.keys()),
@@ -226,7 +227,7 @@ class Results(BaseModel):
             )
         elif label == "area":
             st.write(
-                f"""Abbiamo stimato che nell'area che hai inserito, l'impianto fotovoltaico che potresti costruirci produrrebbe circa {production} kWh in un anno."""
+                f"""Abbiamo stimato che nell'area che hai inserito l'impianto fotovoltaico che potresti costruirci produrrebbe circa {production} kWh in un anno."""
             )
 
     def compose_optimal_members_string(self, optimal_memebers):
@@ -244,7 +245,7 @@ class Results(BaseModel):
     ):
         messages = {
             "membri non presenti": "I membri ideali con cui potresti costituire la CER per ottimizzare l'energia autoconsumata sono",
-            "membri già presenti": "Ai membri della tua CER, potresti aggiungere i seguenti membri per ottimizzare l'energia autoconsumata",
+            "membri già presenti": "Ai membri della tua CER potresti aggiungere i seguenti membri per ottimizzare l'energia autoconsumata",
         }
 
         message = messages.get(label, None)
@@ -252,12 +253,15 @@ class Results(BaseModel):
         result_string1 = self.compose_optimal_members_string(optimal_members)
         result_string2 = self.compose_optimal_members_string(optimal_members2)
         result_string3 = self.compose_optimal_members_string(optimal_members3)
+
         if message:
+            # TODO: stampiamo solo le stringhe diverse
+
             st.write(
                 f"""
                     {message}:
-                    - {result_string1}; oppure
-                    - {result_string2}; oppure
+                    - {result_string1} oppure
+                    - {result_string2} oppure
                     - {result_string3}
                     """
             )

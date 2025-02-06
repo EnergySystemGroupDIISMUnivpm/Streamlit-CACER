@@ -29,18 +29,18 @@ class UserInput(BaseModel):
         df_uploaded = None
         st.markdown("  ")
         st.markdown(
-            """Scarica, compila con i tuoi consumi energetici e ricarica il File Excel. Il file deve contenere i consumi elettrici (kWh), caloriferi (kWh termici) e frigoriferi (kWh termici) orari riferiti ad un periodo di un anno.  \n Se inserisci consumi frigoriferi diversi da zero, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di trigenerazione.  \n Se inserisci consumi frigoriferi nulli, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di cogenerazione."""
+            """Scarica, compila con i tuoi consumi energetici e ricarica il file excel. Il file deve contenere i consumi elettrici (kWh), caloriferi (kWh termici) e frigoriferi (kWh termici) orari riferiti ad un periodo di un anno intero (8760 ore).  \n Se inserisci consumi frigoriferi diversi da zero, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di trigenerazione.  \n Se inserisci consumi frigoriferi nulli, il simulatore prenderà in considerazione la possibilità di installare un impianto PV, una batteria, una pompa di calore reversibile e un impianto di cogenerazione."""
         )
         file_path = "./resources/Esempio_input_consumi_multienergetico.xlsx"
         if st.download_button(
-            label="Scarica il file Excel",
+            label="Scarica il file excel",
             data=read_excel_file(file_path),
             file_name="Esempio_input_consumi_multienergetico.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         ):
             st.success("File scaricato! Controlla tra i tuoi download.")
         uploaded_file = st.file_uploader(
-            "Carica il file Excel compilato", type=["xlsx"]
+            "Carica il file excel compilato", type=["xlsx"]
         )
 
         if uploaded_file is not None:
@@ -109,7 +109,7 @@ class UserInput(BaseModel):
 class UserOuput(BaseModel):
     def no_result_found(self):
         st.markdown(
-            "La simulazione non ha prodotto una soluzione ottimale questa volta. Ritentando potrebbe esplorare nuove possibilità e trovare un risultato: prova ad effettuare nuovamente la simulazione."
+            """La simulazione non ha prodotto una soluzione ottimale questa volta. Prova ad effettuare nuovamente la simulazione: potrebbe esplorare nuove possibilità e trovare un risultato."""
         )
 
     def see_results(self) -> bool:
@@ -117,9 +117,9 @@ class UserOuput(BaseModel):
         Botton to visualize results
         """
         view_result = st.button(
-            "Clicca qui per vedere la tipologia e la dimensione ottimale degli impianti che potresti installare i base ai tuoi consumi",
+            "Clicca qui per vedere la tipologia e la dimensione ottimale degli impianti che potresti installare in base ai tuoi consumi",
             key="visualize-result-multivettore",
-            help="Questi valori sono stati calcolati attraverso un metodo di ottimizzazione basato sul gradiente, con lo scopo di minimizzare i costi (in un periodo di 20 anni) e di massimizzare la copertura dei consumi.",
+            help="Questi valori sono stati calcolati attraverso un metodo di ottimizzazione basato sul gradiente con lo scopo di minimizzare i costi (in un periodo di 20 anni) e di massimizzare la copertura dei consumi.",
         )
 
         return view_result

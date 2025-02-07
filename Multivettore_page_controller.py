@@ -3,7 +3,12 @@ from tracemalloc import start
 from requests import session
 import streamlit as st
 import pandas as pd
-from multivector_simulator.views.view import UserInput, UserOuput, title_multivettore
+from multivector_simulator.views.view import (
+    UserInput,
+    UserOuput,
+    title_multivettore,
+    KnwonProfileConsump_or_Total,
+)
 from multivector_simulator.models import model
 import numpy as np
 import multivector_simulator.common as common
@@ -19,58 +24,59 @@ def Simulator_Multivettore():
     electric_consumption = None
     thermal_consumption = None
     refrigeration_consumption = None
-    consumption = user_input.download_upload_consumption()
-    user_output = UserOuput()
     if "electric_consumption" not in st.session_state:
         st.session_state["electric_consumption"] = None
     if "thermal_consumption" not in st.session_state:
         st.session_state["thermal_consumption"] = None
     if "refrigeration_consumption" not in st.session_state:
         st.session_state["refrigeration_consumption"] = None
-
     tot_electric_consum = None
     tot_thermal_consum = None
     tot_refrig_consum = None
-    tot_electric_consum, tot_thermal_consum, tot_refrig_consum = (
-        UserInput().insert_annual_consumption()
-    )
+    profileConsump_or_onlyTotal = user_input.select_profileConsump_or_onlyTotal()
+    match profileConsump_or_onlyTotal:
+        case KnwonProfileConsump_or_Total.KnwonProfileConsump:
+            consumption = user_input.download_upload_consumption()
+            if consumption is not None:
+                st.session_state["electric_consumption"] = consumption[
+                    "Consumi Elettrici (kWh)"
+                ].to_numpy()
+                st.session_state["thermal_consumption"] = consumption[
+                    "Consumi Termici (kWh)"
+                ].to_numpy()
+                st.session_state["refrigeration_consumption"] = consumption[
+                    "Consumi Frigoriferi (kWh)"
+                ].to_numpy()
+                electric_consumption = st.session_state["electric_consumption"]
+                thermal_consumption = st.session_state["thermal_consumption"]
+                refrigeration_consumption = st.session_state[
+                    "refrigeration_consumption"
+                ]
+        case KnwonProfileConsump_or_Total.KnwonTotalConsump:
+            tot_electric_consum, tot_thermal_consum, tot_refrig_consum = (
+                UserInput().insert_annual_consumption()
+            )
+            if all(
+                x is not None
+                for x in [tot_electric_consum, tot_thermal_consum, tot_refrig_consum]
+            ):
+                (
+                    st.session_state["electric_consumption"],
+                    st.session_state["thermal_consumption"],
+                    st.session_state["refrigeration_consumption"],
+                ) = model.simulation_electric_themal_refrig_consumption_profile(
+                    tot_electric_consum,  # type: ignore
+                    tot_thermal_consum,  # type:ignore
+                    tot_refrig_consum,  # type:ignore
+                )
+    user_output = UserOuput()
+    electric_consumption = st.session_state["electric_consumption"]
+    thermal_consumption = st.session_state["thermal_consumption"]
+    refrigeration_consumption = st.session_state["refrigeration_consumption"]
     if all(
         x is not None
-        for x in (tot_electric_consum, tot_thermal_consum, tot_refrig_consum)
-    ):  # type:ignore
-        (
-            st.session_state["electric_consumption"],
-            st.session_state["thermal_consumption"],
-            st.session_state["refrigeration_consumption"],
-        ) = model.simulation_electric_themal_refrig_consumption_profile(
-            tot_electric_consum,  # type: ignore
-            tot_thermal_consum,  # type:ignore
-            tot_refrig_consum,  # type:ignore
-        )
-
-    # Load consumption
-    elif consumption is not None:
-        st.session_state["electric_consumption"] = consumption[
-            "Consumi Elettrici (kWh)"
-        ].to_numpy()
-        st.session_state["thermal_consumption"] = consumption[
-            "Consumi Termici (kWh)"
-        ].to_numpy()
-        st.session_state["refrigeration_consumption"] = consumption[
-            "Consumi Frigoriferi (kWh)"
-        ].to_numpy()
-
-    if all(
-        x is not None
-        for x in (
-            st.session_state["electric_consumption"],
-            st.session_state["thermal_consumption"],
-            st.session_state["refrigeration_consumption"],
-        )
-    ):  # type:ignore
-        electric_consumption = st.session_state["electric_consumption"]
-        thermal_consumption = st.session_state["thermal_consumption"]
-        refrigeration_consumption = st.session_state["refrigeration_consumption"]
+        for x in [electric_consumption, thermal_consumption, refrigeration_consumption]
+    ):
         if refrigeration_consumption.any() != 0:  # type:ignore
             LabelCogTrigen = "Trigen"
         else:

@@ -5,6 +5,7 @@ import numpy as np
 from traitlets import default
 import multivector_simulator.common as common
 from pydantic import PositiveFloat, validate_call, PositiveInt, NonNegativeInt
+from enum import StrEnum
 
 
 def title_multivettore():
@@ -20,7 +21,26 @@ def read_excel_file(file_path):
 # Input
 
 
+class KnwonProfileConsump_or_Total(StrEnum):
+    KnwonProfileConsump = "Si"
+    KnwonTotalConsump = "No"
+
+
 class UserInput(BaseModel):
+    def select_profileConsump_or_onlyTotal(self) -> KnwonProfileConsump_or_Total | None:
+        profileConsump_or_onlyTotal = st.radio(
+            """Conosci i tuoi consumi elettrici (kWh),caloriferi (kWh termici) e frigoriferi (kWh termici) orari riferiti ad un periodo di un anno intero?""",
+            options=[
+                KnwonProfileConsump_or_Total.KnwonProfileConsump,
+                KnwonProfileConsump_or_Total.KnwonTotalConsump,
+            ],
+            key="profileConsump_or_onlyTotal",
+            index=None,
+        )
+        if profileConsump_or_onlyTotal is None:
+            return None
+        return KnwonProfileConsump_or_Total(profileConsump_or_onlyTotal)
+
     @validate_call
     def download_upload_consumption(self) -> common.ConsumptionDataFrameType | None:
         """

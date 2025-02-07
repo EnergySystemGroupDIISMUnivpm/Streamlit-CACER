@@ -253,9 +253,10 @@ class Results(BaseModel):
                         {message}:
                         """
             )
-            for members in optimal_members:
+            for index, members in enumerate(optimal_members):
                 result_string = self.compose_optimal_members_string(members)
-                st.write(f"- {result_string}")
+                suffix = " oppure" if index < len(optimal_members) - 1 else ""
+                st.write(f"- {result_string}{suffix}")
         else:
             st.write("Label non riconosciuto.")
 

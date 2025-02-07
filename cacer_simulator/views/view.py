@@ -238,9 +238,7 @@ class Results(BaseModel):
 
     def see_optimal_members(
         self,
-        optimal_members: common.MembersWithValues,
-        optimal_members2: common.MembersWithValues,
-        optimal_members3: common.MembersWithValues,
+        optimal_members: list[common.MembersWithValues],
         label: str,
     ):
         messages = {
@@ -249,22 +247,15 @@ class Results(BaseModel):
         }
 
         message = messages.get(label, None)
-
-        result_string1 = self.compose_optimal_members_string(optimal_members)
-        result_string2 = self.compose_optimal_members_string(optimal_members2)
-        result_string3 = self.compose_optimal_members_string(optimal_members3)
-
         if message:
-            # TODO: stampiamo solo le stringhe diverse
-
             st.write(
                 f"""
-                    {message}:
-                    - {result_string1} oppure
-                    - {result_string2} oppure
-                    - {result_string3}
-                    """
+                        {message}:
+                        """
             )
+            for members in optimal_members:
+                result_string = self.compose_optimal_members_string(members)
+                st.write(f"- {result_string}")
         else:
             st.write("Label non riconosciuto.")
 

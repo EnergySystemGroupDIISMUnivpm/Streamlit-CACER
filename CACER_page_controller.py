@@ -184,6 +184,9 @@ def Simulator_CACER():
                         optimal_members = model.optimal_members(production, "all")
                         optimal_members_2 = model.optimal_members(production, "no_pmi")
                         optimal_members_3 = model.optimal_members(production, "random")
+                        optimal_mem = model.control_diversity_members(
+                            [optimal_members, optimal_members_2, optimal_members_3]
+                        )
                         result_view = results.see_results()
                         if result_view:
                             results.visualize_useful_information()
@@ -200,9 +203,7 @@ def Simulator_CACER():
                             )
                             results.visualize_advices()
                             results.see_optimal_members(
-                                optimal_members,
-                                optimal_members_2,
-                                optimal_members_3,
+                                optimal_mem,
                                 "membri non presenti",
                             )
                             results.visualize_economical_environmental_benefits()
@@ -234,6 +235,9 @@ def Simulator_CACER():
                         optimal_members = model.optimal_members(production, "all")
                         optimal_members_2 = model.optimal_members(production, "no_pmi")
                         optimal_members_3 = model.optimal_members(production, "random")
+                        optimal_mem = model.control_diversity_members(
+                            [optimal_members, optimal_members_2, optimal_members_3]
+                        )
                         results.visualize_useful_information()
                         results.see_installable_power(installable_power)
                         cost_plant = model.compute_cost_plant(installable_power)
@@ -251,9 +255,7 @@ def Simulator_CACER():
                         )
                         results.visualize_advices()
                         results.see_optimal_members(
-                            optimal_members,
-                            optimal_members_2,
-                            optimal_members_3,
+                            optimal_mem,
                             "membri non presenti",
                         )
                         results.visualize_economical_environmental_benefits()

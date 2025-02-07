@@ -341,6 +341,24 @@ def percentage_daytime_consumption_estimation(
 
 
 @validate_call(validate_return=True)
+def control_diversity_members(
+    optimal_members: list[common.MembersWithValues],
+) -> list[common.MembersWithValues]:
+    unique_members = []
+    seen = set()
+
+    for member in optimal_members:
+        member_tuple = tuple(
+            member.items()
+        )  # Convertiamo il dict in una tupla immutabile per poterlo confrontare
+        if member_tuple not in seen:
+            seen.add(member_tuple)
+            unique_members.append(member)
+
+    return unique_members
+
+
+@validate_call(validate_return=True)
 def optimal_members(energy_year: PositiveFloat, type: str) -> common.MembersWithValues:
     """
     Estimation of the optimal members of a CER based on the annual production of energy in kWh.

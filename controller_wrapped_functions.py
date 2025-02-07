@@ -250,11 +250,12 @@ def results_CER(
         optimal_members_3 = model.optimal_members(
             energy_difference_produc_consum, "random"
         )
+        opt_memb = model.control_diversity_members(
+            [optimal_members, optimal_members_2, optimal_members_3]
+        )
         results.visualize_advices()
         results.see_optimal_members(
-            optimal_members,
-            optimal_members_2,
-            optimal_members_3,
+            opt_memb,
             label="membri già presenti",
         )
 

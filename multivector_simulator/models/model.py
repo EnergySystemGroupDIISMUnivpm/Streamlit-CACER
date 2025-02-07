@@ -1262,7 +1262,7 @@ def optimizer_multiple_runs(
                     results.append(future.result())
                 except Exception as e:
                     print(f"Error during optimization: {e}")
-
+        solution = results
         # Filter feasible solutions
         feasible_results = [
             (params, value)

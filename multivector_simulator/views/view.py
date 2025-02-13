@@ -129,7 +129,7 @@ class UserInput(BaseModel):
 class UserOuput(BaseModel):
     def no_result_found(self):
         st.markdown(
-            """La simulazione non ha prodotto una soluzione ottimale questa volta. Prova ad effettuare nuovamente la simulazione: potrebbe esplorare nuove possibilità e trovare un risultato."""
+            """La simulazione non ha prodotto una soluzione ottimale questa volta. Ricarica la pagina e prova ad effettuare nuovamente la simulazione: potrebbe esplorare nuove possibilità e trovare un risultato."""
         )
 
     def see_results(self) -> bool:
@@ -239,7 +239,7 @@ class UserOuput(BaseModel):
         )
         st.area_chart(chart_data, x="Ore", y_label="kWh", x_label="Ore")
 
-    def graph_return_investment(  # TODO: add attualizzazione dei costi
+    def graph_return_investment(
         self,
         df_cumulative_costs_and_savings: pd.DataFrame,
     ):
@@ -248,7 +248,7 @@ class UserOuput(BaseModel):
             help="Questo grafico mostra l'andamento cumulativo di costi e risparmi annuali, partendo dal costo iniziale dell'installazione  degli impianti e includendo i costi e i risparmi accumulati ogni anno. I valori negativi rappresentano le spese, mentre i valori positivi indicano i risparmi ottenuti. Il punto in cui la barra cumulativa supera lo zero rappresenta il momento in cui si ottiene il ritorno dell'investimento, segnando il passaggio da una situazione di costo netto a una di guadagno.",
         )
         years = common.Optimizer().YEARS
-
+        __import__("ipdb").set_trace()
         st.bar_chart(
             df_cumulative_costs_and_savings.set_index("Year")["Cumulative value"],
             x_label="Anni dopo l'installazione degli impianti",

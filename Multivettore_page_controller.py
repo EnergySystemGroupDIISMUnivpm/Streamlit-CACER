@@ -145,6 +145,7 @@ def Simulator_Multivettore():
                 )
 
                 # calculation of recovery time
+
                 df_cumulative_cost_savings = model.cumulative_costs_savings(
                     savings, investment_costs, cost_gas + annual_maintenance_cost
                 )

@@ -109,21 +109,6 @@ class UserInput(BaseModel):
             else:
                 return None, None, None
 
-    def select_period_plot(self):
-        st.markdown(" ")
-        st.markdown(
-            "###### **Qui sotto puoi visulaizzare l'andamento tipico dell'energia che consumi e che produrresti con gli impianti consigliati**",
-            help="Per andamento tipico si intende l'andamento medio calcolato sui dati annuali",
-        )
-        period_label = None
-        period_label = st.radio(
-            "Per prima cosa, seleziona la durata del periodo in cui vuoi visualizzare l'andamento della tua energia",
-            options=list(common.PERIOD_TO_BE_PLOTTED.keys()),
-            index=0,
-            key="select label of period",
-        )
-        return period_label
-
 
 # Output
 class UserOuput(BaseModel):
@@ -252,4 +237,11 @@ class UserOuput(BaseModel):
             df_cumulative_costs_and_savings.set_index("Year")["Cumulative value"],
             x_label="Anni dopo l'installazione degli impianti",
             y_label="€",
+        )
+
+    def info_andamento_tipico(self):
+        st.markdown(" ")
+        st.markdown(
+            "###### **Qui sotto puoi visulaizzare l'andamento tipico dell'energia che consumi e che produrresti con gli impianti consigliati**",
+            help="Per andamento tipico si intende l'andamento medio calcolato sui dati annuali",
         )

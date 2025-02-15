@@ -40,7 +40,7 @@ class Heat_pump(BaseModel):
 
 # cogenerator/trigenerator
 class Trigen_Cogen(BaseModel):
-    info_biomass: str = """L'impianto considerato è un impiano a gas. Potresti valutare anche la possibilità di instalare un impianto a biomassa. 
+    info_biomass: str = """L'impianto considerato è un impianto a gas. Potresti valutare anche la possibilità di installare un impianto a biomassa. 
                     Gli impianti di cogenerazione a gas usano gas naturale, garantendo alta efficienza, semplicità gestionale e basse emissioni rispetto ad altri fossili, ma dipendono da fonti non rinnovabili. 
                     Gli impianti a biomassa, invece, utilizzano scarti organici, sono più sostenibili, ma hanno rendimenti inferiori, costi di gestione più elevati e richiedono una logistica complessa per il combustibile. """
     COST_GAS_FOR_GEN: PositiveFloat = 0.4

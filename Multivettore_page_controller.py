@@ -172,32 +172,33 @@ def Simulator_Multivettore():
                 )  # type:ignore
 
                 # GRAPH WITH ENERGY PRODUCTION AND CONSUMPTION
+                electric_production_pv = model.calculation_pv_production(
+                    st.session_state["PV_size"]
+                )
+                electric_production_pv = model.calculation_pv_production(
+                    st.session_state["PV_size"]
+                )
+                (
+                    electric_production_cogen,
+                    thermal_production_cogen,
+                    refrigeration_production_cogen,
+                ) = model.annual_production_cogen_trigen(
+                    st.session_state["cogen_trigen_size"],
+                    LabelCogTrigen,
+                    start_winter_season,
+                    end_winter_season,
+                )
 
-                if "period_label" not in st.session_state:
-                    st.session_state["period_label"] = None
-                st.session_state["period_label"] = user_input.select_period_plot()
-
-                if st.session_state["period_label"] is not None:
+                user_output.info_andamento_tipico()
+                for period in common.PERIOD_TO_BE_PLOTTED.keys():
+                    st.session_state["period_label"] = period
                     period_to_be_plot = user_output.extract_period_from_period_label(
                         st.session_state["period_label"]
                     )
                     electric_consumption_period = model.calculate_mean_over_period(
                         electric_consumption, period_to_be_plot
                     )
-                    electric_production_pv = model.calculation_pv_production(
-                        st.session_state["PV_size"]
-                    )
 
-                    (
-                        electric_production_cogen,
-                        thermal_production_cogen,
-                        refrigeration_production_cogen,
-                    ) = model.annual_production_cogen_trigen(
-                        st.session_state["cogen_trigen_size"],
-                        LabelCogTrigen,
-                        start_winter_season,
-                        end_winter_season,
-                    )
                     electric_production_period = model.calculate_mean_over_period(
                         np.nansum(
                             [electric_production_cogen, electric_production_pv], axis=0

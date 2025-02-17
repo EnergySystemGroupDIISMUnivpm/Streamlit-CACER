@@ -10,7 +10,19 @@ class MacroSelection(StrEnum):
 
 def homepage() -> MacroSelection | None:
     st.set_page_config(page_icon=":sun_small_cloud:", layout="wide")
-    col1_title, col2_title, col3_title = st.columns([1, 5, 1])
+    contribution = (
+        "Piattaforma finanziata a valere sul Fondo per la ricerca di sistema elettrico"
+    )
+    st.markdown(
+        f"""
+    <div style="text-align: right; font-size: 10px;">
+        <em>{contribution}</em>
+    </div>
+    """,
+        unsafe_allow_html=True,
+    )
+    st.write(" ")
+    col1_title, col2_title, col3_title = st.columns([2, 6, 2])
 
     with col1_title:
         st.image("./resources/logo_ENEA.png", use_container_width=True)

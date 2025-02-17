@@ -62,7 +62,7 @@ class UserInput(BaseModel):
     def insert_percentage_daytime_consumption(self) -> float | None:
         consumption_options = {
             "Di giorno sono più bassi": 0.25,
-            "sono all'incirca uguali": 0.5,
+            "Sono all'incirca uguali": 0.5,
             "Di giorno sono più alti": 0.75,
         }
 

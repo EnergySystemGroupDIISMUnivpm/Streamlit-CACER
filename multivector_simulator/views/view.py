@@ -181,7 +181,7 @@ class UserOuput(BaseModel):
         )
 
     def see_battery_size(self, battery_size: NonNegativeInt):
-        st.markdown(f"- un **impianto di accumulo** da {battery_size} kW")
+        st.markdown(f"- un **impianto di accumulo** da {battery_size} kWh")
 
     def see_costs_investment_recovery(
         self, costs: PositiveFloat, recovery_time: PositiveInt | float

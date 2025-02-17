@@ -136,7 +136,7 @@ class UserOuput(BaseModel):
         trigen_size: NonNegativeInt,
         battery_size: NonNegativeInt,
     ):
-        st.markdown("##### **Risulati del simulatore**")
+        st.markdown("##### **Risultati del simulatore**")
         st.markdown(
             """Per massimizzare la copertura dei tuoi consumi e minimizzare i costi puoi installare i seguenti impianti:
 """

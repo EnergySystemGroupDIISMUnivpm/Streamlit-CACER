@@ -29,7 +29,7 @@ def homepage() -> MacroSelection | None:
 
     with col2_title:
         st.markdown(
-            "<h1 style='text-align: center;'>Benvenuto in ENEA Simulatore CACER e Multivettore Energetico</h1>",
+            "<h1 style='text-align: center;'>Benvenuto in SIMBA </h1>",
             unsafe_allow_html=True,
         )
 

@@ -38,20 +38,27 @@ def Simulator_Multivettore():
         case KnwonProfileConsump_or_Total.KnwonProfileConsump:
             consumption = user_input.download_upload_consumption()
             if consumption is not None:
-                st.session_state["electric_consumption"] = consumption[
-                    "Consumi Elettrici (kWh)"
-                ].to_numpy()
-                st.session_state["thermal_consumption"] = consumption[
-                    "Consumi Termici (kWh)"
-                ].to_numpy()
-                st.session_state["refrigeration_consumption"] = consumption[
-                    "Consumi Frigoriferi (kWh)"
-                ].to_numpy()
-                electric_consumption = st.session_state["electric_consumption"]
-                thermal_consumption = st.session_state["thermal_consumption"]
-                refrigeration_consumption = st.session_state[
-                    "refrigeration_consumption"
-                ]
+                el_consum = consumption["Consumi Elettrici (kWh)"].to_numpy()
+                th_consum = consumption["Consumi Termici (kWh)"].to_numpy()
+                ref_consum = consumption["Consumi Frigoriferi (kWh)"].to_numpy()
+                if (
+                    el_consum.sum() <= 2000000000
+                    and th_consum.sum() <= 2000000000
+                    and ref_consum.sum() <= 2000000000
+                ):
+                    st.session_state["electric_consumption"] = el_consum
+                    st.session_state["thermal_consumption"] = th_consum
+                    st.session_state["refrigeration_consumption"] = ref_consum
+                    electric_consumption = st.session_state["electric_consumption"]
+                    thermal_consumption = st.session_state["thermal_consumption"]
+                    refrigeration_consumption = st.session_state[
+                        "refrigeration_consumption"
+                    ]
+                else:
+                    st.error(
+                        "Errore: il consumo elettrico non può superare 2.000.000.000 kWh. Il consumo termico non può superare 2.000.000.000 kWh termici. Il consumo frigorifero non può superare 2.000.000.000 kWh termici.",
+                        icon=None,
+                    )
         case KnwonProfileConsump_or_Total.KnwonTotalConsump:
             tot_electric_consum, tot_thermal_consum, tot_refrig_consum = (
                 UserInput().insert_annual_consumption()

@@ -93,12 +93,18 @@ class UserInput(BaseModel):
             "##### Non conosci i consumi orari? Inserisci i consumi totali annui qui sotto"
         )
         with st.form(key="input_form", border=False):
-            electric = st.number_input("Inserisci i consumi elettrici in kWh", step=1)
+            electric = st.number_input(
+                "Inserisci i consumi elettrici in kWh", max_value=2000000000, step=1
+            )
             thermal = st.number_input(
-                "Inserisci i consumi termici in kWh termici", step=1
+                "Inserisci i consumi termici in kWh termici",
+                step=1,
+                max_value=2000000000,
             )
             refrig = st.number_input(
-                "Inserisci i consumi frigoriferi in kWh termici", step=1
+                "Inserisci i consumi frigoriferi in kWh termici",
+                step=1,
+                max_value=2000000000,
             )
             submit_button = st.form_submit_button(label="Carica i dati")
             if submit_button:

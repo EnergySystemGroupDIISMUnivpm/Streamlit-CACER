@@ -29,7 +29,14 @@ def homepage() -> MacroSelection | None:
 
     with col2_title:
         st.markdown(
-            "<h1 style='text-align: center;'>Benvenuto in SIMBA </h1>",
+            """<h1 style='text-align: center; font-size: 60px;'>Benvenuto in SIMBA</h1>
+    <p style='text-align: center; font-size: 22px;'>
+    <span style='font-weight: 900;'>S</span>imulator for CACER 
+    <span style='font-weight: 900;'>I</span>ntegration & 
+    <span style='font-weight: 900;'>M</span>ulti-Energy 
+    <span style='font-weight: 900;'>B</span>est 
+    <span style='font-weight: 900;'>A</span>ssessment
+    </p>""",
             unsafe_allow_html=True,
         )
 

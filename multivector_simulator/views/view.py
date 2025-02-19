@@ -29,7 +29,7 @@ class KnwonProfileConsump_or_Total(StrEnum):
 class UserInput(BaseModel):
     def select_profileConsump_or_onlyTotal(self) -> KnwonProfileConsump_or_Total | None:
         profileConsump_or_onlyTotal = st.radio(
-            """Conosci i tuoi consumi elettrici (kWh),caloriferi (kWh termici) e frigoriferi (kWh termici) orari riferiti ad un periodo di un anno intero?""",
+            """Conosci i tuoi consumi orari elettrici (kWh), caloriferi (kWh termici) e frigoriferi (kWh termici) di un anno intero?""",
             options=[
                 KnwonProfileConsump_or_Total.KnwonProfileConsump,
                 KnwonProfileConsump_or_Total.KnwonTotalConsump,
@@ -81,7 +81,7 @@ class UserInput(BaseModel):
     def unknown_consumption_profile(self):
         st.markdown(" ")
         st.markdown("##### Non hai a disposizione i consumi orari?")
-        unknown_profiles = st.button(label="Inserisci solo i consumi totali annui")
+        unknown_profiles = st.button(label="Inserisci i consumi totali annui")
         return unknown_profiles
 
     def insert_annual_consumption(self) -> tuple[int | None, int | None, int | None]:
@@ -90,7 +90,7 @@ class UserInput(BaseModel):
         """
         st.markdown(" ")
         st.markdown(
-            "##### Non conosci i consumi orari? Inserisci solo i consumi totali annui qui sotto"
+            "##### Non conosci i consumi orari? Inserisci i consumi totali annui qui sotto"
         )
         with st.form(key="input_form", border=False):
             electric = st.number_input("Inserisci i consumi elettrici in kWh", step=1)
@@ -175,12 +175,12 @@ class UserOuput(BaseModel):
         if recovery_time > 0 and recovery_time < 21:
             st.markdown(
                 f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in circa {recovery_time} anni.",
-                help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {trigen_cogen.COST_GAS_FOR_GEN}€/Smc.",
+                help=f"Il tempo di recupero è stato calcolato tenendo conto del prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, del costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e del costo del carburante per il cogeneratore pari a {trigen_cogen.COST_GAS_FOR_GEN}€/Smc.",
             )
         elif recovery_time < 0:
             st.markdown(
                 f"Il costo previsto per l'installazione degli impianti è di circa {costs}€. Grazie all'energia autoprodotta, riusciresti a recuperare l'investimento in meno di un anno.",
-                help=f"Il tempo di recupero è stato calcolato tenendo conto di un prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, un costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e un costo del carburante per il cogeneratore pari a {trigen_cogen.COST_GAS_FOR_GEN}€/Smc.",
+                help=f"Il tempo di recupero è stato calcolato tenendo conto del prezzo dell'energia elettrica da rete pari a {common.ELECTRIC_ENERGY_PRICE}€/kWh, del costo dell'energia termica da rete pari a {common.THERMAL_ENERGY_PRICE}€/kWh e del costo del carburante per il cogeneratore pari a {trigen_cogen.COST_GAS_FOR_GEN}€/Smc.",
             )
         else:
             st.markdown(
@@ -242,6 +242,6 @@ class UserOuput(BaseModel):
     def info_andamento_tipico(self):
         st.markdown(" ")
         st.markdown(
-            "###### **Qui sotto puoi visulaizzare l'andamento tipico dell'energia che consumi e che produrresti con gli impianti consigliati**",
+            "###### **Qui sotto puoi visualizzare l'andamento tipico dell'energia che consumi e che produrresti con gli impianti consigliati**",
             help="Per andamento tipico si intende l'andamento medio calcolato sui dati annuali",
         )

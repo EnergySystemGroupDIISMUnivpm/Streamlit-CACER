@@ -73,7 +73,7 @@ def calculate_mean_over_period(data: np.ndarray, hours: int) -> np.ndarray:
 
     data_start = data[0:hours]
     for i in range(1, round((len(data) / hours)) - 1):
-        data_start = data_start + data[hours * i + 1 : hours * (i + 1) + 1]
+        data_start = data_start + data[hours * i : hours * (i + 1)]
     mean_value = data_start / round(len(data) / hours)
     return mean_value
 
